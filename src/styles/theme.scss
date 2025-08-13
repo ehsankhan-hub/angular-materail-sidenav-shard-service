@@ -3,8 +3,8 @@
 $light-theme: mat.define-theme((
   color: (
     theme-type: light,
-    primary: mat.$indigo-palette,
-    secondary: mat.$pink-palette,
+    primary: mat.$m2-indigo-palette,
+    secondary: mat.$m2-pink-palette,
   ),
 ));
 

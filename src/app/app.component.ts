@@ -9,12 +9,11 @@ import { LandingComponent } from './layout/landing/landing.component';
 // import { MatButtonModule } from '@angular/material/button';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  //imports: [RouterOutlet,MatToolbarModule,MatSidenavModule,MatIconModule,MatListModule,MatButtonModule,RouterModule],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
-  imports: [RouterModule,LandingComponent]
+    selector: 'app-root',
+    //imports: [RouterOutlet,MatToolbarModule,MatSidenavModule,MatIconModule,MatListModule,MatButtonModule,RouterModule],
+    templateUrl: './app.component.html',
+    styleUrl: './app.component.css',
+    imports: [RouterModule, LandingComponent]
 })
 export class AppComponent {
   title = 'angular-sidenav';

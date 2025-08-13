@@ -7,11 +7,10 @@ import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
-  selector: 'app-landing',
-  standalone: true,
-  imports: [RouterOutlet,MatToolbarModule,MatSidenavModule,MatIconModule,MatListModule,MatButtonModule,RouterModule],
-  templateUrl: './landing.component.html',
-  styleUrl: './landing.component.css'
+    selector: 'app-landing',
+    imports: [RouterOutlet, MatToolbarModule, MatSidenavModule, MatIconModule, MatListModule, MatButtonModule, RouterModule],
+    templateUrl: './landing.component.html',
+    styleUrl: './landing.component.css'
 })
 export class LandingComponent {
   menuItems: any[] =[
