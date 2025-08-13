@@ -4,31 +4,39 @@ import { PartnersComponent } from './pages/partners/partners.component';
 import { TrainingComponent } from './pages/training/training.component';
 import { EventsComponent } from './pages/events/events.component';
 import { SupportComponent } from './pages/support/support.component';
+import { LandingComponent } from './layout/landing/landing.component';
+import { LoginComponent } from './login/login/login.component';
 
 export const routes: Routes = [
-    {
-        path:'',
-        pathMatch:'full',
-        redirectTo:'home'
-    },
-    {
-        path:'home',
-        component: HomeComponent
-    },
-    {
-        path:'partners',
-        component:PartnersComponent
-    },
-    {
-        path:'training',
-        component:TrainingComponent
-    },
-    {
-        path:'event',
-        component:EventsComponent
-    },
-    {
-        path:'support',
-        component:SupportComponent
-    },
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'login',
+  },
+  {
+    path: 'login',
+    component: LoginComponent,
+  },
+
+  {
+    path: 'landing',
+    component: LandingComponent,
+    children: [
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
+      { path: 'home', component: HomeComponent },
+      { path: 'partners', component: PartnersComponent },
+      {
+        path: 'training',
+        component: TrainingComponent,
+      },
+      {
+        path: 'event',
+        component: EventsComponent,
+      },
+      {
+        path: 'support',
+        component: SupportComponent,
+      },
+    ],
+  },
 ];

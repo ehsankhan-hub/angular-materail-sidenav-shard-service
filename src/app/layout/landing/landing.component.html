@@ -1,0 +1,26 @@
+<mat-toolbar color="accent">
+    <mat-toolbar-row>
+      <button mat-icon-button (click)="sidenav.toggle();">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <h1>Angular Material Sidenav</h1>
+    </mat-toolbar-row>
+  </mat-toolbar>
+  <mat-sidenav-container>
+    <mat-sidenav #sidenav opened mode="side" [style.width]="'200px'">
+      <mat-nav-list>
+            @for(item of menuItems;track $index){
+          <a mat-list-item [routerLink]="item.route">
+            <mat-icon matListItemIcon>{{item.icon}}</mat-icon>
+            <span>{{item.label}}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <router-outlet />
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+  
+  
+  
