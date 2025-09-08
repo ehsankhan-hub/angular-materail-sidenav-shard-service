@@ -1,0 +1,54 @@
+<div class="registration-container">
+    <form class="registration-form" [formGroup]="registerForm">
+      <!-- First Column -->
+      <div class="form-column">
+        <mat-form-field appearance="outline">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstName">
+        </mat-form-field>
+  
+        <mat-form-field appearance="outline">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="lastName">
+        </mat-form-field>
+  
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email">
+        </mat-form-field>
+  
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password">
+        </mat-form-field>
+  
+        <mat-form-field appearance="outline">
+          <mat-label>Confirm Password</mat-label>
+          <input matInput type="password" formControlName="confirmPassword">
+        </mat-form-field>
+      </div>
+  
+      <!-- Second Column -->
+      <div class="form-column">
+        <mat-form-field appearance="outline">
+          <mat-label>Phone Number</mat-label>
+          <input matInput type="tel" formControlName="phone">
+        </mat-form-field>
+  
+        <mat-form-field appearance="outline">
+          <mat-label>Country</mat-label>
+          <mat-select formControlName="country">
+            <mat-option value="us">United States</mat-option>
+            <mat-option value="uk">United Kingdom</mat-option>
+            <mat-option value="sa">Saudi Arabia</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </form>
+  
+    <div class="form-actions">
+      <button mat-raised-button color="primary">Register</button>
+      <button mat-button type="reset">Reset</button>
+    </div>
+  </div>
+  

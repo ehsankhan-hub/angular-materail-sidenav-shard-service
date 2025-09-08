@@ -1,0 +1,9 @@
+<a [routerLink]="'recent'">Recent books</a>
+
+
+
+<h2>All Books</h2>
+<div *ngFor="let book of allBooks">
+  <app-book-card [book]="book"></app-book-card>
+</div>
+

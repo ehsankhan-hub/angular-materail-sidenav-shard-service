@@ -6,6 +6,9 @@ import { EventsComponent } from './pages/events/events.component';
 import { SupportComponent } from './pages/support/support.component';
 import { LandingComponent } from './layout/landing/landing.component';
 import { LoginComponent } from './login/login/login.component';
+import { RecentBooksComponent } from './recent-books/recent-books.component';
+import { AllBooksComponent } from './all-books/all-books.component';
+import { RegistrationComponent } from './pages/registration/registration.component';
 
 export const routes: Routes = [
   {
@@ -37,6 +40,9 @@ export const routes: Routes = [
         path: 'support',
         component: SupportComponent,
       },
+      {path:'registration',component:RegistrationComponent},
+      { path: 'recent', component: RecentBooksComponent },  // ✅ new route
+      { path: 'all', component: AllBooksComponent },        // ✅ new route
     ],
   },
 ];

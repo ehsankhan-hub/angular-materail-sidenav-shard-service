@@ -1,10 +1,65 @@
 /* You can add global styles to this file, and also import other style files */
 /* src/styles.scss */
-@use './styles/theme';
+//@use './styles/theme';
 
 /* Your global styles after this */
+
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-quartz.css";
 html, body { height: 100%; }
 body { margin: 0; font-family: Inter, Arial, sans-serif; }
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Grid theme adjustments */
+.ag-theme-alpine {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Header styling */
+.ag-header {
+  background-color: #007acc;
+  color: white;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Row hover effect */
+.ag-row:hover {
+  background-color: #e6f2ff !important;
+  cursor: pointer;
+}
+
+/* Default UDC highlight */
+.highlight-udc {
+  background-color: #fff2cc !important; /* soft yellow */
+  font-weight: bold;
+}
+
+/* Clicked row */
+.highlight-pink {
+  background-color: #ffb6c1 !important; /* soft pink */
+  font-weight: bold;
+}
+
+/* Center content in columns */
+.ag-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Checkbox column alignment */
+.ag-selection-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+  
+  

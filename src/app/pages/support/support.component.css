@@ -1,0 +1,38 @@
+.registration-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* two columns */
+    gap: 2rem;
+    max-width: 900px;
+    margin: 2rem auto;
+  }
+  
+  .form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .form-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .form-row label {
+    width: 150px;              /* fixed width for labels */
+    font-weight: 500;
+    text-align: right;
+  }
+  
+  .form-row input,
+  .form-row mat-select {
+    flex: 1;                   /* input/select takes remaining space */
+  }
+  
+  .form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+  

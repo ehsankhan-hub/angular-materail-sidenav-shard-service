@@ -1,0 +1,7 @@
+<div style="border: 2px solid green; padding: 20px;">
+    <h2>Parent Component (app-parent-component)</h2>
+    <p>Received event from child: <strong>{{ receivedEvent | json }}</strong></p>
+    <button (click)="updateChildFilter()">Update Child's Filter Data</button>
+    <hr>
+    <app-schedule-filters></app-schedule-filters>
+  </div>

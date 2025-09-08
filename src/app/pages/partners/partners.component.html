@@ -1,1 +1,9 @@
-<p>partners works!</p>
+<ng-container *ngIf="isBrowser">
+    <ag-grid-angular
+      style="width: 100%; height: 500px;"
+      class="ag-theme-alpine"
+      [gridOptions]="gridOptions"
+      [rowData]="rowData"
+      [columnDefs]="columnDefs">
+    </ag-grid-angular>
+  </ng-container>

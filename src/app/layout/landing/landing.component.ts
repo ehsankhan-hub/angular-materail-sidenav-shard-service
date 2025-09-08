@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 
 @Component({
     selector: 'app-landing',
+    standalone: true, 
     imports: [RouterOutlet, MatToolbarModule, MatSidenavModule, MatIconModule, MatListModule, MatButtonModule, RouterModule],
     templateUrl: './landing.component.html',
     styleUrl: './landing.component.css'
@@ -38,6 +39,24 @@ export class LandingComponent {
       icon:'help',
       label:'Support',
       route:'support'
-    }
+    },
+    {
+      icon:'help',
+      label:'recent',
+      route:'recent'
+    },
+    {
+      icon:'help',
+      label:'all',
+      route:'all'
+    },
+    {
+      icon:'help',
+      label:'registration',
+      route:'registration'
+    },
+
+    
+
   ];
 }

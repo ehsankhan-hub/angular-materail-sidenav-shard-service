@@ -1,0 +1,17 @@
+<mat-card class="book-card">
+  <mat-card-header>
+    <mat-card-title>{{ book.title }}</mat-card-title>
+    <mat-card-subtitle>by {{ book.author }}</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <p><strong>Published:</strong> {{ book.publishedDate }}</p>
+  </mat-card-content>
+
+  <mat-card-actions>
+    <button mat-button color="primary">Details</button>
+    <button mat-button color="accent">Buy</button>
+  </mat-card-actions>
+</mat-card>
+
+

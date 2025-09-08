@@ -1,0 +1,25 @@
+.books-container {
+    display: flex;
+    flex-wrap: wrap;        /* allows wrapping to new line */
+    gap: 1rem;              /* space between cards */
+    justify-content: flex-start; /* align to left */
+  }
+  
+  app-book-card {
+    flex: 1 1 calc(33.33% - 1rem);  /* 3 cards per row on desktop */
+    max-width: 350px;
+    min-width: 250px;
+  }
+  
+  @media (max-width: 900px) {
+    app-book-card {
+      flex: 1 1 calc(50% - 1rem);  /* 2 cards per row on tablet */
+    }
+  }
+  
+  @media (max-width: 600px) {
+    app-book-card {
+      flex: 1 1 100%;              /* 1 card per row on mobile */
+    }
+  }
+  

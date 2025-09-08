@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterModule } from "@angular/router";
 import { LandingComponent } from './layout/landing/landing.component';
+import { ParentComponent } from './parent/parent.component';
 // import { RouterModule, RouterOutlet } from '@angular/router';
 // import { MatToolbarModule } from '@angular/material/toolbar';
 // import { MatSidenavModule } from '@angular/material/sidenav';
@@ -13,7 +14,8 @@ import { LandingComponent } from './layout/landing/landing.component';
     //imports: [RouterOutlet,MatToolbarModule,MatSidenavModule,MatIconModule,MatListModule,MatButtonModule,RouterModule],
     templateUrl: './app.component.html',
     styleUrl: './app.component.css',
-    imports: [RouterModule, LandingComponent]
+    standalone: true, 
+    imports: [RouterModule,ParentComponent]
 })
 export class AppComponent {
   title = 'angular-sidenav';
