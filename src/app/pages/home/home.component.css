@@ -1,0 +1,38 @@
+/* app.component.css */
+
+.header-icon {
+    margin-right: 8px; /* Add some space between the icon and the text */
+  }
+  
+  /* To give the panel a bit more separation */
+  mat-expansion-panel {
+    margin-bottom: 8px; 
+  }
+
+  .main-container {
+    padding: 16px;
+  }
+  
+  .apply-btn {
+    background-color: #4CAF50; 
+    color: white;
+    width: 100%;
+  }
+  
+  .label-row {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    margin-bottom: 8px;
+  
+    .label {
+      font-weight: 600;
+      margin-right: 8px;
+      min-width: 150px; 
+    }
+  
+    .value {
+      color: #333;
+    }
+  }
+  
