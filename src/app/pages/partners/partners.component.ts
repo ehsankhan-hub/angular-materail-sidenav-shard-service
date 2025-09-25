@@ -1,21 +1,32 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AfterViewInit, Component, Inject, PLATFORM_ID } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { AgGridModule } from 'ag-grid-angular';
 import { GridOptions, ColDef, RowNode, IRowNode, GridApi } from 'ag-grid-community';
+import { AgGridDialogComponent } from './ag-grid-dialog/ag-grid-dialog.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar } from '@angular/material/snack-bar'; 
 @Component({
     selector: 'app-partners',
     standalone: true, 
-    imports: [AgGridModule,CommonModule],
+    imports: [AgGridModule,CommonModule,MatButtonModule],
     templateUrl: './partners.component.html',
     styleUrl: './partners.component.css'
 })
 export class PartnersComponent  implements AfterViewInit {
   isBrowser = false;
-
+  selectedRows: any[] = []; // store all selected rows
   columnDefs: ColDef[] = [
     { field: 'id', sortable: true, filter: true },
     { field: 'name', sortable: true, filter: true },
     { field: 'department', sortable: true, filter: true },
+  ];
+
+  public columnSelectedDefs: ColDef[] = [
+    { field: 'id', sortable: true, filter: true },
+    { field: 'make', sortable: true, filter: true },
+    { field: 'model', sortable: true, filter: true },
+    { field: 'price', sortable: true, filter: true }
   ];
 
   rowData = [
@@ -62,8 +73,36 @@ export class PartnersComponent  implements AfterViewInit {
     },
   };
   
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object,private dialog: MatDialog,private snackBar: MatSnackBar) {
     this.isBrowser = isPlatformBrowser(this.platformId);
+  }
+
+  
+  openDialog() {
+    const dialogRef = this.dialog.open(AgGridDialogComponent, {
+      width: '80%',
+      height: '50%',
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed',result);
+      const exists = this.selectedRows.some(r => r.id === result.id);
+
+      if (!exists) {
+        this.selectedRows.push(result); // push selected row into array
+        this.selectedRows = [...this.selectedRows]; 
+      }
+      else{
+        this.snackBar.open(`Row with Id ${result.id} already exists!`, 'Close', {
+          duration: 3000,       // auto close in 3 sec
+          panelClass: ['warn-snackbar'] // optional custom style
+        });
+      }
+    });
+  }
+  onRowClicked(event: any) {
+    console.log('Row clicked:', event.data);
+   // this.dialogRef.close(event.data); // pass row data back to parent
   }
 
   ngAfterViewInit() {

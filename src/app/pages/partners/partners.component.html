@@ -1,9 +1,26 @@
+<button mat-raised-button color="primary" (click)="openDialog()">
+  Open AG Grid Dialog
+</button>
 <ng-container *ngIf="isBrowser">
     <ag-grid-angular
-      style="width: 100%; height: 500px;"
+      style="width: 100%; height: 40%"
       class="ag-theme-alpine"
       [gridOptions]="gridOptions"
       [rowData]="rowData"
       [columnDefs]="columnDefs">
     </ag-grid-angular>
   </ng-container>
+
+  <ng-container *ngIf="isBrowser">
+  <ag-grid-angular (rowClicked)="onRowClicked($event)"
+  style="color: black; width: 100%; height: 400px;"
+  class="ag-theme-alpine"
+  [rowData]="selectedRows"
+  [columnDefs]="columnSelectedDefs"
+  [pagination]="true"
+  [paginationPageSize]="5">
+</ag-grid-angular>
+</ng-container>
+
+ 
+  

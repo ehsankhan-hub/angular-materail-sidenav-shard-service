@@ -1,7 +1,15 @@
 /* styles.css or component.css */
 /* styles.css */
+/* AG Grid CSS themes */
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-alpine.css";
+
 .my-custom-header {
   background-color: #ffc107; /* A specific color for this header */
   color: #333;
 }
+.ag-theme-alpine .ag-cell {
+  color: #000 !important;
+}
+
   

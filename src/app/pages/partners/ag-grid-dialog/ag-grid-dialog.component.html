@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>AG Grid Data</h2>
+<mat-dialog-content class="mat-typography">
+    <ng-container *ngIf="isBrowser">
+  <ag-grid-angular
+    style="width: 100%; height: 400px;"
+    class="ag-theme-alpine"
+    [rowData]="rowData"
+    (rowClicked)="onRowClicked($event)"
+    [columnDefs]="columnDefs">
+  </ag-grid-angular>
+</ng-container>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>
+
