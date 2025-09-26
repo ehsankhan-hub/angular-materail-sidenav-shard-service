@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './ag-grid-dialog.component.css'
 })
 export class AgGridDialogComponent {
-  isBrowser = false;
+  isBrowser = true;
   constructor(private dialogRef: MatDialogRef<AgGridDialogComponent>) {}
  // Column definitions for AG Grid
  public columnDefs: ColDef[] = [

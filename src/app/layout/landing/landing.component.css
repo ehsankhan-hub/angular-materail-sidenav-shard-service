@@ -4,7 +4,7 @@
 .mat-sidenav-content{
     padding: 20px;
 }
-.menu-item {
+/* .menu-item {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -21,5 +21,79 @@
   mat-icon {
     font-size: 20px;
     vertical-align: middle;
+  } */
+  
+
+   .header-toolbar {
+    background: #1f1f1f; 
+    color: #fff;
+    height: 56px;
+    padding: 0 12px;
+  }
+  
+  .logo-section {
+    .logo {
+      width: 32px;
+      height: 32px;
+      margin-right: 8px;
+    }
+    .app-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-right: 8px;
+    }
+    .app-version {
+      font-size: 12px;
+      color: #aaa;
+    }
+  }
+  
+  .nav-section {
+    .nav-btn {
+      color: #fff;
+      font-weight: 500;
+      margin: 0 4px;
+  
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  
+    /* Colors for each tab */
+    .blue mat-icon,
+    .blue {
+      color: #1e88e5;
+    }
+    .indigo mat-icon,
+    .indigo {
+      color: #3949ab;
+    }
+    .orange mat-icon,
+    .orange {
+      color: #f57c00;
+    }
+    .pink mat-icon,
+    .pink {
+      color: #d81b60;
+    }
+    .green mat-icon,
+    .green {
+      color: #43a047;
+    }
+    .teal mat-icon,
+    .teal {
+      color: #00897b;
+    }
+  }
+  
+  .user-section {
+    .username {
+      margin-right: 8px;
+      font-size: 14px;
+      color: #ddd;
+    }
+    button {
+      color: #fff;
+    }
   }
   

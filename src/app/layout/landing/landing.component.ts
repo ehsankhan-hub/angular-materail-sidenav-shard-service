@@ -7,11 +7,12 @@ import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { FlexLayoutModule } from '@angular/flex-layout';  
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
     selector: 'app-landing',
     standalone: true, 
-    imports: [RouterOutlet, 
+    imports: [RouterOutlet, MatFormFieldModule,
       MatToolbarModule, MatSidenavModule, MatIconModule, 
       MatListModule, MatButtonModule, RouterModule,FlexLayoutModule,MatTabsModule],
     templateUrl: './landing.component.html',

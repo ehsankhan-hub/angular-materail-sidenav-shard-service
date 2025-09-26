@@ -1,10 +1,67 @@
-<mat-toolbar color="accent">
+<!-- <mat-toolbar color="accent">
     <mat-toolbar-row>
       <button mat-icon-button (click)="sidenav.toggle();">
         <mat-icon>menu</mat-icon>
       </button>
       <h1>Angular Material Sidenav</h1>
     </mat-toolbar-row>
+  </mat-toolbar>
+  <mat-sidenav-container>
+    <mat-sidenav #sidenav opened mode="side" [style.width]="'200px'">
+      <mat-nav-list>
+            @for(item of menuItems;track $index){
+          <a mat-list-item [routerLink]="item.route">
+            <mat-icon matListItemIcon>{{item.icon}}</mat-icon>
+            <span>{{item.label}}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <router-outlet />
+    </mat-sidenav-content>
+  </mat-sidenav-container> -->
+  
+
+  <mat-toolbar class="header-toolbar" fxLayout="row" fxLayoutAlign="start center">
+    <!-- Logo + Title -->
+    <div fxLayout="row" fxLayoutAlign="start center" class="logo-section">
+      <img src="assets/logo.png" alt="Logo" class="logo" />
+      <span class="app-title">DrillEye</span>
+      <span class="app-version">2022.10.1</span>
+    </div>
+
+    <button mat-icon-button (click)="sidenav.toggle();">
+      <mat-icon>menu</mat-icon>
+    </button>
+  
+    <!-- Navigation Tabs -->
+    <div fxFlex fxLayout="row" fxLayoutAlign="center center" class="nav-section">
+      <button mat-button class="nav-btn blue">
+        <mat-icon>event_note</mat-icon> iPlanning
+      </button>
+      <button mat-button class="nav-btn indigo">
+        <mat-icon>build</mat-icon> iEngineering
+      </button>
+      <button mat-button class="nav-btn orange">
+        <mat-icon>assignment</mat-icon> iOperations
+      </button>
+      <button mat-button class="nav-btn pink">
+        <mat-icon>bar_chart</mat-icon> iAnalytics
+      </button>
+      <button mat-button class="nav-btn green">
+        <mat-icon>support_agent</mat-icon> Support Center
+      </button>
+      <button mat-button class="nav-btn teal">
+        <mat-icon>verified_user</mat-icon> My Access
+      </button>
+    </div>
+  
+    <!-- User Info + Actions -->
+    <div fxLayout="row" fxLayoutAlign="end center" class="user-section">
+      <span class="username">Khan, Ehsan Ahmad</span>
+      <button mat-icon-button><mat-icon>logout</mat-icon></button>
+    </div>
   </mat-toolbar>
   <mat-sidenav-container>
     <mat-sidenav #sidenav opened mode="side" [style.width]="'200px'">
