@@ -1,0 +1,93 @@
+
+  .dashboard-container {
+    padding: 1.5rem;
+    background-color: #f9fafb;
+  }
+  .pb-4 { padding-bottom: 1rem; }
+  .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .mb-6 { margin-bottom: 1.5rem; }
+  .mb-4 { margin-bottom: 1rem; }
+  .mt-4 { margin-top: 1rem; }
+  .mr-4 { margin-right: 1rem; }
+  .ml-2 { margin-left: 0.5rem; }
+  .whitespace-nowrap { white-space: nowrap; }
+  .card-content-height { height: 100%; } /* Replaces h-full */
+  .card-title-padding { padding: 0.5rem; } /* Replaces p-2 */
+
+  /* =======================================
+     2. Header and Text Styling
+     ======================================= */
+  .header-section {
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .header-title {
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: #111827;
+  }
+  .info-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+  }
+  .count-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4b5563;
+  }
+  /* Simple media query simulation for hidden sm:block */
+  @media (max-width: 640px) {
+    .hidden-sm-block {
+      display: none !important;
+    }
+  }
+
+  /* =======================================
+     3. Card Base Styling
+     ======================================= */
+  .card-base {
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease-in-out; 
+    overflow: hidden;
+  }
+  .card-base:hover {
+    transform: scale(1.01);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* 4. Card Content Styling */
+  .card-title-container {
+    height: 3rem; /* Fixed height to stabilize icon position */
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .card-title {
+    font-size: 1rem;
+    font-weight: 100;
+    line-height: 1.25;
+  }
+  .card-icon {
+    cursor: pointer;
+    font-size: 48px; 
+    width: 48px; 
+    height: 96px;
+  }
+  
+  /* 5. Color and State Styling */
+  .card-green-text {
+    color: #15803d; /* Green color for text */
+  }
+  .default-card {
+    border: 1px solid #e5e7eb;
+    background-color: white;
+  }
+  .active-card {
+    border: 2px solid #16a34a;
+    background-color: #f0fdf4;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  mat-icon {
+      color: #4ade80; /* Light green icon color for default state */
+  }

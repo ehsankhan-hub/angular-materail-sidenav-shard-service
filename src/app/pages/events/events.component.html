@@ -1,1 +1,71 @@
-<p>events works!</p>
+<div fxLayout="column" class="dashboard-container">
+      
+    <!-- Dashboard Header and Navigation -->
+    <div fxLayout="column" class="header-section pb-4 mb-6">
+      <h1 class="header-title mb-4">App Navigation</h1>
+      
+      <!-- Arrows and Info Text -->
+      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="8px" class="py-2">
+        
+        <!-- Info Text -->
+        <span class="info-text mr-4 hidden-sm-block">
+          D&WO Engineers, Requirement Reviewers, Superintendents, General Supervisors and Managers access.
+        </span>
+
+        <!-- Navigation Arrows -->
+        <button mat-icon-button color="primary" [disabled]="startIndex === 0" (click)="navigate(-1)" title="Previous App">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <button mat-icon-button color="primary" [disabled]="startIndex + cardsPerPage >= appCards.length" (click)="navigate(1)" title="Next App">
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+        
+        <!-- Card Count Display -->
+        <span class="count-text ml-2 whitespace-nowrap">
+          App {{ startIndex + 1 }} - {{ Math.min(startIndex + cardsPerPage, appCards.length) }} of {{ appCards.length }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Responsive Card Layout Container -->
+    <div fxLayout="row wrap" fxLayoutGap="20px" class="mt-4">
+      
+      <!-- Use *ngFor to iterate over visible cards (simulating horizontal navigation) -->
+      <mat-card 
+        *ngFor="let card of visibleCards; trackBy: trackByCardId"  
+        [ngClass]="{'active-card': card.isActive, 'default-card': !card.isActive}"
+        class="card-base cursor-pointer"
+        (click)="selectCard(card.id)" 
+        
+        fxFlex="calc(20% - 16px)"            
+        fxFlex.lt-md="calc(33.333% - 13.333px)" 
+        fxFlex.lt-sm="calc(50% - 10px)"        
+        style="height: 160px;"
+      >
+        <div fxLayout="column" class="card-content-height">
+          
+          <!-- Card Title: Fixed height to reserve space and prevent icon misalignment -->
+          <div class="card-title-container card-title-padding">
+            <span class="card-title card-green-text">
+              {{ card.title }}
+            </span>
+          </div>
+          
+          <!-- Icon: Uses fxFlex and fxLayoutAlign="center center" to take up remaining space and center the icon -->
+          <div 
+            fxFlex 
+            fxLayout="row" 
+            fxLayoutAlign="center center" 
+            class="card-icon-container"
+          >
+            <mat-icon [style.color]="card.color" class="card-icon">
+              {{ card.icon }}
+            </mat-icon>
+          </div>
+          
+        </div>
+      </mat-card>
+
+    </div>
+    
+  </div>

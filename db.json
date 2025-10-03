@@ -1,7 +1,7 @@
 {
   "items": [
     {
-      "rigCode": "NEW4",
+      "rigCode": "NEW43",
       "rigName": "New Rig",
       "location": "alld",
       "rigType": "off",
@@ -54,6 +54,28 @@
       "companyName": "New Company",
       "justificatio": "User Added",
       "id": 12
+    },
+    {
+      "rigCode": "NEW1",
+      "rigName": "New Rig",
+      "location": "Alld",
+      "rigType": "PVLTD",
+      "opPlanFlag": "N",
+      "companyCode": "003",
+      "companyName": "New Company",
+      "justificatio": "User Added",
+      "id": 13
+    },
+    {
+      "rigCode": "NEW",
+      "rigName": "New Rig",
+      "location": "Alld",
+      "rigType": "PVLTD",
+      "opPlanFlag": "N",
+      "companyCode": "003",
+      "companyName": "New Company",
+      "justificatio": "User Added",
+      "id": 14
     }
   ]
 }
