@@ -61,5 +61,51 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   justify-content: center;
 }
 
+/* Default (inactive) tab text = white */
+.mat-mdc-tab-link .mdc-tab__text-label {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+/* Active tab text color */
+.mat-mdc-tab-link.mdc-tab--active .mdc-tab__text-label {
+  color: var(--active-color) !important;
+  font-weight: 600;
+}
+
+/* Active tab underline (indicator) */
+.mat-mdc-tab-link.mdc-tab--active .mdc-tab-indicator__content--underline {
+  border-color: currentColor !important;
+}
+/* Fix navigation colors */
+.mat-tab-nav-bar,
+.mat-tab-link {
+  color: #fff !important;   /* force white text */
+  opacity: 1 !important;    /* prevent Angular Material dimming */
+  font-weight: 500;
+  margin: 0 6px;
+  display: flex;
+  align-items: center;
+}
+
+::ng-deep .mat-tab-link .mat-icon {
+  margin-right: 4px;
+}
+
+/* Active tab underline */
+::ng-deep .mat-tab-link.mat-tab-label-active {
+  border-bottom: 2px solid currentColor; /* underline with icon color */
+}
+
+/* Custom colors for each tab */
+::ng-deep  .blue.mat-tab-label-active { color: #1e88e5 !important; }
+::ng-deep .indigo.mat-tab-label-active { color: #3949ab !important; }
+::ng-deep .orange.mat-tab-label-active { color: #f57c00 !important; }
+::ng-deep .pink.mat-tab-label-active { color: #d81b60 !important; }
+::ng-deep .green.mat-tab-label-active { color: #43a047 !important; }
+::ng-deep .teal.mat-tab-label-active { color: #00897b !important; }
+
+
+
   
   

@@ -1,0 +1,59 @@
+{
+  "items": [
+    {
+      "rigCode": "NEW4",
+      "rigName": "New Rig",
+      "location": "alld",
+      "rigType": "off",
+      "opPlanFlag": "N",
+      "companyCode": "003",
+      "companyName": "old",
+      "justificatio": "User Added",
+      "id": 8
+    },
+    {
+      "rigCode": "NEW",
+      "rigName": "New Rig",
+      "location": "Alld",
+      "rigType": "PVLTD",
+      "opPlanFlag": "N",
+      "companyCode": "003",
+      "companyName": "od",
+      "justificatio": "updt",
+      "id": 9
+    },
+    {
+      "rigCode": "NEW",
+      "rigName": "New Rig",
+      "location": "Alld",
+      "rigType": "PVLTD",
+      "opPlanFlag": "N",
+      "companyCode": "003",
+      "companyName": "New Company",
+      "justificatio": "User Added",
+      "id": 10
+    },
+    {
+      "rigCode": "NEW",
+      "rigName": "New Rig",
+      "location": "Alld",
+      "rigType": "PVLTD",
+      "opPlanFlag": "N",
+      "companyCode": "003",
+      "companyName": "New Company",
+      "justificatio": "User Added",
+      "id": 11
+    },
+    {
+      "rigCode": "NEW",
+      "rigName": "New Rig",
+      "location": "Alld",
+      "rigType": "PVLTD",
+      "opPlanFlag": "Y",
+      "companyCode": "003",
+      "companyName": "New Company",
+      "justificatio": "User Added",
+      "id": 12
+    }
+  ]
+}

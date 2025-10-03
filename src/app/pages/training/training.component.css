@@ -1,0 +1,99 @@
+
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* Angular Material overrides for cleaner form field */
+.mat-form-field-wrapper {
+  padding-bottom: 0 !important;
+}
+.mat-form-field-appearance-outline .mat-form-field-outline-gap {
+  border-width: 1px !important; /* Make outline thinner */
+}
+.mat-form-field-appearance-outline .mat-form-field-flex {
+  padding: 0 8px !important; /* Adjust padding for input */
+}
+.mat-form-field-appearance-outline .mat-form-field-infix {
+  padding: 0.8em 0 0.8em 0 !important; /* Adjust padding for text */
+}
+
+/* Overall App Container */
+.ag-app-container {
+  height: 98vh; /* Adjust as needed */
+  padding: 10px;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.permission-text {
+  font-size: 0.8em;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* Top Toolbar Styling */
+.ag-top-toolbar {
+  margin-bottom: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee; /* Light separator */
+}
+
+/* Status Ribbon Styling */
+.status-ribbon {
+  margin-left: 20px;
+}
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  font-size: 0.8em;
+  color: #555;
+}
+.status-count {
+  font-weight: bold;
+  color: #000;
+}
+.status-item.has-changes {
+  background-color: #ffe0b2; /* Light orange for changes */
+  color: #e65100; /* Darker orange text */
+}
+.status-item.has-changes .status-count {
+  color: #e65100;
+}
+
+
+/* Search Field Styling */
+.search-field {
+  width: 250px; /* Adjust width as needed */
+  font-size: 0.9em;
+  margin-bottom: -1.25em; /* Compensate for default material form-field margin */
+}
+
+.row-count {
+  font-size: 0.9em;
+  color: #555;
+  margin: 0 10px;
+}
+
+/* AG Grid Container Styling */
+.ag-grid-container {
+  height: calc(100% - 120px); /* Adjust based on toolbar + permission text height */
+  width: 100%;
+}
+
+/* Style for rows marked as deleted */
+.ag-row-deleted {
+    text-decoration: line-through;
+    opacity: 0.6;
+    background-color: #ffebee !important; /* Light red background */
+}
+
+/* Style for new rows */
+.ag-row-inserted {
+    background-color: #e8f5e9 !important; /* Light green background */
+}
+
+/* Style for updated rows */
+.ag-row-updated {
+    background-color: #fffde7 !important; /* Light yellow background */
+}

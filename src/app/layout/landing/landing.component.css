@@ -23,14 +23,14 @@
     vertical-align: middle;
   } */
   
-
-   .header-toolbar {
-    background: #1f1f1f; 
+  .header-toolbar {
+    background: #1f1f1f;
     color: #fff;
     height: 56px;
     padding: 0 12px;
   }
   
+  /* Logo */
   .logo-section {
     .logo {
       width: 32px;
@@ -41,6 +41,7 @@
       font-weight: bold;
       font-size: 18px;
       margin-right: 8px;
+      color: #fff;
     }
     .app-version {
       font-size: 12px;
@@ -48,50 +49,45 @@
     }
   }
   
-  .nav-section {
-    .nav-btn {
-      color: #fff;
-      font-weight: 500;
-      margin: 0 4px;
   
+  /* Right Section */
+  .right-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  
+    .search-box {
+      width: 200px;
+      margin-right: 8px;
+  
+      input {
+        color: #fff;
+      }
       mat-icon {
-        margin-right: 4px;
+        color: #ccc;
       }
     }
   
-    /* Colors for each tab */
-    .blue mat-icon,
-    .blue {
-      color: #1e88e5;
-    }
-    .indigo mat-icon,
-    .indigo {
-      color: #3949ab;
-    }
-    .orange mat-icon,
-    .orange {
-      color: #f57c00;
-    }
-    .pink mat-icon,
-    .pink {
-      color: #d81b60;
-    }
-    .green mat-icon,
-    .green {
-      color: #43a047;
-    }
-    .teal mat-icon,
-    .teal {
-      color: #00897b;
-    }
-  }
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      margin: 0 8px;
   
-  .user-section {
-    .username {
-      margin-right: 8px;
-      font-size: 14px;
-      color: #ddd;
+      .username {
+        font-size: 14px;
+        font-weight: 500;
+        color: #fff;
+      }
+      .role {
+        font-size: 12px;
+        color: #bbb;
+      }
     }
+  
+    .logout-btn {
+      color: #fff;
+    }
+  
     button {
       color: #fff;
     }

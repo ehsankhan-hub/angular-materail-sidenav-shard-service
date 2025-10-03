@@ -8,17 +8,29 @@ import { MatButtonModule } from '@angular/material/button';
 import { FlexLayoutModule } from '@angular/flex-layout';  
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatMenuModule } from '@angular/material/menu';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-landing',
     standalone: true, 
     imports: [RouterOutlet, MatFormFieldModule,
       MatToolbarModule, MatSidenavModule, MatIconModule, 
-      MatListModule, MatButtonModule, RouterModule,FlexLayoutModule,MatTabsModule],
+      MatListModule,CommonModule, MatButtonModule, RouterModule,FlexLayoutModule,MatTabsModule,MatMenuModule],
     templateUrl: './landing.component.html',
     styleUrl: './landing.component.css'
 })
 export class LandingComponent {
+  activeLink = 'iPlanning';
+
+  navLinks = [
+    { label: 'iPlanning', icon: 'event_note', colorClass: 'blue' },
+    { label: 'iEngineering', icon: 'build', colorClass: 'indigo' },
+    { label: 'iOperations', icon: 'assignment', colorClass: 'orange' },
+    { label: 'iAnalytics', icon: 'bar_chart', colorClass: 'pink' },
+    { label: 'Support Center', icon: 'support_agent', colorClass: 'green' },
+    { label: 'My Access', icon: 'verified_user', colorClass: 'teal' }
+  ];
 
   selectedCard = signal<any | null>(null);
   isLoading = signal(false);
