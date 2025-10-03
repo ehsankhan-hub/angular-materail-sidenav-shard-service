@@ -13,33 +13,44 @@
         </span>
 
         <!-- Navigation Arrows -->
-        <button mat-icon-button color="primary" [disabled]="startIndex === 0" (click)="navigate(-1)" title="Previous App">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <button mat-icon-button color="primary" [disabled]="startIndex + cardsPerPage >= appCards.length" (click)="navigate(1)" title="Next App">
-          <mat-icon>arrow_forward</mat-icon>
-        </button>
-        
-        <!-- Card Count Display -->
-        <span class="count-text ml-2 whitespace-nowrap">
-          App {{ startIndex + 1 }} - {{ Math.min(startIndex + cardsPerPage, appCards.length) }} of {{ appCards.length }}
-        </span>
+        <!-- Hide arrows if all cards are visible (e.g., on medium screen now) -->
+        <ng-container *ngIf="cardsPerPage < appCards.length">
+          <button mat-icon-button color="primary" [disabled]="startIndex === 0" (click)="navigate(-1)" title="Previous App">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <button mat-icon-button color="primary" [disabled]="startIndex + cardsPerPage >= appCards.length" (click)="navigate(1)" title="Next App">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+          
+          <!-- Card Count Display -->
+          <span class="count-text ml-2 whitespace-nowrap">
+            App {{ startIndex + 1 }} - {{ Math.min(startIndex + cardsPerPage, appCards.length) }} of {{ appCards.length }}
+          </span>
+        </ng-container>
+        <ng-container *ngIf="cardsPerPage >= appCards.length">
+          <span class="count-text ml-2 whitespace-nowrap">
+            Showing All {{ appCards.length }} Apps
+          </span>
+        </ng-container>
       </div>
     </div>
 
     <!-- Responsive Card Layout Container -->
+    <!-- fxLayoutWrap ensures items wrap to the next row when space runs out -->
     <div fxLayout="row wrap" fxLayoutGap="20px" class="mt-4">
       
-      <!-- Use *ngFor to iterate over visible cards (simulating horizontal navigation) -->
+      <!-- Use *ngFor to iterate over visible cards. 
+           If cardsPerPage < appCards.length, it shows a slice (navigation mode).
+           Otherwise, it shows all cards (full list mode). -->
       <mat-card 
-        *ngFor="let card of visibleCards; trackBy: trackByCardId"  
+        *ngFor="let card of cardsToShow; trackBy: trackByCardId"  
         [ngClass]="{'active-card': card.isActive, 'default-card': !card.isActive}"
-        class="card-base cursor-pointer"
+        class="card-base card-row-gap cursor-pointer"
         (click)="selectCard(card.id)" 
         
-        fxFlex="calc(20% - 16px)"            
-        fxFlex.lt-md="calc(33.333% - 13.333px)" 
-        fxFlex.lt-sm="calc(50% - 10px)"        
+        fxFlex="calc(20% - 16px)"             
+        fxFlex.lt-md="calc(33.333% - 13.333px)"
+        fxFlex.lt-sm="calc(50% - 10px)"       
         style="height: 160px;"
       >
         <div fxLayout="column" class="card-content-height">

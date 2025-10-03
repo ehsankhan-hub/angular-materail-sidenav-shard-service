@@ -1,5 +1,4 @@
-
-  .dashboard-container {
+.dashboard-container {
     padding: 1.5rem;
     background-color: #f9fafb;
   }
@@ -13,6 +12,17 @@
   .whitespace-nowrap { white-space: nowrap; }
   .card-content-height { height: 100%; } /* Replaces h-full */
   .card-title-padding { padding: 0.5rem; } /* Replaces p-2 */
+  
+  /* New class for row spacing: Adds margin to the bottom of each card */
+  .card-row-gap {
+      margin-bottom: 20px; /* Matches the fxLayoutGap for horizontal spacing */
+  }
+  
+  /* When FlexLayout wraps, the last row shouldn't have bottom margin, but applying 
+     a consistent bottom margin on the cards is the simplest way to get row spacing. 
+     The main container provides top/bottom padding to handle the overflow margin. 
+     We remove the extra margin on the last row only if we know how many cards are total
+     and they are all being displayed (full list mode). */
 
   /* =======================================
      2. Header and Text Styling
@@ -64,6 +74,7 @@
     justify-content: flex-start;
   }
   .card-title {
+    
     font-size: 1rem;
     font-weight: 100;
     line-height: 1.25;
