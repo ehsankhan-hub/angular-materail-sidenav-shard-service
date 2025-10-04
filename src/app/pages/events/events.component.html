@@ -45,7 +45,7 @@
       <mat-card 
         *ngFor="let card of cardsToShow; trackBy: trackByCardId"  
         [ngClass]="{'active-card': card.isActive, 'default-card': !card.isActive}"
-        class="card-base card-row-gap cursor-pointer"
+       
         (click)="selectCard(card.id)" 
         
         fxFlex="calc(20% - 16px)"             
