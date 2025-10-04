@@ -76,6 +76,17 @@
       "companyName": "New Company",
       "justificatio": "User Added",
       "id": 14
+    },
+    {
+      "rigCode": "NEW",
+      "rigName": "New Rig",
+      "location": "Alld",
+      "rigType": "PVLTD",
+      "opPlanFlag": "N",
+      "companyCode": "003",
+      "companyName": "New Company",
+      "justificatio": "User Added",
+      "id": 15
     }
   ]
 }

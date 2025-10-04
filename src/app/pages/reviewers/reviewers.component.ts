@@ -99,7 +99,7 @@ export class ReviewersComponent implements OnInit {
         const eDiv = document.createElement('div');
         eDiv.className = 'ag-grid-cell-actions';
         eDiv.innerHTML = `<button class="remove-btn" mat-icon-button color="warn" style="height: 24px; width: 24px; line-height: 24px;" matTooltip="Remove">
-                            <mat-icon style="font-size: 18px; height: 18px; width: 18px;">delete_forever</mat-icon>
+        <mat-icon style="font-size: 18px; height: 18px; width: 18px;">delete</mat-icon>
                           </button>`;
         const button = eDiv.querySelector('.remove-btn');
         if (button) {

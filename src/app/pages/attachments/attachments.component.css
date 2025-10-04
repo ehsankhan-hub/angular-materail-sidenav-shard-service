@@ -1,0 +1,139 @@
+.attachments-container {
+    padding: 10px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  /* Header/Toolbar Styling */
+  .header-toolbar {
+    background-color: transparent; /* Makes the toolbar just a title bar */
+    color: #333;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+  
+  .toolbar-title {
+    font-size: 1.1em;
+    font-weight: 500;
+    border-bottom: 2px solid #ccc; /* Subtle separator under the title */
+    padding-bottom: 5px;
+  }
+  
+  .attachments-card {
+    padding: 16px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    min-height: 500px;
+  }
+  
+  /* Action Bar Styling */
+  .action-bar {
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee; /* Separator between action bar and table */
+  }
+  
+  /* Green Button Styling (for Refresh and View/Edit) */
+  .green-button {
+    background-color: #4CAF50 !important; /* Green background */
+    color: white !important;
+    border-radius: 4px;
+  }
+  /* Ensure the icon within the green button is white */
+  .green-button .mat-icon {
+      color: white !important; 
+  }
+  
+  /* Search Input Styling */
+  .search-input {
+    width: 200px;
+    font-size: 0.9em;
+  }
+  
+  .count-display {
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #555;
+      background-color: #f7f7f7;
+  }
+  
+  /* AG Grid Styling */
+  .ag-grid-wrapper {
+    position: relative;
+  }
+  
+  .attachment-grid {
+    --ag-header-background-color: #f5f5f5; /* Light header background */
+    --ag-grid-size: 4px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  /* Overlay Styling */
+  .no-rows-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #777;
+    font-size: 1.2em;
+    font-weight: bold;
+    z-index: 5;
+    pointer-events: none;
+  }
+  
+  /* Action Cell Styling (for Download/Delete) */
+  .ag-grid-action-wrapper {
+      height: 100%;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+  }
+  
+  .ag-grid-action-wrapper .mat-icon-button {
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+  }
+  
+  /* Ensure the Material Icons class is targeted for correct rendering */
+  .material-icons {
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;  /* Default size */
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* attachments.component.css */
+
+/* This targets the header cell text content within the alpine theme */
+.attachment-grid .ag-header-cell-text {
+  /* Aligns the text content to the left */
+  text-align: left;
+}
+
+/* * Optional: You might also want to align the sort/filter icons to the left 
+* if they are floating right of the text.
+*/
+.attachment-grid .ag-header-cell-label {
+  /* Uses flexbox to align the label (text + icons) to the start (left) */
+  justify-content: flex-start;
+}
+
+  

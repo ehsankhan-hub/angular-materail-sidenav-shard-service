@@ -15,6 +15,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip'; // Added MatTooltipModule
 import { FormsModule } from '@angular/forms';
+import { AttachmentsComponent } from '../attachments/attachments.component';
+import { AttachmentComponent } from '../../attachment/attachment.component';
+import { FileProgComponent } from '../../file-prog/file-prog.component';
 
 // FIX: Define an extended type for internal state tracking to resolve TypeScript error.
 export type GridRowData = RowData & {
@@ -36,7 +39,9 @@ export type GridRowData = RowData & {
     MatSelectModule, 
     MatIconModule,
     FormsModule,
-    MatTooltipModule // Include Tooltip Module
+    MatTooltipModule ,
+    AttachmentsComponent,
+    FileProgComponent,
   ],
   templateUrl: './training.component.html',
   styleUrls: ['./training.component.css']

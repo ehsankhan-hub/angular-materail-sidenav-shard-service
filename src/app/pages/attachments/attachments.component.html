@@ -1,0 +1,64 @@
+<div class="attachments-container" fxLayout="column" fxLayoutGap="10px">
+
+  <input 
+    type="file" 
+    #fileInput 
+    (change)="onFileSelected($event)" 
+    style="display: none;" 
+    [accept]="ALLOWED_TYPES.join(',')"
+  >
+
+  <mat-toolbar class="header-toolbar" fxLayout="row" fxLayoutAlign="center center">
+    <span class="toolbar-title">Change Request Attachments</span>
+  </mat-toolbar>
+
+  <mat-card class="attachments-card" fxLayout="column">
+    
+    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px" class="action-bar">
+      
+      <button mat-flat-button color="primary" (click)="triggerFileInput()" fxLayout="row" fxLayoutAlign="center center">
+        <mat-icon>add</mat-icon> Attach Document
+      </button>
+
+      <span fxFlex></span> 
+
+      <mat-form-field appearance="outline" class="search-input">
+        <input matInput 
+               [formControl]="searchCtrl" 
+               (keyup.enter)="applySearch()" 
+               placeholder="search and click enter">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+      
+      <div class="count-display">{{ rowData.length }}/{{ rowData.length }}</div>
+
+      <button mat-icon-button color="primary" (click)="refreshData()" matTooltip="Refresh Data" class="green-button">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-icon-button color="primary" (click)="viewDetails()" matTooltip="View Details" class="green-button">
+        <mat-icon>visibility</mat-icon>
+      </button>
+
+    </div>
+
+    <div class="ag-grid-wrapper" fxFlex>
+        <ag-grid-angular
+          #agGrid
+          style="width: 100%; height: 350px;" 
+          class="ag-theme-alpine attachment-grid"
+          [rowData]="rowData"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          (gridReady)="onGridReady($event)"
+          [suppressRowClickSelection]="true"
+          [rowSelection]="'multiple'"
+          [context]="{componentParent: this}"
+        >
+        </ag-grid-angular>
+
+        <div *ngIf="rowData.length === 0" class="no-rows-overlay">
+            No Rows To Show
+        </div>
+    </div>
+  </mat-card>
+</div>
