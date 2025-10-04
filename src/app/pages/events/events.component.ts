@@ -5,6 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 // Import FlexLayoutModule for fxLayout and fxFlex directives
 import { FlexLayoutModule } from '@angular/flex-layout'; 
 import { CommonModule } from '@angular/common';
+import { routes } from '../../app.routes';
+import { Router } from '@angular/router';
 // Define a simple structure for the card data
 interface AppCard {
     id: number;
@@ -40,11 +42,14 @@ export class EventsComponent {
 
  startIndex: number = 0;
  cardsPerPage: number = 5; 
+  
 
  // FIX: Expose the Math object to the template
  public get Math() {
    return Math;
  }
+
+ constructor(private router: Router) {}
 
  ngOnInit(): void {
    // Calculate initial cardsPerPage on load
@@ -134,5 +139,7 @@ export class EventsComponent {
      ...card,
      isActive: card.id === cardId,
    }));
+
+  this.router.navigate(['reviewers']);
  }
 }

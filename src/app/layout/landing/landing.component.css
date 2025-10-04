@@ -4,6 +4,13 @@
 .mat-sidenav-content{
     padding: 20px;
 }
+
+.mat-toolbar .mat-mdc-button-base.mat-mdc-button-base.mat-unthemed {
+  color: white;
+}
+.mat-mdc-button>.mat-icon, .mat-mdc-unelevated-button>.mat-icon, .mat-mdc-raised-button>.mat-icon, .mat-mdc-outlined-button>.mat-icon {
+  color: gray;
+}
 /* .menu-item {
     display: flex;
     align-items: center;

@@ -1,0 +1,110 @@
+/* General container styling */
+.reviewers-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Card styling */
+mat-card {
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.note-card {
+  background-color: #fff3e0;
+  color: #fb8c00;
+  border-left: 5px solid #ff9800;
+}
+
+.search-card mat-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.ag-grid-card mat-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ag-grid-card mat-card-subtitle {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.ag-grid-card .ag-grid-content {
+  position: relative;
+  min-height: 200px;
+}
+
+/* AG Grid specific styling */
+.ag-theme-alpine {
+  --ag-border-color: #e0e0e0;
+  --ag-header-background-color: #f5f5f5;
+  --ag-odd-row-background-color: #fdfdfd;
+  --ag-row-hover-color: #f0f0f0;
+  border: 1px solid var(--ag-border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* --- Overlays (Loading & No Data) --- */
+.loading-overlay,
+.no-rows-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #777;
+  font-size: 1.2em;
+  font-weight: bold;
+  z-index: 10;
+}
+.loading-overlay p {
+    margin-top: 10px;
+    font-size: 0.8em;
+    font-weight: normal;
+}
+/* --------------------------------- */
+
+
+/* Multi-select chips styling */
+.selected-reviewers-chips mat-chip-listbox {
+  margin-top: 10px;
+}
+
+.selected-reviewers-chips mat-chip {
+  background-color: #e0f2f7 !important;
+  color: #01579b !important;
+}
+
+.selected-reviewers-chips mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  margin-left: 5px;
+  color: #01579b;
+}
+
+.ag-grid-cell-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+@media (max-width: 959px) {
+  .reviewers-container {
+    padding: 10px;
+  }
+}

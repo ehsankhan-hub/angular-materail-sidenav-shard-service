@@ -9,6 +9,7 @@ import { LoginComponent } from './login/login/login.component';
 import { RecentBooksComponent } from './recent-books/recent-books.component';
 import { AllBooksComponent } from './all-books/all-books.component';
 import { RegistrationComponent } from './pages/registration/registration.component';
+import { ReviewersComponent } from './pages/reviewers/reviewers.component';
 
 export const routes: Routes = [
   {
@@ -19,6 +20,10 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
+  },
+  {
+    path: 'reviewers',
+    component: ReviewersComponent,
   },
 
   {

@@ -1,0 +1,131 @@
+<div class="reviewers-container" fxLayout="column" fxLayoutGap="20px">
+
+  <mat-card class="note-card">
+    <p class="mat-body-1">
+      Note: Assigning reviewers will put the request in a 'locked' state, ensuring that no further changes can be made.
+    </p>
+  </mat-card>
+
+  <div fxLayout="row" fxLayout.lt-md="column" fxLayoutGap="20px" fxFlex>
+
+    <div fxFlex="70" fxLayout="column" fxLayoutGap="20px">
+
+      <mat-card class="search-card">
+        <mat-card-header>
+          <mat-card-title>Search for Organization</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          
+          <mat-form-field appearance="outline" fxFlex>
+            <mat-label>Search Organization</mat-label>
+            <input
+              type="text"
+              placeholder="e.g., Organization Alpha (OA)"
+              aria-label="Search Organization"
+              matInput
+              [formControl]="organizationSearchCtrl"
+              [matAutocomplete]="auto"
+            >
+            <mat-autocomplete
+              #auto="matAutocomplete"
+              (optionSelected)="onOrganizationSelected($event)"
+              [displayWith]="displayOrganization"
+            >
+              <mat-option *ngFor="let org of filteredOrganizations | async" [value]="org">
+                {{ org.name }} ({{ org.code }})
+              </mat-option>
+              <mat-option *ngIf="(filteredOrganizations | async)?.length === 0 && organizationSearchCtrl.value && organizationSearchCtrl.value !== ''" [disabled]="true">
+                No organizations found matching "{{ organizationSearchCtrl.value }}"
+              </mat-option>
+            </mat-autocomplete>
+            <button mat-icon-button matSuffix (click)="onGeneralSearch()" matTooltip="Perform a general search">
+              <mat-icon>search</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <div class="selected-reviewers-chips" *ngIf="selectedOrganizations.length > 0">
+            <mat-chip-listbox aria-label="Selected organizations">
+              <mat-chip *ngFor="let org of selectedOrganizations" (removed)="removeSelectedOrganization(org)">
+                {{ org.name }} ({{ org.code }})
+                <mat-icon matChipRemove>cancel</mat-icon>
+              </mat-chip>
+            </mat-chip-listbox>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="ag-grid-card">
+        <mat-card-header>
+          <mat-card-title>List of Employees/Reviewers</mat-card-title>
+          <mat-card-subtitle>
+            <mat-checkbox>Default Rule</mat-checkbox>
+            <mat-icon matTooltip="Information about default rule" class="info-icon">info</mat-icon>
+          </mat-card-subtitle>
+          <span fxFlex></span> 
+          <button mat-icon-button color="primary" matTooltip="Add Employee (e.g., from a dialog)">
+            <mat-icon>add_circle</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" matTooltip="Remove Selected Employee(s)">
+            <mat-icon>remove_circle</mat-icon>
+          </button>
+        </mat-card-header>
+        
+        <mat-card-content class="ag-grid-content">
+          <ag-grid-angular
+            #agGrid
+            style="width: 100%; height: 300px;"
+            class="ag-theme-alpine"
+            [rowData]="rowData"
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef"
+            (gridReady)="onGridReady($event)"
+            (rowClicked)="onRowClicked($event)"
+            [suppressRowClickSelection]="true"
+            [rowSelection]="'multiple'"
+          >
+          </ag-grid-angular>
+          
+          <div *ngIf="loadingEmployees" class="loading-overlay">
+             <mat-spinner diameter="40"></mat-spinner>
+             <p>Loading Employees...</p>
+          </div>
+
+          <div *ngIf="!loadingEmployees && rowData.length === 0" class="no-rows-overlay">
+            No Employees Added. Select an Organization above.
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+    <div fxFlex="30" fxLayout="column">
+      <mat-card class="remarks-card" fxFlex>
+        <mat-card-header>
+          <mat-card-title>
+            <span *ngIf="selectedEmployee">Remarks for {{ selectedEmployee.fullName }}</span>
+            <span *ngIf="!selectedEmployee">Select an employee to view their remarks</span>
+          </mat-card-title>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div *ngIf="selectedEmployee">
+            <!-- <p><strong>Network ID:</strong> {{ selectedEmployee.networkId }}</p>
+            <p><strong>Job Title:</strong> {{ selectedEmployee.jobTitle }}</p> -->
+            <mat-form-field appearance="fill" fxFlex style="width: 100%;">
+              <mat-label>Remarks</mat-label>
+              <textarea matInput rows="5" [(ngModel)]="selectedEmployee.remarks" placeholder="Enter specific remarks here..."></textarea>
+            </mat-form-field>
+          </div>
+
+          <p *ngIf="!selectedEmployee" class="mat-body-2">
+            Click on any employee row in the table to display their details and existing remarks here.
+          </p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+
+
+
+  </div>
+</div>
