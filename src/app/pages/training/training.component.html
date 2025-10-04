@@ -35,7 +35,7 @@
       <div fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="5px">
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>search and click enter</mat-label>
-          <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearchInput()">
+          <input matInput [(ngModel)]="searchText"  (input)="onSearchInput()">
           <button mat-icon-button matSuffix (click)="onSearchInput()" matTooltip="Search">
             <mat-icon>search</mat-icon>
           </button>
