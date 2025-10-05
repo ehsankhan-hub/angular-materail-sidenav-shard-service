@@ -135,8 +135,9 @@ export class ReviewersComponent implements OnInit {
     const currentSelectedCodes = new Set(this.selectedOrganizations.map(o => o.code));
 
     return this.allOrganizations.filter(org =>
-      !currentSelectedCodes.has(org.code) && // Don't show already selected organizations
-      (org.name.toLowerCase().includes(filterValue) || org.code.toLowerCase().includes(filterValue))
+      !currentSelectedCodes.has(org.code) 
+      //&& // Don't show already selected organizations
+     // (org.name.toLowerCase().includes(filterValue) || org.code.includes(filterValue))
     );
   }
 
@@ -190,7 +191,7 @@ export class ReviewersComponent implements OnInit {
     this.selectedOrganizations = this.selectedOrganizations.filter(o => o.code !== organization.code);
     
     // 2. Remove all employees belonging to this organization from rowData
-    this.rowData = this.rowData.filter(emp => emp.orgId !== organization.id);
+    this.rowData = this.rowData.filter(emp => emp.code !== organization.id);
     
     if (this.gridApi) {
         this.gridApi.setRowData(this.rowData);
@@ -212,10 +213,10 @@ removeEmployeeFromGrid(employeeToRemove: Employee): void {
   let organizationRemoved = false; 
 
   // Check if we removed the last employee of an organization, and remove the organization chip if so
-  const orgEmployees = this.rowData.filter(emp => emp.orgId === employeeToRemove.orgId);
+  const orgEmployees = this.rowData.filter(emp => emp.code === employeeToRemove.code);
   if (orgEmployees.length === 0) {
       // Removed the last employee of this organization, so remove the organization chip as well
-      this.selectedOrganizations = this.selectedOrganizations.filter(o => o.id !== employeeToRemove.orgId);
+      this.selectedOrganizations = this.selectedOrganizations.filter(o => o.id !== employeeToRemove.code);
       organizationRemoved = true;
   }
 

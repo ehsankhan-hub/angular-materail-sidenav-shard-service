@@ -88,5 +88,21 @@
       "justificatio": "User Added",
       "id": 15
     }
-  ]
-}
+  ],
+
+      "organizations": [
+        { "code": "ORG001", "name": "Sales Division" },
+        { "code": "ORG002", "name": "Engineering Corp" },
+        { "code": "ORG003", "name": "Marketing Solutions" },
+        { "code": "ORG004", "name": "Research & Dev" }
+      ],
+      "employees": [
+        { "code": "1110023", "networkId": "30002070", "fullName": "Piet Erang Apple", "jobTitle": "Engineer", "remarks": "Success", "orgCode": "ORG001" },
+        { "code": "1110024", "networkId": "30002071", "fullName": "Jane Doe", "jobTitle": "Manager", "remarks": "Active", "orgCode": "ORG001" },
+        { "code": "2220050", "networkId": "40001001", "fullName": "John Smith", "jobTitle": "Developer", "remarks": "Success", "orgCode": "ORG002" },
+        { "code": "2220051", "networkId": "40001002", "fullName": "Alice Johnson", "jobTitle": "Analyst", "remarks": "Active", "orgCode": "ORG002" },
+        { "code": "3330052", "networkId": "50001003", "fullName": "Bob Tester", "jobTitle": "QA", "remarks": "On Leave", "orgCode": "ORG003" }
+      ]
+    }
+
+  

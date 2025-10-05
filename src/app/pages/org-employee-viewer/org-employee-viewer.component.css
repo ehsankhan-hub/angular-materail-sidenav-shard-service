@@ -1,0 +1,22 @@
+.container {
+    padding: 20px;
+
+    height: calc(100vh - 80px); 
+}
+
+.ag-grid-card {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allows the card to take up remaining vertical space */
+
+    mat-card-content {
+        flex-grow: 1; /* Allows content area to take up card space */
+        padding-top: 10px;
+    }
+}
+
+
+.ag-theme-alpine {
+    height: 100%; 
+    width: 100%;
+}

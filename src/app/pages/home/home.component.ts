@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { from } from 'rxjs';
+import { OrgEmployeeViewerComponent } from '../org-employee-viewer/org-employee-viewer.component';
 
 @Component({
     selector: 'app-home',
@@ -25,7 +26,8 @@ import { from } from 'rxjs';
         MatRadioModule,
         MatSelectModule,
         ReactiveFormsModule,
-        MatInputModule
+        MatInputModule,
+        OrgEmployeeViewerComponent
         
       ],
     templateUrl: './home.component.html',
