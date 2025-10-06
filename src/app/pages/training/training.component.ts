@@ -18,6 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { AttachmentsComponent } from '../attachments/attachments.component';
 import { AttachmentComponent } from '../../attachment/attachment.component';
 import { FileProgComponent } from '../../file-prog/file-prog.component';
+import { FileUploadComponent } from '../../file-upload/file-upload.component';
 
 // FIX: Define an extended type for internal state tracking to resolve TypeScript error.
 export type GridRowData = RowData & {
@@ -42,6 +43,7 @@ export type GridRowData = RowData & {
     MatTooltipModule ,
     AttachmentsComponent,
     FileProgComponent,
+    FileUploadComponent
   ],
   templateUrl: './training.component.html',
   styleUrls: ['./training.component.css']

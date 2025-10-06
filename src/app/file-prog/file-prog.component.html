@@ -1,56 +1,28 @@
-<div class="attachments-container" fxLayout="column" fxLayoutGap="15px">
+<p>file-prog works!</p>
+<div class="attachments-container" fxLayout="column" fxLayoutGap="10px">
 
-  <!-- Hidden File Input Element -->
   <input 
     type="file" 
     #fileInput 
     (change)="onFileSelected($event)" 
     style="display: none;" 
     [accept]="ALLOWED_TYPES.join(',')"
-    multiple 
   >
 
-  <!-- Header and Title (Left-aligned) -->
-  <mat-toolbar class="header-toolbar" fxLayout="row" fxLayoutAlign="start center"> 
+  <mat-toolbar class="header-toolbar" fxLayout="row" fxLayoutAlign="center center">
     <span class="toolbar-title">Change Request Attachments</span>
   </mat-toolbar>
 
-  <!-- UPLOAD PROGRESS CARD (Only visible when files are uploading) -->
-  <mat-card *ngIf="uploadingFiles.length > 0" class="progress-card">
-    <h2 class="upload-title">Upload Progress ({{ uploadingFiles.length }} file{{ uploadingFiles.length === 1 ? '' : 's' }})</h2>
-    
-    <!-- Loop through each file being uploaded -->
-    <div *ngFor="let item of uploadingFiles" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" class="progress-item">
-      
-      <!-- File Name -->
-      <span fxFlex="20%" class="file-name">{{ item.fileName }}</span>
-      
-      <!-- Progress Bar (Style dynamically based on item.style: green, blue, or yellow) -->
-      <mat-progress-bar 
-        fxFlex 
-        [value]="item.progress" 
-        mode="determinate" 
-        [ngClass]="item.style === 'green' ? 'progress-green' : item.style === 'blue' ? 'progress-blue' : 'progress-yellow'">
-      </mat-progress-bar>
-      
-      <!-- Status Text -->
-      <span fxFlex="15%" class="progress-status" [ngClass]="item.status === 'complete' ? 'text-success' : 'text-primary'">
-        {{ item.progress | number:'1.0-0' }}% {{ item.status === 'complete' ? 'Complete (Success)' : 'Uploading' }}
-      </span>
-    </div>
-  </mat-card>
-
-  <!-- Content Card containing actions and the table -->
   <mat-card class="attachments-card" fxLayout="column">
     
-    <!-- Action/Search Bar -->
-    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px" class="action-bar-top">
+    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px" class="action-bar">
       
-      <div class="count-display">Attached: {{ rowData.length }} file(s)</div>
+      <button mat-flat-button color="primary" (click)="triggerFileInput()" fxLayout="row" fxLayoutAlign="center center">
+        <mat-icon>add</mat-icon> Attach Document
+      </button>
 
       <span fxFlex></span> 
 
-      <!-- Search Field -->
       <mat-form-field appearance="outline" class="search-input">
         <input matInput 
                [formControl]="searchCtrl" 
@@ -58,37 +30,18 @@
                placeholder="search and click enter">
         <mat-icon matPrefix>search</mat-icon>
       </mat-form-field>
+      
+      <div class="count-display">{{ rowData.length }}/{{ rowData.length }}</div>
 
-      <!-- Action Icons (Green Buttons) -->
       <button mat-icon-button color="primary" (click)="refreshData()" matTooltip="Refresh Data" class="green-button">
         <mat-icon>refresh</mat-icon>
       </button>
       <button mat-icon-button color="primary" (click)="viewDetails()" matTooltip="View Details" class="green-button">
         <mat-icon>visibility</mat-icon>
       </button>
+
     </div>
 
-    <mat-divider></mat-divider>
-
-    <!-- DRAG-AND-DROP DROPZONE AREA -->
-    <div 
-      class="dropzone" 
-      [class.drag-over]="isDragging"
-      (click)="triggerFileInput()"
-      (dragover)="onDragOver($event)"
-      (dragleave)="onDragLeave($event)"
-      (drop)="onDrop($event)"
-      fxLayout="column" fxLayoutAlign="center center"
-    >
-        <mat-icon class="dropzone-icon">cloud_upload</mat-icon>
-        <p class="mat-body-1" *ngIf="!isDragging">Drag & drop files here, or click to browse</p>
-        <p class="mat-body-1" *ngIf="isDragging">Drop files to attach</p>
-        <button mat-stroked-button color="primary" class="browse-button">
-            Browse Files
-        </button>
-    </div>
-
-    <!-- AG Grid Table (Files list) -->
     <div class="ag-grid-wrapper" fxFlex>
         <ag-grid-angular
           #agGrid
@@ -103,8 +56,9 @@
           [context]="{componentParent: this}"
         >
         </ag-grid-angular>
-        <div *ngIf="rowData.length === 0" class="no-rows-overlay-table">
-            No attached files. Use the dropzone above to add documents.
+
+        <div *ngIf="rowData.length === 0" class="no-rows-overlay">
+            No Rows To Show
         </div>
     </div>
   </mat-card>
