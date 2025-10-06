@@ -64,7 +64,7 @@ export class OrgEmployeeViewerComponent implements OnInit {
   isLoadingEmployees = signal(false);
 
   // Ag-Grid Definitions
-  mainColumnDefs: ColDef[] = this.createColumnDefs(false); 
+  mainColumnDefs: ColDef[] = this.createColumnDefsMain(false); 
   selectedColumnDefs: ColDef[] = this.createColumnDefs(true); 
   defaultColDef: ColDef = { sortable: true, filter: true, resizable: true };
   // Pass component instance to cell renderer for callback
@@ -206,6 +206,33 @@ updateMainGridData(allEmployees: Employee[]): void {
   // --- Ag-Grid Helpers ---
 
   /** Defines the columns for Ag-Grid. The 'isForSelectedGrid' flag sets the checkbox logic. */
+  createColumnDefsMain(isForSelectedGrid: boolean): ColDef[] {
+    const headerName = isForSelectedGrid ? 'Remove' : 'Select';
+
+    return [
+      {
+        headerName: headerName,
+        field: 'isSelected', 
+        cellRenderer: CheckboxCellRendererComponent,
+        cellRendererParams: { 
+            initialChecked: isForSelectedGrid // Tells the renderer its context
+        },
+        width: 100,
+        pinned: 'left',
+        sortable: false,
+        filter: false,
+        suppressMovable: true,
+      },
+      // ... (other column definitions)
+      // { headerName: 'Org Code', field: 'orgCode', width: 100 },
+      { headerName: 'Network ID', field: 'networkId', width: 120 },
+      { headerName: 'Full Name', field: 'fullName', flex: 1 },
+      // { headerName: 'Job Title', field: 'jobTitle', width: 150 },
+      // { headerName: 'Remarks', field: 'remarks', width: 100 }
+    ];
+  }
+
+
   createColumnDefs(isForSelectedGrid: boolean): ColDef[] {
     const headerName = isForSelectedGrid ? 'Remove' : 'Select';
 
