@@ -356,6 +356,9 @@
 //     });
 //   }
 // }
+
+
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -366,6 +369,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-file-upload',
@@ -376,7 +380,8 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
     MatCardModule,
     MatSnackBarModule,
     FlexLayoutModule,
-    AgGridAngular
+    AgGridAngular,
+    HttpClientModule
   ],
   template: `
     <mat-card fxLayout="column" fxLayoutGap="10px" class="upload-container">
@@ -397,7 +402,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
       </div>
 
       <div fxLayout="row" fxLayoutAlign="end center">
-        <button mat-raised-button color="accent" [disabled]="!selectedCount" (click)="uploadSelected()">
+        <button mat-raised-button color="accent" [disabled]="!selectedCount" (click)="uploadSelectedSequential()">
           Submit ({{selectedCount}} Selected)
         </button>
       </div>
@@ -475,7 +480,7 @@ export class FileUploadComponent {
   selectedCount = 0;
   private gridApi!: GridApi;
 
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(private snackBar: MatSnackBar,private http: HttpClient) {}
 
   columnDefs: ColDef[] = [
     { headerName: '', checkboxSelection: true, headerCheckboxSelection: true, width: 50, pinned: 'left' },
@@ -543,6 +548,7 @@ export class FileUploadComponent {
 
   onFileSelected(event: any) {
     const files: FileList = event.target.files;
+    console.log(files);
     this.handleFiles(files);
     event.target.value = '';
   }
@@ -554,35 +560,59 @@ export class FileUploadComponent {
       documentType: file.type || 'Unknown',
       progress: 0
     }));
+    console.log(newFiles);
     this.rowData = [...this.rowData, ...newFiles];
+    if (this.gridApi) this.gridApi.setRowData(this.rowData);
   }
 
-  uploadSelected() {
+  /** Sequential upload for selected rows */
+  async uploadSelectedSequential() {
     const selectedRows = this.gridApi.getSelectedRows();
     if (!selectedRows.length) return;
-    selectedRows.forEach(row => this.simulateUpload(row));
+
+    for (const row of selectedRows) {
+      await this.simulateUpload(row);
+    }
   }
 
   /** Real-time simulated upload with live bar update */
-  simulateUpload(row: any) {
-    row.progress = 0;
-    const barEl = row._progressBarRef;
-    let progress = 0;
+  simulateUpload(row: any): Promise<void> {
+    return new Promise((resolve) => {
+      row.progress = 0;
+      const barEl = row._progressBarRef;
+      let progress = 0;
 
-    const interval = setInterval(() => {
-      progress += 5; // Increase per tick
-      row.progress = progress;
-      if (barEl) barEl.style.width = `${progress}%`;
+      const interval = setInterval(() => {
+        progress += 5; // Increase per tick
+        row.progress = progress;
+        if (barEl) barEl.style.width = `${progress}%`;
 
-      if (progress >= 100) {
-        clearInterval(interval);
-        this.snackBar.open(`✅ ${row.fileName} uploaded successfully`, 'Close', { duration: 2000 });
-        setTimeout(() => {
-          this.rowData = this.rowData.filter(r => r !== row);
-          this.gridApi.setRowData(this.rowData);
-          this.selectedCount = 0;
-        }, 1000);
-      }
-    }, 300); // 300ms * 20 = 6 seconds upload
+        if (progress >= 100) {
+          clearInterval(interval);
+          // Send file to backend
+          this.uploadToServer(row.file);
+          this.snackBar.open(`✅ ${row.fileName} uploaded successfully`, 'Close', { duration: 2000 });
+
+          // Optional: remove uploaded row after short delay
+          setTimeout(() => {
+            this.rowData = this.rowData.filter(r => r !== row);
+            this.gridApi.setRowData(this.rowData);
+            this.selectedCount = 0;
+          }, 1000);
+          resolve();
+        }
+      }, 300);
+    });
+  }
+
+  /** Upload a single file to server */
+  uploadToServer(file: File) {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    this.http.post('YOUR_BACKEND_UPLOAD_URL', formData).subscribe({
+      next: (res) => console.log(`${file.name} uploaded successfully`, res),
+      error: (err) => console.error(`Error uploading ${file.name}`, err)
+    });
   }
 }
