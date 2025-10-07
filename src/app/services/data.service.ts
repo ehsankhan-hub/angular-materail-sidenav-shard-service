@@ -37,4 +37,10 @@ export class DataService {
   getEmployeesByOrg(orgCode: string): Observable<Employee[]> {
     return this.http.get<Employee[]>(`${this.apiUrl}/employees?orgCode=${orgCode}`);
   }
+
+  
+  sendProcessedEmployees(data: Employee[]): Observable<any> {
+    return this.http.post('http://localhost:3000/processedEmployees', data);
+  }
+  
 }

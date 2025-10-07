@@ -1,4 +1,4 @@
-<div fxLayout="column" fxLayoutAlign="start stretch" class="container">
+<!-- <div fxLayout="column" fxLayoutAlign="start stretch" class="container">
   
   <mat-card fxFlex="none" class="mb-3">
     <mat-card-content>
@@ -57,27 +57,6 @@
       <mat-progress-spinner *ngIf="isLoadingEmployees()" mode="indeterminate" diameter="50"></mat-progress-spinner>
     </mat-card-content>
   </mat-card>
-  <!-- <mat-card fxFlex="50" class="ag-grid-card mb-3">
-    <mat-card-header>
-        <mat-card-title>Available Employees (Click 'Select' to move)</mat-card-title>
-    </mat-card-header>
-
-    <mat-card-content fxFlex="grow">
-      <div class="ag-theme-alpine" style="height: 100%; width: 100%;">
-        <ag-grid-angular
-          style="width: 100%; height: 100%;"
-          [rowData]="mainEmployeeData()"
-          [columnDefs]="mainColumnDefs"
-          [defaultColDef]="defaultColDef"
-          [animateRows]="true"
-          [context]="gridContext"
-          (gridReady)="onMainGridReady($event)"
-        >
-        </ag-grid-angular>
-      </div>
-      <mat-progress-spinner *ngIf="isLoadingEmployees()" mode="indeterminate" diameter="50"></mat-progress-spinner>
-    </mat-card-content>
-  </mat-card> -->
   
   <mat-card fxFlex="50" class="ag-grid-card">
     <mat-card-header>
@@ -99,17 +78,68 @@
    
     </mat-card-content>
     
-    <!-- <mat-card-actions>
-        <button 
-          mat-raised-button 
-          color="accent"
-          (click)="onExportSelected()" 
-          [disabled]="selectedEmployeeData().length === 0">
-            <mat-icon>file_download</mat-icon> 
-            Export All Selected ({{ selectedEmployeeData().length }})
-        </button>
-    </mat-card-actions> -->
+
 
   </mat-card>
 
+</div> --><mat-card>
+  <h3>Select Organization(s)</h3>
+
+  <mat-form-field class="full-width">
+    <mat-label>Search Organization</mat-label>
+    <input matInput [formControl]="searchInputControl" [matAutocomplete]="auto" />
+    <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onOrgSelected($event.option.value)">
+      <mat-option *ngFor="let org of filteredOrganizations$ | async" [value]="org.code">
+        {{ org.name }} ({{ org.code }})
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-chip-listbox>
+    <mat-chip *ngFor="let code of orgControl.value" (removed)="removeOrg(code)">
+      {{ code }}
+      <button matChipRemove>
+        <mat-icon>cancel</mat-icon>
+      </button>
+    </mat-chip>
+  </mat-chip-listbox>
+</mat-card>
+
+<div fxLayout="row" fxLayoutGap="16px" style="margin-top: 16px;">
+  <mat-card fxFlex="50%">
+    <h3>Main Employees</h3>
+    <ag-grid-angular
+      style="width: 100%; height: 400px;"
+      class="ag-theme-material"
+      [columnDefs]="mainColumnDefs"
+      [defaultColDef]="defaultColDef"
+      [rowData]="mainEmployeeData()"
+      rowSelection="multiple"
+      (gridReady)="onMainGridReady($event)"
+    ></ag-grid-angular>
+  </mat-card>
+
+  <mat-card fxFlex="50%">
+    <h3>Selected Employees</h3>
+    <ag-grid-angular
+      style="width: 100%; height: 400px;"
+      class="ag-theme-material"
+      [columnDefs]="selectedColumnDefs"
+      [defaultColDef]="defaultColDef"
+      [rowData]="selectedEmployeeData()"
+      rowSelection="multiple"
+      (gridReady)="onSelectedGridReady($event)"
+    ></ag-grid-angular>
+
+    <div fxLayout="row" fxLayoutAlign="end center" style="margin-top: 10px;">
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="!isProcessEnabled()"
+        (click)="onProcessSelected()"
+      >
+        Process Selected
+      </button>
+    </div>
+  </mat-card>
 </div>

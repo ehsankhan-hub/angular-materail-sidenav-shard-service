@@ -1,4 +1,4 @@
-.container {
+/* .container {
     padding: 20px;
 
     height: calc(100vh - 80px); 
@@ -7,10 +7,9 @@
 .ag-grid-card {
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Allows the card to take up remaining vertical space */
-
+    flex-grow: 1; 
     mat-card-content {
-        flex-grow: 1; /* Allows content area to take up card space */
+        flex-grow: 1; 
         padding-top: 10px;
     }
 }
@@ -19,4 +18,59 @@
 .ag-theme-alpine {
     height: 100%; 
     width: 100%;
-}
+} */
+
+/* ===============================
+   AG Grid + Angular Material Fixes
+   =============================== */
+
+/* Ensure AG Grid takes full height and uses border-box layout */
+:host {
+    display: block;
+    box-sizing: border-box;
+  }
+  
+  /* --- Fix for AG Grid checkboxes not visible --- */
+  .ag-theme-material .ag-checkbox-input-wrapper {
+    width: 18px !important;
+    height: 18px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .ag-theme-material .ag-checkbox-input {
+    appearance: auto !important;
+    -webkit-appearance: checkbox !important;
+    width: 16px;
+    height: 16px;
+    accent-color: #1976d2; /* material primary color */
+  }
+  
+  /* Optional: Improve checkbox alignment */
+  .ag-theme-material .ag-cell {
+    display: flex;
+    align-items: center;
+  }
+  
+  /* --- Optional aesthetics for the grids and layout --- */
+  mat-card {
+    padding: 16px;
+  }
+  
+  mat-chip-listbox {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  button[mat-raised-button] {
+    min-width: 160px;
+  }
+  
+  
