@@ -356,6 +356,7 @@ export class OrgEmployeeViewerComponent implements OnInit {
     {
       headerName: '',
       checkboxSelection: true,
+      headerCheckboxSelection: true,
       width: 50,
     },
     { headerName: 'Org Code', field: 'orgCode', width: 120 },
