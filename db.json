@@ -145,23 +145,8 @@
     }
   ],
   "approvers": [
-    
-      {
-        "chid": 123,
-        "networkId": "30002070",
-        "fullName": "Piet Erang Apple",
-        "jobTitle": "Engineer",
-        "remarks": "Success",
-        "orgCode": "333333333"
-      },
-      {
-        "chid": 123,
-        "networkId": "30002071",
-        "fullName": "Jane Doe",
-        "jobTitle": "Manager",
-        "remarks": "Active",
-        "orgCode": "333333333"
-      }
-    
+    [
+      
+    ]
   ]
 }
