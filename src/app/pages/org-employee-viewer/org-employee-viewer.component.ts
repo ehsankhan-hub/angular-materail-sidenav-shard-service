@@ -1,267 +1,177 @@
-// import { Component, OnInit, signal } from '@angular/core';
+
+
+
+// import { Component, OnInit, signal, computed } from '@angular/core';
 // import { CommonModule } from '@angular/common';
 // import { FormControl, ReactiveFormsModule } from '@angular/forms';
-// import { Observable, startWith, map, forkJoin } from 'rxjs';
+// import { Observable, forkJoin, map, startWith } from 'rxjs';
 
-// // Angular Material Imports
+// // Angular Material
 // import { MatCardModule } from '@angular/material/card';
 // import { MatFormFieldModule } from '@angular/material/form-field';
 // import { MatInputModule } from '@angular/material/input';
 // import { MatAutocompleteModule } from '@angular/material/autocomplete';
 // import { MatButtonModule } from '@angular/material/button';
 // import { MatIconModule } from '@angular/material/icon';
-// import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-// import { MatSelectModule } from '@angular/material/select'; 
-// import { MatChipsModule } from '@angular/material/chips'; // FIX: Imported for chip functionality
+// import { MatChipsModule } from '@angular/material/chips';
+// import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-// // Third-Party Library Imports
+// // Layout and AG Grid
 // import { FlexLayoutModule } from '@angular/flex-layout';
 // import { AgGridAngular } from 'ag-grid-angular';
 // import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
-// // Local Imports
-// import { Organization, Employee } from '../../services/data.service'; 
-// import { DataService } from '../../services/data.service'; 
-// import { CheckboxCellRendererComponent } from './checkbox-cell-renderer.component'; 
+// // Mock Services / Models
+// import { Organization, Employee, DataService } from '../../services/data.service';
 
 // @Component({
 //   selector: 'app-org-employee-viewer',
 //   standalone: true,
 //   imports: [
-//     CommonModule, 
+//     CommonModule,
 //     ReactiveFormsModule,
 //     FlexLayoutModule,
-//     MatCardModule, 
-//     MatFormFieldModule, 
-//     MatInputModule, 
-//     MatAutocompleteModule, 
-//     MatButtonModule, 
+//     MatCardModule,
+//     MatFormFieldModule,
+//     MatInputModule,
+//     MatAutocompleteModule,
+//     MatButtonModule,
 //     MatIconModule,
-//     MatProgressSpinnerModule,
-//     MatSelectModule, 
 //     MatChipsModule,
-//     AgGridAngular 
-    
+//     MatSnackBarModule,
+//     AgGridAngular,
 //   ],
 //   templateUrl: './org-employee-viewer.component.html',
-//   styleUrls: ['./org-employee-viewer.component.scss']
+//   styleUrls: ['./org-employee-viewer.component.scss'],
 // })
 // export class OrgEmployeeViewerComponent implements OnInit {
-
-//   // --- Multi-Select Autocomplete State ---
-//   // Stores array of selected organization codes
-//   orgControl = new FormControl<string[]>([]); 
+//   // --- Form Controls ---
+//   orgControl = new FormControl<string[]>([]);
 //   searchInputControl = new FormControl<string>('');
 //   allOrganizations: Organization[] = [];
 //   filteredOrganizations$!: Observable<Organization[]>;
-  
-//   // --- Grid State ---
-//   private mainGridApi!: GridApi;
-//   private selectedGridApi!: GridApi;
-//   //mainEmployeeData = signal<Employee[]>([]); 
-//   mainEmployeeData = signal<Employee[]>([]); 
-//   selectedEmployeeData = signal<Employee[]>([]); 
+
+//   // --- Signals ---
+//   mainEmployeeData = signal<Employee[]>([]);
+//   selectedEmployeeData = signal<Employee[]>([]);
 //   isLoadingEmployees = signal(false);
 
-//   // Ag-Grid Definitions
-//   mainColumnDefs: ColDef[] = this.createColumnDefsMain(false); 
-//   selectedColumnDefs: ColDef[] = this.createColumnDefs(true); 
-//   defaultColDef: ColDef = { sortable: true, filter: true, resizable: true };
-//   // Pass component instance to cell renderer for callback
-//   gridContext = { parentComponent: this }; 
+//   // --- AG Grid API ---
+//   private mainGridApi!: GridApi;
+//   private selectedGridApi!: GridApi;
 
-//   constructor(private dataService: DataService) { }
+//   // --- Computed ---
+//   isProcessEnabled = computed(() => this.selectedEmployeeData().length > 0);
+
+//   // --- Column Definitions ---
+//   mainColumnDefs: ColDef[] = [
+//     {
+//       headerName: '',
+//       checkboxSelection: true,
+//       headerCheckboxSelection: true,
+//       width: 50,
+//     },
+//     { headerName: 'Org Code', field: 'orgCode', width: 120 },
+//     { headerName: 'Network ID', field: 'networkId', width: 120 },
+//     { headerName: 'Full Name', field: 'fullName', flex: 1 },
+//     { headerName: 'Job Title', field: 'jobTitle', width: 150 },
+//   ];
+
+//   selectedColumnDefs: ColDef[] = [
+//     {
+//       headerName: '',
+//       checkboxSelection: true,
+//       headerCheckboxSelection: true,
+//       width: 50,
+//     },
+//     { headerName: 'Org Code', field: 'orgCode', width: 120 },
+//     { headerName: 'Network ID', field: 'networkId', width: 120 },
+//     { headerName: 'Full Name', field: 'fullName', flex: 1 },
+//     { headerName: 'Job Title', field: 'jobTitle', width: 150 },
+//   ];
+
+//   defaultColDef: ColDef = { sortable: true, filter: true, resizable: true };
+
+//   constructor(private dataService: DataService, private snackBar: MatSnackBar) {}
 
 //   ngOnInit(): void {
-//     // Load organizations once
-//     this.dataService.getOrganizations().subscribe(data => {
-//       this.allOrganizations = data;
-//     });
-
-//     // Setup Autocomplete Filtering
+//     this.dataService.getOrganizations().subscribe((data) => (this.allOrganizations = data));
 //     this.filteredOrganizations$ = this.searchInputControl.valueChanges.pipe(
 //       startWith(''),
-//       map(value => this._filter(value || ''))
+//       map((value) => this._filter(value || ''))
 //     );
+//    // this.getEmployeesByCr(123);
 //   }
 
-//   // --- Multi-Select Autocomplete Helpers ---
-
-//   /** Filters the organization list based on user input. */
 //   private _filter(value: string): Organization[] {
 //     const filterValue = value.toLowerCase();
 //     return this.allOrganizations.filter(
-//       org => org.name.toLowerCase().includes(filterValue) || org.code.toLowerCase().includes(filterValue)
+//       (org) =>
+//         org.name.toLowerCase().includes(filterValue) ||
+//         org.code.toLowerCase().includes(filterValue)
 //     );
 //   }
-  
-//   /** Selects the organization code when an item is clicked in the autocomplete list. */
+
 //   onOrgSelected(code: string): void {
 //     const currentCodes = this.orgControl.value || [];
 //     if (!currentCodes.includes(code)) {
 //       this.orgControl.setValue([...currentCodes, code]);
-//       this.loadEmployeesForSelectedOrgs(); // FIX: Explicitly trigger data load
+//       this.loadEmployeesForSelectedOrgs();
 //     }
-//     this.searchInputControl.setValue(''); 
+//     this.searchInputControl.setValue('');
 //   }
 
-//   /** Removes an organization code when the chip close button is clicked. */
 //   removeOrg(code: string): void {
 //     const currentCodes = this.orgControl.value || [];
-//     this.orgControl.setValue(currentCodes.filter(c => c !== code));
-//     this.loadEmployeesForSelectedOrgs(); // FIX: Explicitly trigger data load
+//     this.orgControl.setValue(currentCodes.filter((c) => c !== code));
+//     this.loadEmployeesForSelectedOrgs();
 //   }
 
-//   // --- Data Loading Logic (FIXED to be explicitly called) ---
-
-//   /** Triggers the API calls and updates the main grid data. */
 //   loadEmployeesForSelectedOrgs(): void {
 //     const codes = this.orgControl.value || [];
-
 //     if (codes.length === 0) {
-//       this.updateMainGridData([]);
+//       this.mainEmployeeData.set([]);
 //       return;
 //     }
-    
+
 //     this.isLoadingEmployees.set(true);
-    
-//     const employeeObservables = codes.map(code => this.dataService.getEmployeesByOrg(code));
-    
-//     forkJoin(employeeObservables).pipe(
-//       map(employeeArrays => employeeArrays.flat())
-//     ).subscribe({
-//         next: (allEmployees) => {
-//             this.isLoadingEmployees.set(false);
-//             this.updateMainGridData(allEmployees);
+//     const employeeRequests = codes.map((c) => this.dataService.getEmployeesByOrg(c));
+
+//     forkJoin(employeeRequests)
+//       .pipe(map((arrays) => arrays.flat()))
+//       .subscribe({
+//         next: (employees) => {
+//           this.isLoadingEmployees.set(false);
+//           this.mainEmployeeData.set(employees);
+//           this.mainGridApi?.setGridOption('rowData', employees);
 //         },
-//         error: (err) => {
-//             console.error('Error loading employees:', err);
-//             this.isLoadingEmployees.set(false);
-//             this.updateMainGridData([]); 
-//         }
-//     });
-//   }
-
-
-//   // --- Data Management & Movement Logic ---
-
-//   /** Updates the main grid data, ensuring selected employees are not duplicated. */
-// // src/app/org-employee-viewer/org-employee-viewer.component.ts
-
-// updateMainGridData(allEmployees: Employee[]): void {
-//   // ⬅️ SET BREAKPOINT HERE (Check if this line is reached)
-//   console.log('--- UPDATE MAIN GRID DATA ---'); 
-//   console.log('1. All Employees Fetched:', allEmployees.length); 
-  
-//   const selectedCodes = new Set(this.selectedEmployeeData().map(e => e.code));
-  
-//   // Filter out employees that are already in the selected list
-//   const filteredMainData = allEmployees.filter(e => !selectedCodes.has(e.code));
-  
-//   console.log('2. Data after filtering selected:', filteredMainData.length);
-  
-//   this.mainEmployeeData.set(filteredMainData);
-  
-//   // ⬅️ CRITICAL CHECK: Is this block executing?
-//   if (this.mainGridApi) { 
-//       console.log('3. mainGridApi is READY. Calling setRowData.');
-//       this.mainGridApi.setRowData(this.mainEmployeeData());
-//       this.mainGridApi.sizeColumnsToFit();
-//   } else {
-//       console.error('3. ERROR: mainGridApi is NOT ready when data arrived.');
-//   }
-// }
-
-//   /** Moves an employee between the main and selected grids. */
-//   moveEmployee(employee: Employee, isMovingToSelected: boolean): void {
-//     const employeeCode = employee.code; 
-
-//     if (isMovingToSelected) {
-//       // Move FROM Main Grid TO Selected Grid
-//       this.mainEmployeeData.update(data => data.filter(e => e.code !== employeeCode));
-//       const newSelected = { ...employee, isSelected: true }; 
-//       this.selectedEmployeeData.update(data => [...data, newSelected]);
-
-//     } else {
-//       // Move FROM Selected Grid TO Main Grid (if org is still selected)
-//       this.selectedEmployeeData.update(data => data.filter(e => e.code !== employeeCode));
-      
-//       const selectedOrgCodes = this.orgControl.value || [];
-//       if (selectedOrgCodes.includes(employee.orgCode)) {
-//          this.mainEmployeeData.update(data => {
-//             const returnedEmployee = { ...employee, isSelected: false };
-//             return [...data, returnedEmployee]; 
-//          });
-//       }
-//     }
-
-//     // Refresh Ag-Grid views
-//     this.mainGridApi?.setRowData(this.mainEmployeeData());
-//     this.selectedGridApi?.setRowData(this.selectedEmployeeData());
-//     this.mainGridApi?.sizeColumnsToFit();
-//     this.selectedGridApi?.sizeColumnsToFit();
-//   }
-
-
-//   // --- Ag-Grid Helpers ---
-
-//   /** Defines the columns for Ag-Grid. The 'isForSelectedGrid' flag sets the checkbox logic. */
-//   createColumnDefsMain(isForSelectedGrid: boolean): ColDef[] {
-//     const headerName = isForSelectedGrid ? 'Remove' : 'Select';
-
-//     return [
-//       {
-//         headerName: headerName,
-//         field: 'isSelected', 
-//         cellRenderer: CheckboxCellRendererComponent,
-//         cellRendererParams: { 
-//             initialChecked: isForSelectedGrid // Tells the renderer its context
+//         error: () => {
+//           this.isLoadingEmployees.set(false);
+//           this.mainEmployeeData.set([]);
 //         },
-//         width: 100,
-//         pinned: 'left',
-//         sortable: false,
-//         filter: false,
-//         suppressMovable: true,
-//       },
-//       // ... (other column definitions)
-//       // { headerName: 'Org Code', field: 'orgCode', width: 100 },
-//       { headerName: 'Network ID', field: 'networkId', width: 120 },
-//       { headerName: 'Full Name', field: 'fullName', flex: 1 },
-//       // { headerName: 'Job Title', field: 'jobTitle', width: 150 },
-//       // { headerName: 'Remarks', field: 'remarks', width: 100 }
-//     ];
-//   }
-
-
-//   createColumnDefs(isForSelectedGrid: boolean): ColDef[] {
-//     const headerName = isForSelectedGrid ? 'Remove' : 'Select';
-
-//     return [
-//       {
-//         headerName: headerName,
-//         field: 'isSelected', 
-//         cellRenderer: CheckboxCellRendererComponent,
-//         cellRendererParams: { 
-//             initialChecked: isForSelectedGrid // Tells the renderer its context
-//         },
-//         width: 100,
-//         pinned: 'left',
-//         sortable: false,
-//         filter: false,
-//         suppressMovable: true,
-//       },
-//       // ... (other column definitions)
-//       { headerName: 'Org Code', field: 'orgCode', width: 100 },
-//       { headerName: 'Network ID', field: 'networkId', width: 120 },
-//       { headerName: 'Full Name', field: 'fullName', flex: 1 },
-//       { headerName: 'Job Title', field: 'jobTitle', width: 150 },
-//       { headerName: 'Remarks', field: 'remarks', width: 100 }
-//     ];
+//       });
 //   }
 
 //   onMainGridReady(params: GridReadyEvent): void {
 //     this.mainGridApi = params.api;
 //     this.mainGridApi.sizeColumnsToFit();
+
+//     this.mainGridApi.addEventListener('selectionChanged', () => {
+//       const selectedRows = this.mainGridApi.getSelectedRows();
+//       if (selectedRows.length > 0) {
+//         // Move selected rows to Selected Employees
+//         const updatedSelected = [...this.selectedEmployeeData(), ...selectedRows];
+//         this.selectedEmployeeData.set(updatedSelected);
+
+//         // Remove from Main Grid
+//         const remaining = this.mainEmployeeData().filter(
+//           (emp) => !selectedRows.some((sel) => sel.networkId === emp.networkId)
+//         );
+//         this.mainEmployeeData.set(remaining);
+//         this.mainGridApi.applyTransaction({ add: remaining });
+//         this.selectedGridApi.applyTransaction({ add: selectedRows });
+//       }
+//     });
 //   }
 
 //   onSelectedGridReady(params: GridReadyEvent): void {
@@ -269,12 +179,25 @@
 //     this.selectedGridApi.sizeColumnsToFit();
 //   }
 
-//   onExportSelected(): void {
-//     console.log('Final Selected Employees:', this.selectedEmployeeData());
-//     alert(`Exporting ${this.selectedEmployeeData().length} employees...`);
+//   // changeReques:any;
+//   // getEmployeesByCr(chId:number): void {
+//   //   this.dataService.getEmployeesByCr(chId).subscribe(data => {
+//   //     console.log('data', data);
+//   //     this.changeReques=data
+//   //   })
+//   // }
+
+//   onProcessSelected(): void {
+//     const selected = this.selectedEmployeeData();
+//     if (selected.length === 0) return;
+// console.log(' selected ',selected)
+//     // Mock send to backend (JSON Server)
+//     this.dataService.sendProcessedEmployees(selected).subscribe({
+//       next: () => this.snackBar.open('Employees processed successfully!', 'OK', { duration: 2000 }),
+//       error: () => this.snackBar.open('Error processing employees', 'OK', { duration: 2000 }),
+//     });
 //   }
 // }
-
 
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -296,7 +219,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
-// Mock Services / Models
+// Models / Service
 import { Organization, Employee, DataService } from '../../services/data.service';
 
 @Component({
@@ -331,21 +254,19 @@ export class OrgEmployeeViewerComponent implements OnInit {
   selectedEmployeeData = signal<Employee[]>([]);
   isLoadingEmployees = signal(false);
 
-  // --- AG Grid API ---
+  // tracks whether user has selected (checked) rows inside the Selected grid
+  selectedGridHasSelection = signal(false);
+
+  // --- AG Grid API refs ---
   private mainGridApi!: GridApi;
   private selectedGridApi!: GridApi;
 
-  // --- Computed ---
-  isProcessEnabled = computed(() => this.selectedEmployeeData().length > 0);
+  // --- computed for button enablement (enabled when a checkbox is clicked in Selected grid) ---
+  isProcessEnabled = computed(() => this.selectedGridHasSelection());
 
-  // --- Column Definitions ---
+  // --- Column defs ---
   mainColumnDefs: ColDef[] = [
-    {
-      headerName: '',
-      checkboxSelection: true,
-      headerCheckboxSelection: true,
-      width: 50,
-    },
+    { headerName: '', checkboxSelection: true, headerCheckboxSelection: true, width: 50 },
     { headerName: 'Org Code', field: 'orgCode', width: 120 },
     { headerName: 'Network ID', field: 'networkId', width: 120 },
     { headerName: 'Full Name', field: 'fullName', flex: 1 },
@@ -353,12 +274,7 @@ export class OrgEmployeeViewerComponent implements OnInit {
   ];
 
   selectedColumnDefs: ColDef[] = [
-    {
-      headerName: '',
-      checkboxSelection: true,
-      headerCheckboxSelection: true,
-      width: 50,
-    },
+    { headerName: '', checkboxSelection: true, headerCheckboxSelection: true, width: 50 },
     { headerName: 'Org Code', field: 'orgCode', width: 120 },
     { headerName: 'Network ID', field: 'networkId', width: 120 },
     { headerName: 'Full Name', field: 'fullName', flex: 1 },
@@ -367,14 +283,21 @@ export class OrgEmployeeViewerComponent implements OnInit {
 
   defaultColDef: ColDef = { sortable: true, filter: true, resizable: true };
 
+  // make transactions reliable by identifying rows via networkId
+  getRowId = (params: any) => params.data?.networkId?.toString();
+
   constructor(private dataService: DataService, private snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
+    // load orgs for autocomplete
     this.dataService.getOrganizations().subscribe((data) => (this.allOrganizations = data));
     this.filteredOrganizations$ = this.searchInputControl.valueChanges.pipe(
       startWith(''),
       map((value) => this._filter(value || ''))
     );
+
+    // preload any existing approvers from mock DB
+    this.loadExistingApprovers();
   }
 
   private _filter(value: string): Organization[] {
@@ -401,9 +324,17 @@ export class OrgEmployeeViewerComponent implements OnInit {
     this.loadEmployeesForSelectedOrgs();
   }
 
+  /** Load employees for selected org codes; filter out those already in Selected grid.
+   *  Use applyTransaction diffs so grid updates are delta-based (AG Grid v34 friendly).
+   */
   loadEmployeesForSelectedOrgs(): void {
     const codes = this.orgControl.value || [];
     if (codes.length === 0) {
+      // clear main grid via transaction
+      const old = this.mainEmployeeData();
+      if (this.mainGridApi && old.length) {
+        this.mainGridApi.applyTransaction({ remove: [...old] });
+      }
       this.mainEmployeeData.set([]);
       return;
     }
@@ -416,51 +347,165 @@ export class OrgEmployeeViewerComponent implements OnInit {
       .subscribe({
         next: (employees) => {
           this.isLoadingEmployees.set(false);
-          this.mainEmployeeData.set(employees);
-          this.mainGridApi?.setGridOption('rowData', employees);
+
+          // remove those already in selectedEmployeeData
+          const existIds = new Set(this.selectedEmployeeData().map((s) => s.networkId));
+          const filtered = employees.filter((e) => !existIds.has(e.networkId));
+
+          // compute diff vs current main data and apply transaction
+          const oldMain = this.mainEmployeeData();
+          const diff = this._diffByKey(oldMain, filtered, 'networkId');
+
+          // update signal (source of truth)
+          this.mainEmployeeData.set(filtered);
+
+          // apply transaction with only non-empty ops
+          if (this.mainGridApi) {
+            const tx: any = {};
+            if (diff.toRemove.length) {
+              const removeObjs = oldMain.filter((r) => diff.toRemove.includes(r.networkId));
+              tx.remove = removeObjs;
+            }
+            if (diff.toAdd.length) tx.add = diff.toAdd;
+            if (diff.toUpdate.length) tx.update = diff.toUpdate;
+
+            if (Object.keys(tx).length) {
+              this.mainGridApi.applyTransaction(tx);
+            }
+            this.mainGridApi.sizeColumnsToFit();
+          }
         },
         error: () => {
           this.isLoadingEmployees.set(false);
+          const old = this.mainEmployeeData();
+          if (this.mainGridApi && old.length) {
+            this.mainGridApi.applyTransaction({ remove: [...old] });
+          }
           this.mainEmployeeData.set([]);
         },
       });
+  }
+
+  /** Load pre-existing approvers and populate Selected grid */
+  loadExistingApprovers(): void {
+    // adjust chId or endpoint as needed (you're using getEmployeesByCr)
+    this.dataService.getEmployeesByCr(123).subscribe({
+      next: (approvers) => {
+        const existing = approvers || [];
+        this.selectedEmployeeData.set(existing);
+
+        // if selected grid already ready, add via transaction
+        if (this.selectedGridApi && existing.length) {
+          this.selectedGridApi.applyTransaction({ add: existing });
+          this.selectedGridApi.sizeColumnsToFit();
+        }
+      },
+      error: (err) => {
+        console.error('Error loading existing approvers', err);
+      },
+    });
   }
 
   onMainGridReady(params: GridReadyEvent): void {
     this.mainGridApi = params.api;
     this.mainGridApi.sizeColumnsToFit();
 
-    this.mainGridApi.addEventListener('selectionChanged', () => {
-      const selectedRows = this.mainGridApi.getSelectedRows();
-      if (selectedRows.length > 0) {
-        // Move selected rows to Selected Employees
-        const updatedSelected = [...this.selectedEmployeeData(), ...selectedRows];
-        this.selectedEmployeeData.set(updatedSelected);
+    // if main signal already has rows, ensure they are present in grid
+    const currentMain = this.mainEmployeeData();
+    if (currentMain && currentMain.length) {
+      this.mainGridApi.applyTransaction({ add: currentMain });
+    }
 
-        // Remove from Main Grid
-        const remaining = this.mainEmployeeData().filter(
-          (emp) => !selectedRows.some((sel) => sel.networkId === emp.networkId)
-        );
-        this.mainEmployeeData.set(remaining);
-        this.mainGridApi.applyTransaction({ add: remaining });
-        this.selectedGridApi.applyTransaction({ add: selectedRows });
+    // when user selects rows in main grid: remove them from main and add to selected
+    this.mainGridApi.addEventListener('selectionChanged', () => {
+      const selectedRows: Employee[] = this.mainGridApi.getSelectedRows() || [];
+      if (selectedRows.length === 0) return;
+
+      // 1) remove from main grid (by data objects)
+      this.mainGridApi.applyTransaction({ remove: selectedRows });
+
+      // 2) add to selected grid (avoid duplicates)
+      const existingIds = new Set(this.selectedEmployeeData().map((s) => s.networkId));
+      const toAdd = selectedRows.filter((r) => !existingIds.has(r.networkId));
+      if (toAdd.length) {
+        if (this.selectedGridApi) {
+          this.selectedGridApi.applyTransaction({ add: toAdd });
+        }
       }
+
+      // 3) update signals
+      const remaining = this.mainEmployeeData().filter(
+        (emp) => !selectedRows.some((sel) => sel.networkId === emp.networkId)
+      );
+      this.mainEmployeeData.set(remaining);
+
+      const mergedSelected = [...this.selectedEmployeeData(), ...toAdd];
+      this.selectedEmployeeData.set(mergedSelected);
     });
   }
 
   onSelectedGridReady(params: GridReadyEvent): void {
     this.selectedGridApi = params.api;
     this.selectedGridApi.sizeColumnsToFit();
+
+    // populate preloaded selected rows if present
+    const preloaded = this.selectedEmployeeData();
+    if (preloaded && preloaded.length) {
+      this.selectedGridApi.applyTransaction({ add: preloaded });
+    }
+
+    // keep track of whether user has checked rows inside the Selected grid
+    this.selectedGridApi.addEventListener('selectionChanged', () => {
+      const count = this.selectedGridApi.getSelectedRows().length || 0;
+      this.selectedGridHasSelection.set(count > 0);
+    });
   }
 
   onProcessSelected(): void {
-    const selected = this.selectedEmployeeData();
-    if (selected.length === 0) return;
+    const selectedAll = this.selectedEmployeeData();
+    if (!selectedAll || selectedAll.length === 0) return;
 
-    // Mock send to backend (JSON Server)
-    this.dataService.sendProcessedEmployees(selected).subscribe({
-      next: () => this.snackBar.open('Employees processed successfully!', 'OK', { duration: 2000 }),
-      error: () => this.snackBar.open('Error processing employees', 'OK', { duration: 2000 }),
+    // submit all selected rows (preloaded + newly added) to backend
+    this.dataService.sendProcessedEmployees(selectedAll).subscribe({
+      next: () => {
+        this.snackBar.open('Employees processed successfully!', 'OK', { duration: 2000 });
+        // optionally deselect any checkboxes and clear has-selection flag:
+        this.selectedGridApi?.deselectAll();
+        this.selectedGridHasSelection.set(false);
+      },
+      error: (err) => {
+        console.error('Error sending processed employees', err);
+        this.snackBar.open('Error processing employees', 'OK', { duration: 2000 });
+      },
     });
+  }
+
+  // Utility: return { toAdd: Employee[], toRemove: string[] (ids), toUpdate: Employee[] }
+  private _diffByKey(oldArr: Employee[], newArr: Employee[], key: keyof Employee) {
+    const oldMap = new Map<string, Employee>(oldArr.map((r) => [String(r[key]), r]));
+    const newMap = new Map<string, Employee>(newArr.map((r) => [String(r[key]), r]));
+
+    const toAdd: Employee[] = [];
+    const toUpdate: Employee[] = [];
+    const toRemove: string[] = [];
+
+    for (const n of newArr) {
+      const id = String(n[key]);
+      const old = oldMap.get(id);
+      if (!old) {
+        toAdd.push(n);
+      } else if (JSON.stringify(old) !== JSON.stringify(n)) {
+        toUpdate.push(n);
+      }
+    }
+
+    for (const o of oldArr) {
+      const id = String(o[key]);
+      if (!newMap.has(id)) {
+        toRemove.push(id);
+      }
+    }
+
+    return { toAdd, toRemove, toUpdate };
   }
 }

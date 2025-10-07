@@ -89,20 +89,79 @@
       "id": 15
     }
   ],
-
-      "organizations": [
-        { "code": "333333333", "name": "Sales Division" },
-        { "code": "444444444", "name": "Engineering Corp" },
-        { "code": "555555555", "name": "Marketing Solutions" },
-        { "code": "ORG004", "name": "Research & Dev" }
-      ],
-      "employees": [
-        { "code": "1110023", "networkId": "30002070", "fullName": "Piet Erang Apple", "jobTitle": "Engineer", "remarks": "Success", "orgCode": "333333333" },
-        { "code": "1110024", "networkId": "30002071", "fullName": "Jane Doe", "jobTitle": "Manager", "remarks": "Active", "orgCode": "333333333" },
-        { "code": "2220050", "networkId": "40001001", "fullName": "John Smith", "jobTitle": "Developer", "remarks": "Success", "orgCode": "444444444" },
-        { "code": "2220051", "networkId": "40001002", "fullName": "Alice Johnson", "jobTitle": "Analyst", "remarks": "Active", "orgCode": "444444444" },
-        { "code": "3330052", "networkId": "50001003", "fullName": "Bob Tester", "jobTitle": "QA", "remarks": "On Leave", "orgCode": "555555555" }
-      ]
+  "organizations": [
+    {
+      "code": "333333333",
+      "name": "Sales Division"
+    },
+    {
+      "code": "444444444",
+      "name": "Engineering Corp"
+    },
+    {
+      "code": "555555555",
+      "name": "Marketing Solutions"
+    },
+    {
+      "code": "ORG004",
+      "name": "Research & Dev"
     }
-
-  
+  ],
+  "employees": [
+    {
+      "networkId": "30002070",
+      "fullName": "Piet Erang Apple",
+      "jobTitle": "Engineer",
+      "remarks": "Success",
+      "orgCode": "333333333"
+    },
+    {
+      "networkId": "30002071",
+      "fullName": "Jane Doe",
+      "jobTitle": "Manager",
+      "remarks": "Active",
+      "orgCode": "333333333"
+    },
+    {
+      "networkId": "40001001",
+      "fullName": "John Smith",
+      "jobTitle": "Developer",
+      "remarks": "Success",
+      "orgCode": "444444444"
+    },
+    {
+      "networkId": "40001002",
+      "fullName": "Alice Johnson",
+      "jobTitle": "Analyst",
+      "remarks": "Active",
+      "orgCode": "444444444"
+    },
+    {
+      "networkId": "50001003",
+      "fullName": "Bob Tester",
+      "jobTitle": "QA",
+      "remarks": "On Leave",
+      "orgCode": "555555555"
+    }
+  ],
+  "approvers": [
+    
+      {
+        "chid": 123,
+        "networkId": "30002070",
+        "fullName": "Piet Erang Apple",
+        "jobTitle": "Engineer",
+        "remarks": "Success",
+        "orgCode": "333333333"
+      },
+      {
+        "chid": 123,
+        "networkId": "30002071",
+        "fullName": "Jane Doe",
+        "jobTitle": "Manager",
+        "remarks": "Active",
+        "orgCode": "333333333"
+      }
+    
+  ]
+}

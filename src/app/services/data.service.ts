@@ -40,7 +40,13 @@ export class DataService {
 
   
   sendProcessedEmployees(data: Employee[]): Observable<any> {
-    return this.http.post('http://localhost:3000/processedEmployees', data);
+    return this.http.post('http://localhost:3000/approvers', data);
   }
+
+  getEmployeesByCr(chId:number): Observable<Employee[]> {
+    return this.http.get<Employee[]>(`${this.apiUrl}/approvers?chid=${chId}`);
+  }
+
+  
   
 }
