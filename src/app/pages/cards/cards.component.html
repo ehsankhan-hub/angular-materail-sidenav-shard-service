@@ -1,0 +1,22 @@
+<div
+  fxLayout="row wrap"
+  fxLayoutAlign="center start"
+  fxLayoutGap="25px grid"
+  class="dashboard-container"
+>
+  <mat-card
+    *ngFor="let item of dashboardItems"
+    fxFlex.lg="18%"
+    fxFlex.md="30%"
+    fxFlex.sm="45%"
+    fxFlex.xs="100%"
+    (click)="goTo(item)"
+    class="dashboard-card"
+    [ngClass]="{ 'active-card': item.active }"
+  >
+    <div class="icon-container">
+      <mat-icon>{{ item.icon }}</mat-icon>
+    </div>
+    <div class="card-title">{{ item.title }}</div>
+  </mat-card>
+</div>

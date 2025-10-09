@@ -383,7 +383,7 @@ export class TrainingComponent implements OnInit {
   }
 
   onSearchInput(): void {
-   // this.gridApi.setQuickFilter(this.searchText);
+   
    if (this.gridApi) {
     this.gridApi.setQuickFilter(this.searchText);
   }

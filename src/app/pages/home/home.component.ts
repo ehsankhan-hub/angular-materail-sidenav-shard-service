@@ -12,6 +12,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { from } from 'rxjs';
 import { OrgEmployeeViewerComponent } from '../org-employee-viewer/org-employee-viewer.component';
+import { CardsComponent } from '../cards/cards.component';
 
 @Component({
     selector: 'app-home',
@@ -27,7 +28,8 @@ import { OrgEmployeeViewerComponent } from '../org-employee-viewer/org-employee-
         MatSelectModule,
         ReactiveFormsModule,
         MatInputModule,
-        OrgEmployeeViewerComponent
+        OrgEmployeeViewerComponent,
+        CardsComponent
         
       ],
     templateUrl: './home.component.html',
