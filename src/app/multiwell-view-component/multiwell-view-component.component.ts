@@ -71,7 +71,7 @@ export class MultiwellViewComponent implements AfterViewInit {
       const well = this.lstOfTrack[i];
       const logWidget = new (window as any).INT.LogWidget({
         container: canvasRef.nativeElement,
-        title: `${well.wellName} – ${well.wellboreName}`,
+        title: `${well.wellName} - ${well.wellboreName}`,
         width: canvasRef.nativeElement.offsetWidth,
         height: 400,
       });
