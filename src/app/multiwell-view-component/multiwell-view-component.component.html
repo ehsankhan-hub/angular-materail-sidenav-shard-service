@@ -1,56 +1,6 @@
-<!-- 
-<div
-  fxLayout="row wrap"
-  fxLayoutGap="16px grid"
-  class="multiwell-container"
->
-
-  <div
-    *ngFor="let well of lstOfTrack; let i = index"
-    fxFlex="100"
-    fxFlex.gt-sm="48"
-    fxFlex.gt-md="32"
-    class="well-block"
-  >
-    <mat-card class="well-card" appearance="outlined">
-      <mat-card-header>
-        <mat-card-title>
-          {{ well.wellName }} — {{ well.wellboreName }}
-        </mat-card-title>
-      </mat-card-header>
-
-      <mat-card-content>
-     
-        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxFlexFill>
-      
-          <div class="canvas-container" fxFlex="70">
-            <canvas #canvasTrack{{ i }} class="well-canvas"></canvas>
-          </div>
-
-        
-          <div
-            class="widget-panel"
-            fxFlex="30"
-            fxLayout="column"
-            fxLayoutAlign="start stretch"
-          >
-            <div class="widget-item" *ngFor="let curve of well.curves">
-              <div class="widget-label">
-                {{ curve.mnemonic }}
-              </div>
-              <div class="widget-value">
-                {{ curve.unit || '-' }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
-</div> -->
-
 <div class="container-fluid py-3">
   <div class="row gy-3">
+    <!-- One well track per card -->
     <div
       class="col-12 col-md-6 col-lg-4"
       *ngFor="let well of lstOfTrack; let i = index"
@@ -64,18 +14,18 @@
 
         <mat-card-content class="p-2">
           <div class="row g-2 align-items-stretch">
-            <!-- Left: Canvas -->
+            <!-- Left: INT.com Canvas -->
             <div class="col-12 col-md-8">
               <div class="canvas-container">
                 <canvas #canvasTrack class="well-canvas"></canvas>
               </div>
             </div>
 
-            <!-- Right: Dynamic widget list -->
+            <!-- Right: Widgets for this well only -->
             <div class="col-12 col-md-4">
               <div class="widget-panel">
                 <mat-card
-                  *ngFor="let w of statusWidgets"
+                  *ngFor="let w of well.widgets"
                   class="status-card mb-2 p-2"
                 >
                   <div class="d-flex justify-content-between align-items-center">

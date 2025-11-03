@@ -38,7 +38,7 @@
     font-weight: 600;
     text-align: right;
   } */
-
+  
   .well-card {
     background: #1a1a1a;
     color: #f5f5f5;
@@ -70,6 +70,7 @@
     background: #222;
     border: 1px solid #333;
     border-radius: 6px;
+    font-size: 14px;
   }
   
   .status-card:hover {
@@ -77,5 +78,4 @@
     transform: scale(1.01);
     transition: all 0.2s ease-in-out;
   }
-  
   

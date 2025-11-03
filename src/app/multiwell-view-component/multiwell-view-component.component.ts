@@ -22,7 +22,6 @@ export class MultiwellViewComponent implements AfterViewInit {
   canvasTracks!: QueryList<ElementRef<HTMLCanvasElement>>;
 
   lstOfTrack: any[] = [];
-  statusWidgets: any[] = [];
 
   selectedWells = [
     { well: 'Well-A', wellbore: 'Main-1' },
@@ -36,6 +35,7 @@ export class MultiwellViewComponent implements AfterViewInit {
     this.renderAllWidgets();
   }
 
+  /** Loads logs for all selected wells and builds track + widget structures */
   private async loadMultiWellLogs(): Promise<void> {
     this.lstOfTrack = [];
 
@@ -58,31 +58,36 @@ export class MultiwellViewComponent implements AfterViewInit {
             autoScale: true,
           }))
         ),
+        widgets: [], // 👈 now each track has its own widget list
       };
 
       this.lstOfTrack.push(trackDef);
     }
 
-    console.log('Multi-well track data:', this.lstOfTrack);
+    console.log('Loaded wells:', this.lstOfTrack);
   }
 
+  /** Initializes INT.com log widgets for each canvas */
   private renderAllWidgets(): void {
     this.canvasTracks.forEach((canvasRef, i) => {
       const well = this.lstOfTrack[i];
       const logWidget = new (window as any).INT.LogWidget({
         container: canvasRef.nativeElement,
-        title: `${well.wellName} - ${well.wellboreName}`,
+        title: `${well.wellName} – ${well.wellboreName}`,
         width: canvasRef.nativeElement.offsetWidth,
         height: 400,
       });
 
+      // Add all curves
       well.curves.forEach((curve: any) =>
         logWidget.addCurve(curve.mnemonic, curve.data, curve.unit)
       );
 
-      this.lstOfTrack[i].widget = logWidget;
+      // store widget instance
+      well.widget = logWidget;
 
-      this.statusWidgets = well.curves.map((c: any) => ({
+      // initialize widgets panel for this track
+      well.widgets = well.curves.map((c: any) => ({
         name: c.mnemonic,
         unit: c.unit,
         value: c.data?.length ? c.data[c.data.length - 1] : 0,
@@ -90,6 +95,7 @@ export class MultiwellViewComponent implements AfterViewInit {
     });
   }
 
+  /** Updates track and widgets when new data arrives (MQTT / API) */
   updateLiveData(liveData: any[]): void {
     liveData.forEach((entry) => {
       const track = this.lstOfTrack.find(
@@ -109,7 +115,8 @@ export class MultiwellViewComponent implements AfterViewInit {
         }
       });
 
-      this.statusWidgets = track.curves.map((c: any) => ({
+      // update this track's widget panel
+      track.widgets = track.curves.map((c: any) => ({
         name: c.mnemonic,
         unit: c.unit,
         value: c.data?.length ? c.data[c.data.length - 1] : 0,
