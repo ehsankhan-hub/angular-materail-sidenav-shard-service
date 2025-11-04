@@ -1,0 +1,12 @@
+<mat-card class="mb-3 bg-dark text-light border-secondary">
+    <mat-card-header>
+      <mat-card-title>{{ wellName }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngFor="let w of widgets" class="d-flex justify-content-between border-bottom py-1">
+        <span class="fw-semibold">{{ w.label }}</span>
+        <span>{{ w.value }}</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  

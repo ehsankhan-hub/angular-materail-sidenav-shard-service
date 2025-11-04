@@ -1,0 +1,18 @@
+<div class="container-fluid py-2">
+    <div class="row align-items-start">
+      <!-- Left: Multiwell Canvas -->
+      <div class="col-lg-8 col-md-7 col-sm-12 mb-3">
+        <canvas #correlationDisplay class="w-100 border border-secondary" height="600"></canvas>
+      </div>
+  
+      <!-- Right: Dynamic Mnemonic Widgets -->
+      <div class="col-lg-4 col-md-5 col-sm-12">
+        <app-rcc-multi-well-widgets
+          *ngFor="let well of wellWidgets"
+          [wellName]="well.wellName"
+          [widgets]="well.widgets"
+        ></app-rcc-multi-well-widgets>
+      </div>
+    </div>
+  </div>
+  
