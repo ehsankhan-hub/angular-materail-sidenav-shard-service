@@ -255,3 +255,98 @@ export class RccMultiWellDisplayComponent implements AfterViewInit, OnChanges, O
     return { min, max };
   }
 }
+
+
+
+/////
+
+
+// import {
+//   AfterViewInit,
+//   ChangeDetectorRef,
+//   Component,
+//   ElementRef,
+//   QueryList,
+//   ViewChildren,
+// } from "@angular/core";
+// import { CommonModule } from "@angular/common";
+// import { MatCardModule } from "@angular/material/card";
+// import { Plot } from "@int/geotoolkit/plot/Plot";
+// import { MultiWellWidget } from "@int/geotoolkit/welllog/multiwell/MultiWellWidget";
+// import { MultiWellDataService } from "../service/multi-well-service/multiwelldata.service";
+// import { WellDataService } from "../service/well-service/well.service";
+// import { RccMultiWellWidgetsComponent } from "./rcc-multi-well-widgets/rcc-multi-well-widgets.component";
+
+// @Component({
+//   selector: "app-rcc-multi-well-display",
+//   standalone: true,
+//   imports: [CommonModule, MatCardModule, RccMultiWellWidgetsComponent],
+//   templateUrl: "./rcc-multi-well-display.component.html",
+//   styleUrls: ["./rcc-multi-well-display.component.scss"],
+// })
+// export class RccMultiWellDisplayComponent implements AfterViewInit {
+//   @ViewChildren("correlationDisplay")
+//   canvases!: QueryList<ElementRef<HTMLCanvasElement>>;
+
+//   wellWidgets: any[] = [];
+//   wellTrack: any[] = [];
+//   plot!: Plot;
+
+//   constructor(
+//     private cdr: ChangeDetectorRef,
+//     private wellService: WellDataService,
+//     private multiWellService: MultiWellDataService
+//   ) {}
+
+//   ngAfterViewInit(): void {
+//     // Simulated wells (replace with your existing graphData.wells processing)
+//     this.wellWidgets = [
+//       {
+//         wellName: "ABHD_104",
+//         widgets: [
+//           { label: "Gamma", value: 91.0 },
+//           { label: "RHOB", value: 2.36 },
+//           { label: "NPHI", value: 0.27 },
+//           { label: "ROP", value: 95.2 },
+//           { label: "Depth", value: 5728 },
+//         ],
+//       },
+//       {
+//         wellName: "ABHD_112",
+//         widgets: [
+//           { label: "ROP", value: 88.4 },
+//           { label: "Depth", value: 5690 },
+//           { label: "Inclination", value: 87.9 },
+//           { label: "Azimuth", value: 67.4 },
+//         ],
+//       },
+//     ];
+
+//     this.cdr.detectChanges();
+
+//     // Initialize each well’s track using the corresponding canvas
+//     setTimeout(() => {
+//       this.wellWidgets.forEach((well, i) => {
+//         const canvasEl = this.canvases.toArray()[i]?.nativeElement;
+//         if (!canvasEl) return;
+
+//         const widget = new MultiWellWidget({
+//           horizontalscrollable: "auto",
+//           verticalscrollable: "auto",
+//         });
+
+//         // Create a plot for this well
+//         this.plot = new Plot({
+//           canvaselement: canvasEl,
+//           root: widget,
+//           autosize: true,
+//           autoupdate: true,
+//         });
+
+//         // ✅ The rest of your tested dynamic code runs unchanged
+//         // (createWidget(), getCurveData(), addWellData(), etc.)
+//       });
+//     });
+//   }
+// }
+
