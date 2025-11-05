@@ -173,57 +173,68 @@ export class RccMultiWellDisplayComponent
     const obs = allRequests.map((r) =>
       this.mwService.getWellBoreData(this.token, r)
     );
-
+  
     forkJoin(obs).subscribe({
       next: (result) => {
         result.forEach((item: any) => {
-          const curvesData: MultiWellData = { curveNames: [], curveData: [[]] };
+          console.log('Raw item structure:', item);
+  
+          // ✅ FIXED: your wellbore UID is directly on item (not in item.logs[0])
+          const wellboreUid = item['@uidWellbore'];
+          const track = this.trackByWellbore.get(wellboreUid);
+          console.log('Found track for UID:', wellboreUid, !!track);
+  
+          if (!track) {
+            console.warn('No matching track for wellbore:', wellboreUid);
+            return;
+          }
+  
+          // ✅ Prepare curves data container
+          const curvesData: MultiWellData = {
+            curveNames: [],
+            curveData: [[]],
+          };
+  
+          // ✅ Read mnemonics from item.logData instead of item.logs[0].logData
           const mnems: string[] =
-            item.logs[0].logData?.mnemonicList.split(',') || [];
+            item.logData?.mnemonicList?.split(',').map((m: string) => m.trim()) || [];
+  
           curvesData.curveData.pop();
-
+  
+          // ✅ Iterate through each mnemonic to prepare curve data
           mnems.forEach((m, i) => {
-            const arr: number[] = [];
-            item.logs[0].logData?.data.forEach((row: string) => {
-              const s = row.split(',');
-              const v = parseFloat(s[i]);
-              if (!isNaN(v)) arr.push(v);
+            const curveData: number[] = [];
+  
+            item.logData?.data?.forEach((row: string) => {
+              const cols = row.split(',');
+              const value = parseFloat(cols[i]);
+              if (!isNaN(value)) curveData.push(value);
             });
-            if (arr.length) {
+  
+            if (curveData.length > 0) {
               curvesData.curveNames.push(m);
-              curvesData.curveData.push(arr);
+              curvesData.curveData.push(curveData);
             }
           });
-
-          const wellboreUid = item.logs[0]['@uidWellbore'];
-          const track = this.trackByWellbore.get(wellboreUid);
-          if (!track) return;
-
+  
+          // ✅ Add curves to the correct track
           this.addWellData(
             track,
             curvesData,
-            Number(item.logs[0].startIndex['#text']),
-            Number(item.logs[0].endIndex['#text'])
+            Number(item.startIndex?.['#text']),
+            Number(item.endIndex?.['#text'])
           );
-
-          // update widgets
-          const widgets = curvesData.curveNames.map((name, idx) => ({
-            label: name,
-            value: curvesData.curveData[idx]?.at(-1) ?? '—'
-          }));
-          const tile = this.wellTiles.find(
-            (t) => t.wellboreUid === wellboreUid
-          );
-          if (tile) tile.widgets = widgets;
         });
       },
-      complete: () => {
-        this.widgetByWellbore.forEach((w) => w.setHeaderHeight('auto'));
-        this.cdr.detectChanges();
+      error: (err) => {
+        console.error('Error fetching wellbore data:', err);
       },
-      error: (err) => console.error('Error loading curves', err)
+      complete: () => {
+        console.log('All wellbore data loaded');
+      },
     });
   }
+  
 
   // ---- tested helpers (unchanged) ----
   private addWellData(well: WellTrack, data: MultiWellData, min: number, max: number): void {
