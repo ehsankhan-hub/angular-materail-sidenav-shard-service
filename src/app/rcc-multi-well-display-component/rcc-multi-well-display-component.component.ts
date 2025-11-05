@@ -435,3 +435,54 @@ export class RccMultiWellDisplayComponent implements AfterViewInit, OnChanges, O
 //   }
 // }
 
+
+
+
+
+// <div class="row g-3">
+//   <div
+//     class="col-12 col-md-6 col-lg-4"
+//     *ngFor="let well of graphData.wells; let i = index"
+//   >
+//     <div class="p-2 bg-dark rounded shadow-sm d-flex gap-2 align-items-start">
+//       <!-- Left: INT.com canvas -->
+//       <canvas
+//         #canvasTrack
+//         class="w-100 border border-secondary rounded"
+//         height="300"
+//       ></canvas>
+
+//       <!-- Right: well widgets -->
+//       <app-rcc-multi-well-widgets
+//         [wellName]="well.selectedWellBore.name"
+//         [widgets]="well.widgets"
+//       ></app-rcc-multi-well-widgets>
+//     </div>
+//   </div>
+// </div>
+
+
+
+
+// @ViewChildren("canvasTrack") canvases!: QueryList<ElementRef<HTMLCanvasElement>>; // ✅ multi-canvas
+
+// renderGraph() {
+//   setTimeout(() => {
+//     const canvasArray = this.canvases.toArray();
+//     if (!canvasArray.length) return;
+
+//     this.logsRequest = [];
+//     this.wellTrack = [];
+
+//     this.graphData.wells.forEach((well, i) => {
+//       const widget = this.createWidget(); // ✅ your original tested method
+
+//       this.plot = new Plot({
+//         canvaselement: canvasArray[i].nativeElement, // ✅ link each canvas
+//         root: widget,
+//         autosize: true,
+//         autoupdate: true,
+//       });
+//     });
+//   }, 500);
+// }
