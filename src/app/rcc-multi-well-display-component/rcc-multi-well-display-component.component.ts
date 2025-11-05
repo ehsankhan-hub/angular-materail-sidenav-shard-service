@@ -183,4 +183,81 @@ export class RccMultiWellDisplayComponent
         const singleWellTrack = widget.addTrack(MultiWellTrackType.WellTrack, {
           welllog: { range: new Range(0, 100) },
           name: well.selectedWellBore.name,
-          title: '${name}<br/><span style="bac
+          title: '${name}<br/><span style="background-color:#DCDCDC">Depth Scale</span>',
+        });
+
+        (singleWellTrack as any).DI_ = well.selectedWellBore.uid; // ✅ Tag for tested getCurveData()
+        this.wellTrack.push(singleWellTrack); // ✅ Keep old array structure
+      });
+
+      this.logsRequest.forEach((req) => {
+        this.mnemonicListWedgets =
+          req.mnemonicList?.split(",").map((value) => value.trim()) || [];
+      });
+
+      this.cardsConfig = [
+        ...this.mnemonicListWedgets.map((mnemonic) => ({ label: mnemonic })),
+      ];
+
+      this.getCurveData(this.logsRequest, widget);
+    }
+
+    return widget;
+  }
+
+  addWellData(well: WellTrack, curvesData: MultiWellData, min: number, max: number) {
+    well.addTrack(WellLogTrackType.IndexTrack);
+    const logTrack = well.addTrack(WellLogTrackType.LinearTrack);
+    for (let i = 0; i < curvesData.curveNames.length; i++) {
+      logTrack.addChild([
+        this.createCurve(
+          this.createData(1, 10, curvesData.curveNames[i], curvesData.curveData[i])
+        ).setLineStyle(this.getRandomColor()),
+      ]);
+    }
+
+    if (min != null && max != null && min < max) {
+      well.setDepthLimits(min, max);
+    }
+  }
+
+  createCurve(dataSource: LogData): LogCurve {
+    const limits = MathUtil.calculateNeatLimits(
+      dataSource.getMinValue(),
+      dataSource.getMaxValue(),
+      false,
+      false
+    );
+    return new LogCurve(dataSource)
+      .setLineStyle({ color: KnownColors.Blue, width: 2 })
+      .setNormalizationLimits(limits.getLow(), limits.getHigh());
+  }
+
+  createData(from: number, step: number, curveMnemonic: string, curveDataInp: any) {
+    const data = new LogData(curveMnemonic);
+    const depths = [];
+    const values = [];
+    const amountOfPoints = curveDataInp.length;
+    for (let i = 0; i < amountOfPoints; i++) {
+      depths.push(i * step + from);
+      values.push(curveDataInp[i]);
+    }
+    data.setValues(depths, values);
+    return data;
+  }
+
+  getRandomColor(): string {
+    const letters = "0123456789ABCDEF";
+    let color = "#";
+    for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 12)];
+    return color;
+  }
+
+  getMinMaxValues(data: { minIndex: any; maxIndex: any }[]): { min: number; max: number } {
+    const min =
+      Math.min(...data.map((item) => parseFloat("" + item.minIndex["#text"]))) - 100;
+    const max =
+      Math.max(...data.map((item) => parseFloat("" + item.maxIndex["#text"]))) + 100;
+    return { min, max };
+  }
+}
