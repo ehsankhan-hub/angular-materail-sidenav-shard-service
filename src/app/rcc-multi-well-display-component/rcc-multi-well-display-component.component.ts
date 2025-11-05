@@ -351,64 +351,270 @@ export class RccMultiWellDisplayComponent implements AfterViewInit, OnChanges, O
 // }
 
 
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  Input,
+  QueryList,
+  SimpleChanges,
+  ViewChildren,
+  OnChanges,
+  OnInit
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
 
-import { LogWidget } from "@int/geotoolkit/welllog/LogWidget";
-import { LogTrack } from "@int/geotoolkit/welllog/LogTrack";
-import { LogCurve } from "@int/geotoolkit/welllog/LogCurve";
-import { LogData } from "@int/geotoolkit/welllog/data/LogData";
-import { KnownColors } from "@int/geotoolkit/util/ColorUtil";
-import { MathUtil } from "@int/geotoolkit/util/MathUtil";
+import { Plot } from '@int/geotoolkit/plot/Plot';
+import { MultiWellWidget } from '@int/geotoolkit/welllog/multiwell/MultiWellWidget';
+import { TrackType as MultiWellTrackType } from '@int/geotoolkit/welllog/multiwell/TrackType';
+import { TrackType as WellLogTrackType } from '@int/geotoolkit/welllog/TrackType';
+import { WellTrack } from '@int/geotoolkit/welllog/multiwell/WellTrack';
+import { LogData } from '@int/geotoolkit/welllog/data/LogData';
+import { LogCurve } from '@int/geotoolkit/welllog/LogCurve';
+import { KnownColors } from '@int/geotoolkit/util/ColorUtil';
+import { Range } from '@int/geotoolkit/util/Range';
+import { MathUtil } from '@int/geotoolkit/util/MathUtil';
 
-private renderAllWidgets(): void {
-  console.log('this.canvasTracks', this.canvasTracks);
+import { forkJoin } from 'rxjs';
+import { RccMultiWellWidgetsComponent } from './rcc-multi-well-widgets/rcc-multi-well-widgets.component';
 
-  this.canvasTracks.forEach((canvasRef: any, i: number) => {
-    const well = this.listOfTrack[i];
-    console.log('canvasRef', canvasRef, i);
+import { MultiWellDataService } from '../service/multi-well-service/multiwelldata.service';
+import { WellDataService } from '../service/well-service/well.service';
+import { LogDataRequest } from '../models/log-data-request';
+import { MultiWellData } from '../models/multiwell/multi-well-data';
+import { IWellboreLogData } from '../models/wellbore/wellbore-object';
 
-    // 1️⃣ Create the main widget
-    const logWidget = new LogWidget({
-      horizontalscrollable: "auto",
-      verticalscrollable: "auto",
+interface WellForm { wells: any[]; }
+
+@Component({
+  selector: 'app-rcc-multi-well-display',
+  standalone: true,
+  imports: [CommonModule, MatCardModule, RccMultiWellWidgetsComponent],
+  templateUrl: './rcc-multi-well-display.component.html',
+  styleUrls: ['./rcc-multi-well-display.component.scss']
+})
+export class RccMultiWellDisplayComponent implements OnInit, AfterViewInit, OnChanges {
+
+  @Input({ required: true }) graphData!: WellForm;
+
+  @ViewChildren('wellCanvas') canvases!: QueryList<ElementRef<HTMLCanvasElement>>;
+
+  // ---- UI tiles (left canvas + right widgets) ----
+  wellTiles: { wellName: string; wellboreUid: string; widgets: { label: string; value: any }[] }[] = [];
+
+  // ---- Data gathering (unchanged from your tested logic) ----
+  token: string = '';
+  logsRequest: LogDataRequest[] = [];
+
+  // ---- One Plot + Widget per well ----
+  private plotsByWellbore = new Map<string, Plot>();
+  private widgetByWellbore = new Map<string, MultiWellWidget>();
+  private trackByWellbore = new Map<string, WellTrack>(); // used by addWellData()
+
+  isLoading = false;
+  hasData = false;
+
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private mwService: MultiWellDataService,
+    private wellService: WellDataService
+  ) {}
+
+  ngOnInit(): void { this.token = '' + localStorage.getItem('token'); }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['graphData'] && !changes['graphData'].isFirstChange()) {
+      this.prepareRequestsAndTiles();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    this.prepareRequestsAndTiles();
+  }
+
+  // 1) Build requests and UI tiles from graphData (UNCHANGED logic for grouping)
+  private prepareRequestsAndTiles(): void {
+    if (!this.graphData?.wells?.length) { this.hasData = false; return; }
+
+    this.logsRequest = [];
+    this.wellTiles = [];
+
+    this.graphData.wells.forEach((well) => {
+      // group mnemonics per log id (same as your working code)
+      const grouped = well.mnemonicList.reduce((acc: any[], item: any) => {
+        const logId = item.selectedWellBoreLog.uid;
+        const logDetails = item.selectedWellBoreLog.logCurveInfo;
+        const mnemonic = item.mnemonic.mnemonic;
+
+        let group = acc.find((g) => g.log === logId);
+        if (!group) { group = { log: logId, logDetails, list: [] }; acc.push(group); }
+        group.list.push(mnemonic);
+        return acc;
+      }, []);
+
+      grouped.forEach((logData: any) => {
+        const { min, max } = this.getMinMaxValues(logData.logDetails);
+        const req: LogDataRequest = {
+          wellUid: well.selectedWell.uid,
+          wellboreUid: well.selectedWellBore.uid,
+          logUid: logData.log,
+          indexType: 'measured depth',
+          startIndex: min,
+          endIndex: max,
+          mnemonicList: logData.list.join(',')
+        };
+        this.logsRequest.push(req);
+      });
+
+      // create tile placeholder; widgets filled after data arrives
+      this.wellTiles.push({
+        wellName: well.selectedWellBore.name,
+        wellboreUid: well.selectedWellBore.uid,
+        widgets: []
+      });
     });
 
-    // 2️⃣ Create a track inside this widget
-    const logTrack = new LogTrack();
-    logWidget.addChild(logTrack);
+    this.hasData = true;
+    this.cdr.detectChanges();
 
-    // 3️⃣ Add each curve to the track
-    well.curves.forEach((curve: any) => {
-      const logData = new LogData(curve.mnemonic);
-      logData.setValues(curve.depths, curve.data);
+    // 2) initialize one canvas/widget per well
+    this.initPerWellPlots();
 
-      const limits = MathUtil.calculateNeatLimits(
-        logData.getMinValue(),
-        logData.getMaxValue(),
-        false,
-        false
-      );
+    // 3) fetch and add curves to the right track (UNCHANGED downstream)
+    this.getCurveData(this.logsRequest);
+  }
 
-      const logCurve = new LogCurve(logData)
-        .setLineStyle({
-          color: KnownColors.Blue,
-          width: 2,
-        })
-        .setNormalizationLimits(limits.getLow(), limits.getHigh());
+  // Create ONE MultiWellWidget & WellTrack per wellbore → bind to its canvas
+  private initPerWellPlots(): void {
+    // clear previous
+    this.plotsByWellbore.clear();
+    this.widgetByWellbore.clear();
+    this.trackByWellbore.clear();
 
-      logTrack.addChild(logCurve);
+    const canvasArr = this.canvases.toArray();
+    this.wellTiles.forEach((tile, i) => {
+      const canvasEl = canvasArr[i]?.nativeElement;
+      if (!canvasEl) return;
+
+      const widget = new MultiWellWidget({
+        horizontalscrollable: 'auto',
+        verticalscrollable: 'auto',
+        header: { border: { visible: true } },
+        scroll: {
+          headerverticalscroll: { size: 11, visible: true },
+          trackhorizontalscroll: { size: 11, visible: true }
+        }
+      });
+
+      // ONE WellTrack per widget (important!)
+      const track = widget.addTrack(MultiWellTrackType.WellTrack, {
+        welllog: { range: new Range(0, 100) },
+        name: tile.wellName,
+        title: '${name}<br/><span style="background-color:#DCDCDC">Depth Scale</span>'
+      });
+
+      const plot = new Plot({
+        canvaselement: canvasEl,
+        root: widget,
+        autosize: true,
+        autoupdate: true
+      });
+
+      this.plotsByWellbore.set(tile.wellboreUid, plot);
+      this.widgetByWellbore.set(tile.wellboreUid, widget);
+      this.trackByWellbore.set(tile.wellboreUid, track);
+    });
+  }
+
+  // UNCHANGED: fetch data, then add to the correct track by wellbore UID
+  private getCurveData(allRequests: LogDataRequest[]): void {
+    const obs = allRequests.map(r => this.mwService.getWellBoreData(this.token, r));
+    forkJoin(obs).subscribe({
+      next: (result) => {
+        result.forEach((item: any) => {
+          const curvesData: MultiWellData = { curveNames: [], curveData: [[]] };
+          const mnems: string[] = item.logs[0].logData?.mnemonicList.split(',') || [];
+          curvesData.curveData.pop();
+
+          mnems.forEach((m, i) => {
+            const arr: number[] = [];
+            item.logs[0].logData?.data.forEach((row: string) => {
+              const s = row.split(',');
+              const v = parseFloat(s[i]);
+              if (!isNaN(v)) arr.push(v);
+            });
+            if (arr.length) {
+              curvesData.curveNames.push(m);
+              curvesData.curveData.push(arr);
+            }
+          });
+
+          const wellboreUid = item.logs[0]['@uidWellbore'];
+          const track = this.trackByWellbore.get(wellboreUid);
+          if (track) {
+            this.addWellData(
+              track,
+              curvesData,
+              Number(item.logs[0].startIndex['#text']),
+              Number(item.logs[0].endIndex['#text'])
+            );
+
+            // Fill widgets (last values)
+            const widgets = curvesData.curveNames.map((name, idx) => ({
+              label: name,
+              value: curvesData.curveData[idx]?.at(-1) ?? '—'
+            }));
+            const tile = this.wellTiles.find(t => t.wellboreUid === wellboreUid);
+            if (tile) tile.widgets = widgets;
+          }
+        });
+      },
+      error: (err) => console.error('Error loading curves', err),
+      complete: () => {
+        // auto header height for each widget
+        this.widgetByWellbore.forEach(w => w.setHeaderHeight('auto'));
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ---------- your tested helpers (unchanged) ----------
+  private addWellData(well: WellTrack, data: MultiWellData, min: number, max: number): void {
+    well.addTrack(WellLogTrackType.IndexTrack);
+    const logTrack = well.addTrack(WellLogTrackType.LinearTrack);
+
+    data.curveNames.forEach((name, i) => {
+      const curve = this.createCurve(this.createData(1, 10, name, data.curveData[i]));
+      logTrack.addChild([curve]);
     });
 
-    // 4️⃣ Store the widget instance (if needed)
-    well.widget = logWidget;
+    if (min < max) well.setDepthLimits(min, max);
+  }
 
-    // 5️⃣ Finally render into the corresponding canvas
-    const plot = new Plot({
-      canvaselement: canvasRef.nativeElement,
-      root: logWidget,
-      autosize: true,
-      autoupdate: true,
-    });
-  });
+  private createCurve(dataSource: LogData): LogCurve {
+    const limits = MathUtil.calculateNeatLimits(
+      dataSource.getMinValue(),
+      dataSource.getMaxValue(),
+      false,
+      false
+    );
+    return new LogCurve(dataSource)
+      .setLineStyle({ color: KnownColors.Blue, width: 2 })
+      .setNormalizationLimits(limits.getLow(), limits.getHigh());
+  }
+
+  private createData(from: number, step: number, mnemonic: string, values: number[]): LogData {
+    const data = new LogData(mnemonic);
+    const depths = values.map((_, i) => i * step + from);
+    data.setValues(depths, values);
+    return data;
+  }
+
+  private getMinMaxValues(data: { minIndex: any; maxIndex: any }[]): { min: number; max: number } {
+    const min = Math.min(...data.map(d => parseFloat('' + d.minIndex['#text']))) - 100;
+    const max = Math.max(...data.map(d => parseFloat('' + d.maxIndex['#text']))) + 100;
+    return { min, max };
+  }
 }
-
-
