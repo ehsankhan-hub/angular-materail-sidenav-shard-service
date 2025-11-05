@@ -2,7 +2,10 @@
   background-color: #1c1c1c !important;
   transition: transform 0.2s ease-in-out;
 }
-.well-card:hover { transform: scale(1.02); }
+
+.well-card:hover {
+  transform: scale(1.02);
+}
 
 canvas {
   background: #000;
@@ -11,7 +14,7 @@ canvas {
 }
 
 @media (max-width: 768px) {
-  canvas { height: 200px !important; }
+  canvas {
+    height: 200px !important;
+  }
 }
-
-  
