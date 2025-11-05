@@ -2,277 +2,185 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  ElementRef,
+  inject,
   Input,
   OnChanges,
   OnInit,
-  QueryList,
   SimpleChanges,
-  ViewChildren
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
+  ViewChild,
+  ElementRef,
+} from "@angular/core";
+import { forkJoin } from "rxjs";
+import { Plot } from "@int/geotoolkit/plot/Plot";
+import { MultiWellWidget } from "@int/geotoolkit/welllog/multiwell/MultiWellWidget";
+import { TrackType as MultiWellTrackType } from "@int/geotoolkit/welllog/multiwell/TrackType";
+import { TrackType as WellLogTrackType } from "@int/geotoolkit/welllog/TrackType";
+import { WellTrack } from "@int/geotoolkit/welllog/multiwell/WellTrack";
+import { LogData } from "@int/geotoolkit/welllog/data/LogData";
+import { LogCurve } from "@int/geotoolkit/welllog/LogCurve";
+import { KnownColors } from "@int/geotoolkit/util/ColorUtil";
+import { Range } from "@int/geotoolkit/util/Range";
+import { MathUtil } from "@int/geotoolkit/util/MathUtil";
+import { MultiWellDataService } from "../service/multi-well-service/multiwelldata.service";
+import { LogDataRequest } from "../models/log-data-request";
+import { MultiWellData } from "../models/multiwell/multi-well-data";
+import { CommonModule } from "@angular/common";
+import { MatCardModule } from "@angular/material/card";
+import { WellDataService } from "../service/well-service/well.service";
+import { RccMultiWellWidgetsComponent } from "./rcc-multi-well-widgets/rcc-multi-well-widgets.component";
+import { IWellboreLogData } from "../models/wellbore/wellbore-object";
 
-import { forkJoin } from 'rxjs';
-
-import { Plot } from '@int/geotoolkit/plot/Plot';
-import { MultiWellWidget } from '@int/geotoolkit/welllog/multiwell/MultiWellWidget';
-import { TrackType as MultiWellTrackType } from '@int/geotoolkit/welllog/multiwell/TrackType';
-import { TrackType as WellLogTrackType } from '@int/geotoolkit/welllog/TrackType';
-import { WellTrack } from '@int/geotoolkit/welllog/multiwell/WellTrack';
-import { LogData } from '@int/geotoolkit/welllog/data/LogData';
-import { LogCurve } from '@int/geotoolkit/welllog/LogCurve';
-import { KnownColors } from '@int/geotoolkit/util/ColorUtil';
-import { Range } from '@int/geotoolkit/util/Range';
-import { MathUtil } from '@int/geotoolkit/util/MathUtil';
-
-import { RccMultiWellWidgetsComponent } from './rcc-multi-well-widgets/rcc-multi-well-widgets.component';
-import { MultiWellDataService } from '../service/multi-well-service/multiwelldata.service';
-import { WellDataService } from '../service/well-service/well.service';
-import { LogDataRequest } from '../models/log-data-request';
-import { MultiWellData } from '../models/multiwell/multi-well-data';
-
-interface WellForm { wells: any[]; }
+interface wellForm {
+  wells: any[];
+}
 
 @Component({
-  selector: 'app-rcc-multi-well-display',
+  selector: "app-rcc-multi-well-display",
   standalone: true,
-  imports: [CommonModule, MatCardModule, RccMultiWellWidgetsComponent],
-  templateUrl: './rcc-multi-well-display.component.html',
-  styleUrls: ['./rcc-multi-well-display.component.scss']
+  imports: [MatCardModule, CommonModule, RccMultiWellWidgetsComponent],
+  templateUrl: "./rcc-multi-well-display.component.html",
+  styleUrl: "./rcc-multi-well-display.component.scss",
 })
 export class RccMultiWellDisplayComponent
-  implements OnInit, AfterViewInit, OnChanges
+  implements AfterViewInit, OnChanges, OnInit
 {
-  @Input({ required: true }) graphData!: WellForm;
-  @ViewChildren('wellCanvas') canvases!: QueryList<ElementRef<HTMLCanvasElement>>;
+  displayName: string = "LWD Density";
+  defaultCureveInfo: IWellboreLogData;
+  logID: string = "";
+  isUpdateGuageRunning: boolean = false;
+  mnemonicName: any;
+  cardsConfig: any[] = [{}];
+  ropGaugeConfig: any[] = [];
+  columnChartsConfig: any = [{ chartValue: "", chartLabel: "" }];
 
-  wellTiles: {
-    wellName: string;
-    wellboreUid: string;
-    widgets: { label: string; value: any }[];
-  }[] = [];
+  @ViewChild("correlationDisplay", { static: false }) canvas: ElementRef;
+  multiWellService = inject(MultiWellDataService);
+  mnemonicListWedgets: string[] = [];
+  token!: string;
+  private plot: Plot;
+  well: any;
+  @Input({ required: true }) graphData: wellForm;
+  logsRequest: Array<LogDataRequest>;
+  selectedWells = [
+    { well: "ABHD_104", wellbore: "ABHD_104_2" },
+    { well: "ABHD_112", wellbore: "ABHD_112_0" },
+  ];
 
-  token = '';
-  logsRequest: LogDataRequest[] = [];
+  isLoading = false;
+  hasData = false;
+  cards: { mnemonicList: string; content: string }[] = [];
+  wellTrack: any[];
 
-  private plotsByWellbore = new Map<string, Plot>();
-  private widgetByWellbore = new Map<string, MultiWellWidget>();
-  private trackByWellbore = new Map<string, WellTrack>();
-
-  constructor(
-    private cdr: ChangeDetectorRef,
-    private mwService: MultiWellDataService,
-    private wellService: WellDataService
-  ) {}
+  constructor(private cdr: ChangeDetectorRef, private wellService: WellDataService) {}
 
   ngOnInit(): void {
-    this.token = '' + localStorage.getItem('token');
+    setInterval(() => {}, 1000 * 10 * 0.2);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['graphData'] && !changes['graphData'].isFirstChange()) {
-      this.prepareRequestsAndTiles();
+    if (changes["graphData"] && !changes["graphData"].isFirstChange()) {
+      this.processData();
     }
   }
 
   ngAfterViewInit(): void {
-    this.prepareRequestsAndTiles();
+    this.processData();
   }
 
-  private prepareRequestsAndTiles(): void {
-    if (!this.graphData?.wells?.length) return;
-
+  processData() {
+    this.isLoading = true;
     this.logsRequest = [];
-    this.wellTiles = [];
-
-    this.graphData.wells.forEach((well) => {
-      const grouped = well.mnemonicList.reduce((acc: any[], item: any) => {
-        const logId = item.selectedWellBoreLog.uid;
-        const logDetails = item.selectedWellBoreLog.logCurveInfo;
-        const mnemonic = item.mnemonic.mnemonic;
-
-        let group = acc.find((g) => g.log === logId);
-        if (!group) {
-          group = { log: logId, logDetails, list: [] };
-          acc.push(group);
-        }
-        group.list.push(mnemonic);
-        return acc;
-      }, []);
-
-      grouped.forEach((logData: any) => {
-        const { min, max } = this.getMinMaxValues(logData.logDetails);
-        const req: LogDataRequest = {
-          wellUid: well.selectedWell.uid,
-          wellboreUid: well.selectedWellBore.uid,
-          logUid: logData.log,
-          indexType: 'measured depth',
-          startIndex: min,
-          endIndex: max,
-          mnemonicList: logData.list.join(',')
-        };
-        this.logsRequest.push(req);
-      });
-
-      this.wellTiles.push({
-        wellName: well.selectedWellBore.name,
-        wellboreUid: well.selectedWellBore.uid,
-        widgets: []
-      });
-    });
-
+    this.wellTrack = [];
+    this.token = "" + localStorage.getItem("token");
     this.cdr.detectChanges();
-    this.initPerWellPlots();
-    this.getCurveData(this.logsRequest);
+    setTimeout(() => {
+      if (!this.graphData || this.graphData.wells.length === 0) {
+        this.isLoading = false;
+        this.hasData = false;
+        this.cdr.detectChanges();
+        return;
+      }
+      this.hasData = true;
+      this.renderGraph();
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }, 1000);
   }
 
-  /** Create one MultiWellWidget + WellTrack per wellbore */
-  private initPerWellPlots(): void {
-    this.plotsByWellbore.clear();
-    this.widgetByWellbore.clear();
-    this.trackByWellbore.clear();
+  renderGraph() {
+    const widget = this.createWidget();
 
-    const canvasArr = this.canvases.toArray();
-    this.wellTiles.forEach((tile, i) => {
-      const canvasEl = canvasArr[i]?.nativeElement;
-      if (!canvasEl) return;
-
-      const widget = new MultiWellWidget({
-        horizontalscrollable: 'auto',
-        verticalscrollable: 'auto',
-        header: { border: { visible: true } },
-        scroll: {
-          headerverticalscroll: { size: 11, visible: true },
-          trackhorizontalscroll: { size: 11, visible: true }
-        }
-      });
-
-      const track = widget.addTrack(MultiWellTrackType.WellTrack, {
-        welllog: { range: new Range(0, 100) },
-        name: tile.wellName,
-        title:
-          '${name}<br/><span style="background-color:#DCDCDC">Depth Scale</span>'
-      });
-
-      const plot = new Plot({
-        canvaselement: canvasEl,
-        root: widget,
-        autosize: true,
-        autoupdate: true
-      });
-
-      this.plotsByWellbore.set(tile.wellboreUid, plot);
-      this.widgetByWellbore.set(tile.wellboreUid, widget);
-      this.trackByWellbore.set(tile.wellboreUid, track);
-    });
-  }
-
-  /** Fetches data and attaches curves to the correct track */
-  private getCurveData(allRequests: LogDataRequest[]): void {
-    const obs = allRequests.map((r) =>
-      this.mwService.getWellBoreData(this.token, r)
-    );
-  
-    forkJoin(obs).subscribe({
-      next: (result) => {
-        result.forEach((item: any) => {
-          console.log('Raw item structure:', item);
-  
-          // ✅ FIXED: your wellbore UID is directly on item (not in item.logs[0])
-          const wellboreUid = item['@uidWellbore'];
-          const track = this.trackByWellbore.get(wellboreUid);
-          console.log('Found track for UID:', wellboreUid, !!track);
-  
-          if (!track) {
-            console.warn('No matching track for wellbore:', wellboreUid);
-            return;
-          }
-  
-          // ✅ Prepare curves data container
-          const curvesData: MultiWellData = {
-            curveNames: [],
-            curveData: [[]],
-          };
-  
-          // ✅ Read mnemonics from item.logData instead of item.logs[0].logData
-          const mnems: string[] =
-            item.logData?.mnemonicList?.split(',').map((m: string) => m.trim()) || [];
-  
-          curvesData.curveData.pop();
-  
-          // ✅ Iterate through each mnemonic to prepare curve data
-          mnems.forEach((m, i) => {
-            const curveData: number[] = [];
-  
-            item.logData?.data?.forEach((row: string) => {
-              const cols = row.split(',');
-              const value = parseFloat(cols[i]);
-              if (!isNaN(value)) curveData.push(value);
-            });
-  
-            if (curveData.length > 0) {
-              curvesData.curveNames.push(m);
-              curvesData.curveData.push(curveData);
-            }
-          });
-  
-          // ✅ Add curves to the correct track
-          this.addWellData(
-            track,
-            curvesData,
-            Number(item.startIndex?.['#text']),
-            Number(item.endIndex?.['#text'])
-          );
+    if (this.plot) {
+      this.plot.dispose();
+      setTimeout(() => {
+        this.plot = new Plot({
+          canvaselement: this.canvas.nativeElement,
+          root: widget,
+          autosize: true,
+          autoupdate: true,
         });
+      });
+    } else {
+      setTimeout(() => {
+        this.plot = new Plot({
+          canvaselement: this.canvas.nativeElement,
+          root: widget,
+          autosize: true,
+          autoupdate: true,
+        });
+      });
+    }
+  }
+
+  createWidget(): MultiWellWidget {
+    const widget = new MultiWellWidget({
+      horizontalscrollable: "auto",
+      verticalscrollable: "auto",
+      trackcontainer: { border: { visible: false } },
+      header: { border: { visible: true } },
+      tools: {
+        cursortracking: {
+          tooltip: { enabled: true },
+        },
       },
-      error: (err) => {
-        console.error('Error fetching wellbore data:', err);
+      scroll: {
+        headerverticalscroll: { size: 11, visible: true, options: { resizable: false } },
+        trackhorizontalscroll: { size: 11, visible: true, options: { resizable: false } },
       },
-      complete: () => {
-        console.log('All wellbore data loaded');
-      },
-    });
-  }
-  
+    }).setLayoutStyle({ left: 0, top: 0, right: 0, bottom: 0 });
 
-  // ---- tested helpers (unchanged) ----
-  private addWellData(well: WellTrack, data: MultiWellData, min: number, max: number): void {
-    well.addTrack(WellLogTrackType.IndexTrack);
-    const logTrack = well.addTrack(WellLogTrackType.LinearTrack);
+    if (this.graphData) {
+      this.graphData.wells.forEach((well) => {
+        const groupedMnemonics = well.mnemonicList.reduce((acc: any, item: any) => {
+          const selectedLogId = item.selectedWellBoreLog.uid;
+          const logDetails = item.selectedWellBoreLog.logCurveInfo;
+          this.mnemonicName = item.mnemonic.mnemonic;
 
-    data.curveNames.forEach((name, i) => {
-      const curve = this.createCurve(this.createData(1, 10, name, data.curveData[i]));
-      logTrack.addChild([curve]);
-    });
+          let group = acc.find((g: any) => g.log === selectedLogId);
+          if (!group) {
+            group = { log: selectedLogId, logDetails, list: [], cards: [] };
+            acc.push(group);
+          }
+          group.list.push(this.mnemonicName);
+          return acc;
+        }, []);
 
-    if (min < max) well.setDepthLimits(min, max);
-  }
+        groupedMnemonics.forEach((logData: any) => {
+          const minMax = this.getMinMaxValues(logData.logDetails);
+          const singleLogRequest = {
+            wellUid: well.selectedWell.uid,
+            wellboreUid: well.selectedWellBore.uid,
+            logUid: logData.log,
+            indexType: "measured depth",
+            startIndex: minMax.min,
+            endIndex: minMax.max,
+            mnemonicList: logData.list.join(","),
+          };
+          this.logsRequest.push(singleLogRequest);
+        });
 
-  private createCurve(dataSource: LogData): LogCurve {
-    const limits = MathUtil.calculateNeatLimits(
-      dataSource.getMinValue(),
-      dataSource.getMaxValue(),
-      false,
-      false
-    );
-    return new LogCurve(dataSource)
-      .setLineStyle({ color: KnownColors.Blue, width: 2 })
-      .setNormalizationLimits(limits.getLow(), limits.getHigh());
-  }
-
-  private createData(from: number, step: number, mnemonic: string, values: number[]): LogData {
-    const data = new LogData(mnemonic);
-    const depths = values.map((_, i) => i * step + from);
-    data.setValues(depths, values);
-    return data;
-  }
-
-  private getMinMaxValues(data: { minIndex: any; maxIndex: any }[]): { min: number; max: number } {
-    const min =
-      Math.min(...data.map((d) => parseFloat('' + d.minIndex['#text']))) - 100;
-    const max =
-      Math.max(...data.map((d) => parseFloat('' + d.maxIndex['#text']))) + 100;
-    return { min, max };
-  }
-}
+        // ✅ Add per-well track and tag with DI_
+        const singleWellTrack = widget.addTrack(MultiWellTrackType.WellTrack, {
+          welllog: { range: new Range(0, 100) },
+          name: well.selectedWellBore.name,
+          title: '${name}<br/><span style="bac
