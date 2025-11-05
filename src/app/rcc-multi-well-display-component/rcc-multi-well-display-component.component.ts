@@ -350,3 +350,65 @@ export class RccMultiWellDisplayComponent implements AfterViewInit, OnChanges, O
 //   }
 // }
 
+
+
+import { LogWidget } from "@int/geotoolkit/welllog/LogWidget";
+import { LogTrack } from "@int/geotoolkit/welllog/LogTrack";
+import { LogCurve } from "@int/geotoolkit/welllog/LogCurve";
+import { LogData } from "@int/geotoolkit/welllog/data/LogData";
+import { KnownColors } from "@int/geotoolkit/util/ColorUtil";
+import { MathUtil } from "@int/geotoolkit/util/MathUtil";
+
+private renderAllWidgets(): void {
+  console.log('this.canvasTracks', this.canvasTracks);
+
+  this.canvasTracks.forEach((canvasRef: any, i: number) => {
+    const well = this.listOfTrack[i];
+    console.log('canvasRef', canvasRef, i);
+
+    // 1️⃣ Create the main widget
+    const logWidget = new LogWidget({
+      horizontalscrollable: "auto",
+      verticalscrollable: "auto",
+    });
+
+    // 2️⃣ Create a track inside this widget
+    const logTrack = new LogTrack();
+    logWidget.addChild(logTrack);
+
+    // 3️⃣ Add each curve to the track
+    well.curves.forEach((curve: any) => {
+      const logData = new LogData(curve.mnemonic);
+      logData.setValues(curve.depths, curve.data);
+
+      const limits = MathUtil.calculateNeatLimits(
+        logData.getMinValue(),
+        logData.getMaxValue(),
+        false,
+        false
+      );
+
+      const logCurve = new LogCurve(logData)
+        .setLineStyle({
+          color: KnownColors.Blue,
+          width: 2,
+        })
+        .setNormalizationLimits(limits.getLow(), limits.getHigh());
+
+      logTrack.addChild(logCurve);
+    });
+
+    // 4️⃣ Store the widget instance (if needed)
+    well.widget = logWidget;
+
+    // 5️⃣ Finally render into the corresponding canvas
+    const plot = new Plot({
+      canvaselement: canvasRef.nativeElement,
+      root: logWidget,
+      autosize: true,
+      autoupdate: true,
+    });
+  });
+}
+
+
