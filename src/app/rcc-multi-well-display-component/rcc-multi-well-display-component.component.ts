@@ -1,3 +1,63 @@
+@Input() wellsData: { wellId: string; borewellId: string; mnemonics: string[] }[] = [];
+
+AddImageTracksForMultipleWells() {
+  if (!this.wellsData?.length) {
+    console.warn('No wellsData provided');
+    return;
+  }
+
+  let trackNoCounter = 8;
+
+  this.wellsData.forEach((w, wellIndex) => {
+    const curvesForWell: any[] = [];
+
+    w.mnemonics.forEach((mnemonicId, mnemonicIndex) => {
+      const curveInfo = this.wellService.GetDefaultMnemonic();
+      curveInfo.wellId = w.wellId;
+      curveInfo.wellboreId = w.borewellId;
+      curveInfo.LogId = this.logID;
+      curveInfo.color = this.getColorByIndex(mnemonicIndex);
+      curveInfo.mnemonic = mnemonicId;
+      curveInfo.mnemonicId = mnemonicId;
+      curveInfo.displayName = `${mnemonicId} (${w.wellId})`;
+      curveInfo.min = 0;
+      curveInfo.max = 500;
+      curveInfo.autoScale = false;
+
+      curvesForWell.push(curveInfo);
+    });
+
+    this.listOfTrack.push({
+      trackNo: trackNoCounter++,
+      trackName: `Image Track - ${w.wellId}`,
+      trackType: 'Image',
+      isIndex: false,
+      isDepth: false,
+      isImage: true,
+      isMudLog: false,
+      curves: curvesForWell,
+      comments: []
+    });
+  });
+}
+
+getColorByIndex(index: number): string {
+  const colors = ['#d0021b', '#0077cc', '#22aa55', '#ffaa00', '#6600cc', '#009999'];
+  return colors[index % colors.length];
+}
+
+<app-RT
+  [wellsData]="[
+    { wellId: 'WELL-001', borewellId: 'BORE-001', mnemonics: ['GR_L', 'DYN_DEN_IMG'] },
+    { wellId: 'WELL-002', borewellId: 'BORE-002', mnemonics: ['SIGMA', 'SGR_RT'] }
+  ]"
+  callingFrom="StaticTemplate">
+</app-RT>
+
+
+
+
+
 import {
   AfterViewInit,
   ChangeDetectorRef,
