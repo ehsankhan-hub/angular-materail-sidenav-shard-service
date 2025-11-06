@@ -29,10 +29,23 @@ AddImageTracksForMultipleWells() {
 
     this.listOfTrack.push({
       trackNo: trackNoCounter++,
-      trackName: `Image Track - ${w.wellId}`,
-      trackType: 'Image',
+      trackName: `Index Track - ${w.wellId}`,
+      trackType: 'Index',
+      isIndex: true,
+      isDepth: true,
+      isImage: false,
+      isMudLog: false,
+      curves: [],
+      comments: []
+    });
+
+
+    this.listOfTrack.push({
+      trackNo: trackNoCounter++,
+      trackName: '',
+      trackType: 'Linear',
       isIndex: false,
-      isDepth: false,
+      isDepth: true,
       isImage: true,
       isMudLog: false,
       curves: curvesForWell,
