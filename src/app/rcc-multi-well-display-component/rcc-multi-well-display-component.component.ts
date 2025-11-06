@@ -1,3 +1,195 @@
+
+import { Component, Input, OnInit } from '@angular/core';
+import { ITracks } from '../../../models/chart/tracks';
+import { WellDataService } from '../../../service/well-service/well.service';
+
+@Component({
+  selector: 'app-goc-lwd-density-display',
+  standalone: true,
+  imports: [/* your existing imports, plus RealTimeDisplayComponent */],
+  templateUrl: './goc-lwd-density-display.component.html',
+  styleUrl: './goc-lwd-density-display.component.scss'
+})
+export class GocLwdDensityDisplayComponent implements OnInit {
+  @Input() wells: string[] = [];   // multiple wells
+  @Input() wellbore: string;
+  wellTracksMap: { [key: string]: ITracks[] } = {}; // store per-well track configs
+
+  constructor(private wellService: WellDataService) {}
+
+  ngOnInit(): void {
+    this.prepareTracksForAllWells();
+  }
+
+  prepareTracksForAllWells() {
+    this.wells.forEach(wellId => {
+      const trackList: ITracks[] = [];
+      const curveInfos: any[] = [];
+
+      const mnemonics = ['DYN_DEN_IMG', 'GR_L', 'SIGMA']; // or dynamic list
+
+      mnemonics.forEach((mnemonic, idx) => {
+        const curve = this.wellService.GetDefaultMnemonic();
+        curve.wellId = wellId;
+        curve.wellboreId = this.wellbore;
+        curve.LogId = 'LWD_Depth';
+        curve.color = this.getColorByIndex(idx);
+        curve.displayName = `${mnemonic} (${wellId})`;
+        curve.mnemonic = mnemonic;
+        curve.mnemonicId = mnemonic;
+        curve.min = 0;
+        curve.max = 500;
+        curve.autoScale = false;
+        curveInfos.push(curve);
+      });
+
+      // Add one track for this well
+      trackList.push({
+        trackNo: 1,
+        trackName: `Image Track - ${wellId}`,
+        trackType: 'Image',
+        isIndex: false,
+        isDepth: false,
+        isImage: true,
+        isMudLog: false,
+        curves: curveInfos,
+        comments: []
+      });
+
+      this.wellTracksMap[wellId] = trackList;
+    });
+  }
+
+  getColorByIndex(i: number): string {
+    const colors = ['#d0021b', '#0077cc', '#22aa55', '#ffaa00', '#6600cc', '#009999'];
+    return colors[i % colors.length];
+  }
+}
+
+
+
+
+
+///////////////
+
+
+<div class="container-fluid">
+  <div *ngFor="let well of wells" class="mb-4">
+    <h4 class="text-center mb-2">Well: {{ well }}</h4>
+    <app-RT
+      [wells]="[well]"               <!-- one well only -->
+      [wellbore]="wellbore"
+      [lstOfTrack]="wellTracksMap[well]"
+      callingFrom="StaticTemplate">
+    </app-RT>
+  </div>
+</div>
+
+
+
+///////////////////
+
+wells = ['WELL-001', 'WELL-002'];
+wellbore = 'BORE-001';
+
+wellTracksMap = {
+  'WELL-001': [
+    {
+      trackNo: 1,
+      trackName: 'Image Track - WELL-001',
+      trackType: 'Image',
+      isIndex: false,
+      isDepth: false,
+      isImage: true,
+      isMudLog: false,
+      comments: [],
+      curves: [
+        {
+          wellId: 'WELL-001',
+          wellboreId: 'BORE-001',
+          LogId: 'LWD_Depth',
+          color: '#d0021b',
+          displayName: 'DYN_DEN_IMG (WELL-001)',
+          mnemonic: 'DYN_DEN_IMG',
+          mnemonicId: 'DYN_DEN_IMG',
+          min: 0,
+          max: 500,
+          autoScale: false
+        },
+        {
+          wellId: 'WELL-001',
+          wellboreId: 'BORE-001',
+          LogId: 'LWD_Depth',
+          color: '#0077cc',
+          displayName: 'GR_L (WELL-001)',
+          mnemonic: 'GR_L',
+          mnemonicId: 'GR_L',
+          min: 0,
+          max: 500,
+          autoScale: false
+        },
+        {
+          wellId: 'WELL-001',
+          wellboreId: 'BORE-001',
+          LogId: 'LWD_Depth',
+          color: '#22aa55',
+          displayName: 'SIGMA (WELL-001)',
+          mnemonic: 'SIGMA',
+          mnemonicId: 'SIGMA',
+          min: 0,
+          max: 500,
+          autoScale: false
+        }
+      ]
+    }
+  ],
+
+  'WELL-002': [
+    {
+      trackNo: 1,
+      trackName: 'Image Track - WELL-002',
+      trackType: 'Image',
+      isIndex: false,
+      isDepth: false,
+      isImage: true,
+      isMudLog: false,
+      comments: [],
+      curves: [
+        {
+          wellId: 'WELL-002',
+          wellboreId: 'BORE-001',
+          LogId: 'LWD_Depth',
+          color: '#ffaa00',
+          displayName: 'DYN_DEN_IMG (WELL-002)',
+          mnemonic: 'DYN_DEN_IMG',
+          mnemonicId: 'DYN_DEN_IMG',
+          min: 0,
+          max: 500,
+          autoScale: false
+        },
+        {
+          wellId: 'WELL-002',
+          wellboreId: 'BORE-001',
+          LogId: 'LWD_Depth',
+          color: '#6600cc',
+          displayName: 'SGR_RT (WELL-002)',
+          mnemonic: 'SGR_RT',
+          mnemonicId: 'SGR_RT',
+          min: 0,
+          max: 500,
+          autoScale: false
+        }
+      ]
+    }
+  ]
+};
+
+
+
+
+
+
+
 @Input() wellsData: { wellId: string; borewellId: string; mnemonics: string[] }[] = [];
 
 AddImageTracksForMultipleWells() {
