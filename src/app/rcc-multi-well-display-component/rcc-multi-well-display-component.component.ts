@@ -104,6 +104,131 @@ buildTrackListForWell(wellId: string, wellboreId: string, logId: string): ITrack
 
 ////////////////////
 
+///dynamic template
+
+
+
+buildTrackListForWell(
+  wellId: string,
+  wellboreId: string,
+  logId: string,
+  mnemonics: string[]
+): ITracks[] {
+  const listOfTrack: ITracks[] = [];
+  const curveGammaInfos: any[] = [];
+
+  // ✅ Loop through mnemonics
+  mnemonics.forEach((mnemonic, index) => {
+    const curve = this.wellService.GetDefaultMnemonic();
+    curve.wellId = wellId;
+    curve.wellboreId = wellboreId;
+    curve.LogId = logId;
+    curve.mnemonic = mnemonic;
+    curve.mnemonicId = mnemonic;
+    curve.displayName = mnemonic;
+    curve.min = 0;
+    curve.max = 150;
+    curve.autoScale = false;
+
+    // assign color dynamically based on index
+    const colors = ['#6b312d', '#d98c86', '#af7ebf', '#b3e7b3', '#0077cc'];
+    curve.color = colors[index % colors.length];
+
+    // add line style for variety
+    if (index % 2 === 0) {
+      curve.lineStyle = '2,4';
+    }
+
+    curveGammaInfos.push(curve);
+  });
+
+  // ✅ Track 1 — Linear track with all mnemonics
+  listOfTrack.push({
+    trackNo: 1,
+    trackName: 'Gamma Track',
+    trackType: 'Linear',
+    isIndex: true,
+    isDepth: true,
+    isImage: false,
+    isMudLog: false,
+    curves: curveGammaInfos,
+    comments: []
+  });
+
+  // ✅ Track 2 — Static index track
+  listOfTrack.push({
+    trackNo: 2,
+    trackName: 'Index Track',
+    trackType: 'Index',
+    isIndex: true,
+    isDepth: true,
+    isImage: false,
+    isMudLog: false,
+    curves: [],
+    comments: []
+  });
+
+  return listOfTrack;
+}
+
+
+/////
+
+wellsData: any[] = [];
+
+ngOnInit(): void {
+  const wells = [
+    {
+      well: 'WELL-001',
+      wellbore: 'BORE-001',
+      mnemonics: ['SGR_RT', 'SIGMA', 'SIGMAE']
+    },
+    {
+      well: 'WELL-002',
+      wellbore: 'BORE-002',
+      mnemonics: ['GR_L', 'NBI', 'ABG_L']
+    },
+    {
+      well: 'WELL-003',
+      wellbore: 'BORE-003',
+      mnemonics: ['THOR_RT', 'URAN_RT', 'POTA_RT', 'SGR_RT']
+    }
+  ];
+
+  this.wellsData = wells.map((w) => ({
+    well: w.well,
+    wellbore: w.wellbore,
+    selectedTrackList: this.buildTrackListForWell(
+      w.well,
+      w.wellbore,
+      'LWD_Depth',
+      w.mnemonics
+    )
+  }));
+}
+
+////
+
+<div class="container-fluid">
+  <div *ngFor="let item of wellsData" class="card shadow-sm mb-4">
+    <div class="card-header text-center fw-bold bg-light">
+      {{ item.well }}
+    </div>
+    <div class="card-body">
+      <app-RT
+        [wells]="item.well"
+        [wellbore]="item.wellbore"
+        [lstOfTrack]="item.selectedTrackList"
+        callingFrom="StaticTemplate">
+      </app-RT>
+    </div>
+  </div>
+</div>
+
+
+///
+
+
 
 import { Component, Input, OnInit } from '@angular/core';
 import { ITracks } from '../../../models/chart/tracks';
