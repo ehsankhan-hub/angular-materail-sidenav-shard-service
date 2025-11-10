@@ -197,3 +197,210 @@ export class GocLwdDensityDisplayComponent implements OnInit {
 
 /////////////////
 
+
+
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RealTimeDisplayComponent } from '../../wellboreview/realTimeDisplay/realTimeDisplay.component';
+import { ITracks } from '../../../models/chart/tracks';
+import { WellDataService } from '../../../service/well-service/well.service';
+import { CircularGaugeComponent } from '../../gauge/circular-gauge/circular-gauge.component';
+import { LinearGaugeComponent } from '../../gauge/linear-gauge/linear-gauge.component';
+import { NumericGaugeComponent } from '../../gauge/numeric-gauge/numeric-gauge.component';
+
+@Component({
+  selector: 'app-goc-lwd-density-display',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RealTimeDisplayComponent,
+    CircularGaugeComponent,
+    LinearGaugeComponent,
+    NumericGaugeComponent
+  ],
+  templateUrl: './goc-lwd-density-display.component.html',
+  styleUrls: ['./goc-lwd-density-display.component.scss']
+})
+export class GocLwdDensityDisplayComponent implements OnChanges {
+  @Input() graphData: any; // ✅ dynamically provided from parent
+
+  wellsData: any[] = [];
+
+  constructor(private wellService: WellDataService) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes["graphData"] && !changes["graphData"].isFirstChange()) {
+      if (this.graphData) {
+        this.processGraphData(this.graphData);
+      }
+    }
+  }
+  
+
+  /** ✅ Converts graphData into wellsData for visualization */
+  processGraphData(graphData: any): void {
+    const dynamicWells: any[] = [];
+
+    graphData.wells.forEach((well: any) => {
+      // Group mnemonics by log ID (like your code)
+      const groupedMnemonics = well.mnemonicList.reduce((acc: any[], item: any) => {
+        const logId = item.selectedWellBoreLog.uid;
+        const logDetails = item.selectedWellBoreLog.logCurveInfo;
+        const mnemonicName = item.mnemonic.mnemonic;
+
+        let group = acc.find((g) => g.log === logId);
+        if (!group) {
+          group = { log: logId, logDetails, list: [] };
+          acc.push(group);
+        }
+        group.list.push(mnemonicName);
+        return acc;
+      }, []);
+
+      groupedMnemonics.forEach((group: any) => {
+        dynamicWells.push({
+          well: well.selectedWell.uid,
+          wellbore: well.selectedWellBore.uid,
+          logId: group.log,
+          mnemonics: group.list
+        });
+      });
+    });
+
+    // ✅ Rebuild visualization using the extracted wells and mnemonics
+    this.buildWellsData(dynamicWells);
+  }
+
+  /** Builds wellsData (same as before) */
+  buildWellsData(selectedWells: { well: string; wellbore: string; mnemonics: string[] }[]): void {
+    this.wellsData = selectedWells.map((w) => ({
+      well: w.well,
+      wellbore: w.wellbore,
+      selectedTrackList: this.buildTrackListForWell(w.well, w.wellbore, w.logId || 'LWD_Depth', w.mnemonics),
+      widgets: this.buildWidgetsFromMnemonics(w.mnemonics)
+    }));
+  }
+
+  /** Builds tracks from mnemonics */
+  buildTrackListForWell(
+    wellId: string,
+    wellboreId: string,
+    logId: string,
+    mnemonics: string[]
+  ): ITracks[] {
+    const listOfTrack: ITracks[] = [];
+    const curves: any[] = [];
+
+    mnemonics.forEach((mnemonic, i) => {
+      const curve = this.wellService.GetDefaultMnemonic();
+      curve.wellId = wellId;
+      curve.wellboreId = wellboreId;
+      curve.LogId = logId;
+      curve.displayName = mnemonic;
+      curve.mnemonic = mnemonic;
+      curve.mnemonicId = mnemonic;
+      curve.min = 0;
+      curve.max = 150;
+      curve.autoScale = false;
+      curve.color = this.getColorByIndex(i);
+      if (i % 2 === 0) curve.lineStyle = '2,4';
+      curves.push(curve);
+    });
+
+    listOfTrack.push({
+      trackNo: 1,
+      trackName: 'Main Track',
+      trackType: 'Linear',
+      isIndex: true,
+      isDepth: true,
+      isImage: false,
+      isMudLog: false,
+      curves,
+      comments: []
+    });
+
+    listOfTrack.push({
+      trackNo: 2,
+      trackName: 'Index Track',
+      trackType: 'Index',
+      isIndex: true,
+      isDepth: true,
+      isImage: false,
+      isMudLog: false,
+      curves: [],
+      comments: []
+    });
+
+    return listOfTrack;
+  }
+
+  /** Builds matching widgets for each mnemonic */
+  buildWidgetsFromMnemonics(mnemonics: string[]): any[] {
+    return mnemonics.map((mnemonic, i) => ({
+      type: this.getWidgetType(i),
+      label: mnemonic,
+      unit: 'ft',
+      color: this.getColorByIndex(i)
+    }));
+  }
+
+  /** Utility helpers */
+  getColorByIndex(i: number): string {
+    const colors = ['#6b312d', '#d98c86', '#af7ebf', '#b3e7b3', '#0077cc', '#22aa55', '#ffaa00'];
+    return colors[i % colors.length];
+  }
+
+  getWidgetType(i: number): string {
+    const types = ['CircularGauge', 'NumericGauge', 'LinearGauge'];
+    return types[i % types.length];
+  }
+}
+
+
+/////////////
+
+<div class="container-fluid">
+  <div *ngFor="let item of wellsData" class="row mb-4 shadow-sm rounded bg-white">
+    <!-- Left: Real-time tracks -->
+    <div class="col-lg-9 col-md-8 col-sm-12 p-3">
+      <h5 class="fw-bold text-center">{{ item.well }} ({{ item.wellbore }})</h5>
+      <app-RT
+        [wells]="item.well"
+        [wellbore]="item.wellbore"
+        [lstOfTrack]="item.selectedTrackList"
+        callingFrom="StaticTemplate">
+      </app-RT>
+    </div>
+
+    <!-- Right: Widgets -->
+    <div class="col-lg-3 col-md-4 col-sm-12 p-3 border-start bg-light">
+      <div *ngFor="let w of item.widgets" class="mb-3 text-center">
+        <ng-container [ngSwitch]="w.type">
+          <app-circular-gauge
+            *ngSwitchCase="'CircularGauge'"
+            [label]="w.label"
+            [unit]="w.unit"
+            [color]="w.color">
+          </app-circular-gauge>
+
+          <app-numeric-gauge
+            *ngSwitchCase="'NumericGauge'"
+            [label]="w.label"
+            [unit]="w.unit"
+            [color]="w.color">
+          </app-numeric-gauge>
+
+          <app-linear-gauge
+            *ngSwitchCase="'LinearGauge'"
+            [label]="w.label"
+            [unit]="w.unit"
+            [color]="w.color">
+          </app-linear-gauge>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+////////////////////////
+
