@@ -1,3 +1,109 @@
+wellsData: any[] = [];
+
+ngOnInit(): void {
+  const wells = [
+    { well: 'WELL-001', wellbore: 'BORE-001' },
+    { well: 'WELL-002', wellbore: 'BORE-002' },
+    { well: 'WELL-003', wellbore: 'BORE-003' }
+  ];
+
+  this.wellsData = wells.map(w => ({
+    well: w.well,
+    wellbore: w.wellbore,
+    selectedTrackList: this.buildTrackListForWell(w.well, w.wellbore, 'LWD_Depth')
+  }));
+}
+
+buildTrackListForWell(wellId: string, wellboreId: string, logId: string): ITracks[] {
+  const listOfTrack: ITracks[] = [];
+  const curveGammaInfos: any[] = [];
+
+  // ------- Your existing curve creation logic --------
+  let curve = this.wellService.GetDefaultMnemonic();
+  curve.wellId = wellId;
+  curve.wellboreId = wellboreId;
+  curve.LogId = logId;
+  curve.color = "#6b312d";
+  curve.displayName = "Gamma SGR";
+  curve.mnemonic = "SGR_RT";
+  curve.mnemonicId = "SGR_RT";
+  curve.min = 0;
+  curve.max = 150;
+  curve.autoScale = false;
+  curveGammaInfos.push(curve);
+
+  curve = this.wellService.GetDefaultMnemonic();
+  curve.wellId = wellId;
+  curve.wellboreId = wellboreId;
+  curve.LogId = logId;
+  curve.color = "#d98c86";
+  curve.displayName = "SIGMA Channel";
+  curve.mnemonic = "SIGMA";
+  curve.mnemonicId = "SIGMA";
+  curve.min = 0;
+  curve.max = 100;
+  curve.autoScale = false;
+  curve.lineStyle = "2,4";
+  curveGammaInfos.push(curve);
+
+  curve = this.wellService.GetDefaultMnemonic();
+  curve.wellId = wellId;
+  curve.wellboreId = wellboreId;
+  curve.LogId = logId;
+  curve.color = "#af7ebf";
+  curve.displayName = "SIGMA from Element";
+  curve.mnemonic = "SIGMAE";
+  curve.mnemonicId = "SIGMAE";
+  curveGammaInfos.push(curve);
+
+  // Track 1 - Linear
+  listOfTrack.push({
+    trackNo: 1,
+    trackName: "Gamma Track",
+    trackType: "Linear",
+    isIndex: true,
+    isDepth: true,
+    isImage: false,
+    isMudLog: false,
+    curves: curveGammaInfos,
+    comments: []
+  });
+
+  // Track 2 - Index
+  listOfTrack.push({
+    trackNo: 2,
+    trackName: "Index Track",
+    trackType: "Index",
+    isIndex: true,
+    isDepth: true,
+    isImage: false,
+    isMudLog: false,
+    curves: [],
+    comments: []
+  });
+
+  return listOfTrack;
+}
+
+
+////////////////////
+
+<div *ngFor="let item of wellsData" class="card shadow-sm mb-4">
+  <div class="card-header text-center fw-bold bg-light">
+    {{ item.well }}
+  </div>
+  <div class="card-body">
+    <app-RT
+      [wells]="item.well"
+      [wellbore]="item.wellbore"
+      [lstOfTrack]="item.selectedTrackList"
+      callingFrom="StaticTemplate">
+    </app-RT>
+  </div>
+</div>
+
+////////////////////
+
 
 import { Component, Input, OnInit } from '@angular/core';
 import { ITracks } from '../../../models/chart/tracks';
