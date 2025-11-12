@@ -1,3 +1,4 @@
+/// multiw
 ngOnInit(): void {
     // ✅ Only set default wells if BehaviorSubject is empty
     const current = this.staticTemplateSharedService.getMultiWellFilterData();
@@ -15,6 +16,20 @@ ngOnInit(): void {
       }
     });
   }
+
+/////
+/// multiw
+
+
+addWell() {
+    const currentSelection = this.staticTemplateSharedService.getMultiWellFilterData();
+    this.dialogRef = this.dialog.open(MultiWellFilterComponent, {
+      width: "80%",
+      height: "80vh",
+      data: currentSelection,
+    });
+  }
+
 
 
   ////////////
