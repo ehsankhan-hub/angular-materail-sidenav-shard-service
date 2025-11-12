@@ -32,7 +32,7 @@ addWell() {
 
 
 
-  ////////////
+  //////////// multiw
 
   UpdateGuageValue(dynamicWells: any[]): void {
     if (!dynamicWells || dynamicWells.length === 0) return;
@@ -136,6 +136,65 @@ addWell() {
       this.isUpdateGuageRunning = false;
     }
   }
-  
 
+
+  /// filterC
+
+  ngOnInit(): void {
+   
+   const previousData = this.sharedService.getMultiWellFilterData();
+   if (previousData?.wells?.length > 0) {
+     previousData.wells.forEach((wellObj: any) => {
+       this.addWell(); // create form structure
+       const index = this.wells.length - 1;
+ 
+       this.wells.at(index).patchValue({
+         selectedWell: wellObj.selectedWell || null,
+         selectedWellBore: wellObj.selectedWellBore || "",
+       });
+ 
+       if (wellObj.mnemonicList?.length) {
+         wellObj.mnemonicList.forEach((mnemonic: any) => {
+           this.addMnemonic(index);
+           const mnIndex = this.getMnemonics(index).length - 1;
+           this.getMnemonics(index)
+             .at(mnIndex)
+             .patchValue({
+               selectedWellBoreLog: mnemonic.selectedWellBoreLog,
+               mnemonic: mnemonic.mnemonic,
+             });
+         });
+       }
+     });
+   }
+  
+}
+
+
+//////////////
+MultiComponent.ngOnInit():
+ngOnInit(): void {
+    this.buildWellsData(this.selectedWells);
+    this.staticTemplateSharedService.setMultiWellFilterData(this.selectedWells);
+  
+    this.staticTemplateSharedService.multiWellFilterData$.subscribe((data: any) => {
+      this.filteredData = data;
+      if (this.filteredData) {
+        console.log('filter data after subscribe ', this.filteredData.length);
+        this.processGraphData(this.filteredData);
+      }
+    });
+  
+    // ✅ Add this block
+    const previousData = this.staticTemplateSharedService.getMultiWellFilterData();
+    if (previousData?.wells?.length > 0) {
+      console.log('Loading previously selected wells into multiwell component');
+      this.processGraphData(previousData);
+    }
+  
+    this.intervalTimer = setInterval(() => {
+      // existing interval logic
+    }, 1000 * 10 * 0.2);
+  }
+  
   
