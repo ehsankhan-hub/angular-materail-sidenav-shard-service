@@ -404,3 +404,54 @@ export class GocLwdDensityDisplayComponent implements OnChanges {
 
 ////////////////////////
 
+
+
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class SharedService {
+  // Start with a safe default
+  private multiWellFilterData = new BehaviorSubject<any>({ wells: [] });
+  multiWellFilterData$ = this.multiWellFilterData.asObservable();
+
+  /** Get the latest value synchronously */
+  getMultiWellFilterData() {
+    return this.multiWellFilterData.value || { wells: [] };
+  }
+
+  /** Replace everything (used for reset or first load) */
+  setMultiWellFilterData(newData: any) {
+    this.multiWellFilterData.next(newData);
+  }
+
+  /** ✅ Merge new wells with existing, prevent duplicates */
+  mergeSelectedWells(newData: any) {
+    // Get the current wells list safely
+    const currentData = this.getMultiWellFilterData();
+    const currentWells = Array.isArray(currentData.wells) ? currentData.wells : [];
+
+    // Normalize new wells — support single or multiple wells
+    const newWells = Array.isArray(newData.wells)
+      ? newData.wells
+      : newData.well
+      ? [newData]
+      : [];
+
+    // Merge + remove duplicates (by well + wellbore)
+    const merged = [...currentWells, ...newWells].filter(
+      (well, index, arr) =>
+        arr.findIndex(
+          (x) => x.well === well.well && x.wellbore === well.wellbore
+        ) === index
+    );
+
+    // Emit the new merged data
+    this.multiWellFilterData.next({ wells: merged });
+  }
+
+  /** Optional clear/reset */
+  clearSelection() {
+    this.multiWellFilterData.next({ wells: [] });
+  }
+}
