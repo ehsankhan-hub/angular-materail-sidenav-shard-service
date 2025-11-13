@@ -143,30 +143,74 @@ addWell() {
   ngOnInit(): void {
    
    const previousData = this.sharedService.getMultiWellFilterData();
-   if (previousData?.wells?.length > 0) {
-     previousData.wells.forEach((wellObj: any) => {
-       this.addWell(); // create form structure
-       const index = this.wells.length - 1;
+//    if (previousData?.wells?.length > 0) {
+//      previousData.wells.forEach((wellObj: any) => {
+//        this.addWell(); // create form structure
+//        const index = this.wells.length - 1;
  
-       this.wells.at(index).patchValue({
-         selectedWell: wellObj.selectedWell || null,
-         selectedWellBore: wellObj.selectedWellBore || "",
-       });
+//        this.wells.at(index).patchValue({
+//          selectedWell: wellObj.selectedWell || null,
+//          selectedWellBore: wellObj.selectedWellBore || "",
+//        });
  
-       if (wellObj.mnemonicList?.length) {
-         wellObj.mnemonicList.forEach((mnemonic: any) => {
-           this.addMnemonic(index);
-           const mnIndex = this.getMnemonics(index).length - 1;
-           this.getMnemonics(index)
-             .at(mnIndex)
-             .patchValue({
-               selectedWellBoreLog: mnemonic.selectedWellBoreLog,
-               mnemonic: mnemonic.mnemonic,
-             });
-         });
-       }
-     });
-   }
+//        if (wellObj.mnemonicList?.length) {
+//          wellObj.mnemonicList.forEach((mnemonic: any) => {
+//            this.addMnemonic(index);
+//            const mnIndex = this.getMnemonics(index).length - 1;
+//            this.getMnemonics(index)
+//              .at(mnIndex)
+//              .patchValue({
+//                selectedWellBoreLog: mnemonic.selectedWellBoreLog,
+//                mnemonic: mnemonic.mnemonic,
+//              });
+//          });
+//        }
+//      });
+//    }
+if (previousData?.wells?.length > 0) {
+    previousData.wells.forEach((wellObj: any) => {
+      this.addWell(); // create form structure
+      const index = this.wells.length - 1;
+  
+      // Patch basic form values
+      this.wells.at(index).patchValue({
+        selectedWell: wellObj.selectedWell || null,
+        selectedWellBore: wellObj.selectedWellBore || '',
+      });
+  
+      // ✅ Trigger loading of WellBore options based on selected well
+      if (wellObj.selectedWell) {
+        this.fetchWllBoreOptions(index, wellObj.selectedWell);
+      }
+  
+      // ✅ Trigger loading of WellBore logs for selected WellBore
+      if (wellObj.selectedWell && wellObj.selectedWellBore) {
+        this.multiWellService
+          .getWellBoreLogsList(this.token, wellObj.selectedWell, wellObj.selectedWellBore, 'measured depth')
+          .subscribe({
+            next: (logsOptions) => {
+              this.wellBoreLogOptions[index] = logsOptions as any;
+  
+              // ✅ Restore mnemonics if available
+              if (wellObj.mnemonicList?.length) {
+                wellObj.mnemonicList.forEach((mnemonic: any) => {
+                  this.addMnemonic(index);
+                  const mnIndex = this.getMnemonics(index).length - 1;
+                  this.getMnemonics(index)
+                    .at(mnIndex)
+                    .patchValue({
+                      selectedWellBoreLog: mnemonic.selectedWellBoreLog,
+                      mnemonic: mnemonic.mnemonic,
+                    });
+                });
+              }
+            },
+            error: (err) => console.error('Error loading logs for restored well:', err),
+          });
+      }
+    });
+  }
+  
   
 }
 
