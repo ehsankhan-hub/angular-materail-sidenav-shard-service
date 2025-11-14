@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MultiWComponent } from './multi-w.component';
+import { MultiWellFilterComponent } from './multi-well-filter.component';
 
-describe('MultiWComponent', () => {
-  let component: MultiWComponent;
-  let fixture: ComponentFixture<MultiWComponent>;
+describe('MultiWellFilterComponent', () => {
+  let component: MultiWellFilterComponent;
+  let fixture: ComponentFixture<MultiWellFilterComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MultiWComponent]
+      imports: [MultiWellFilterComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(MultiWComponent);
+    fixture = TestBed.createComponent(MultiWellFilterComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

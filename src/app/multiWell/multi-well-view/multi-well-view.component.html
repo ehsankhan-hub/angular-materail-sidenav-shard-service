@@ -1,0 +1,245 @@
+
+<div class="border p-4 overflow-y-auto" >
+    <h5 class="text-theme">Well List</h5>
+    
+    <form [formGroup]="wellForm" (ngSubmit)="submit()">
+      <button
+        type="button"
+        class="btn border-0 d-inline-flex align-items-center w-100 bg-dark mb-3"
+        (click)="addWell()"
+      >
+        <span
+          data-icon="material-symbols-light:add"
+          class="iconify fs-20px my-n2 me-1 text-theme"
+        ></span>
+        Add Well
+      </button>
+    
+      <div formArrayName="wells" class="accordion mb-3" id="wellAccordion">
+        @for (item of wells.controls; track $index; let idx = $index) {
+          <div [formGroupName]="idx" class="accordion-item">
+            <h2 class="accordion-header d-flex justify-content-between mb-0">
+              <button
+                class="accordion-button fs-3"
+                type="button"
+                data-bs-toggle="collapse"
+                [attr.data-bs-target]="'#collapse' + idx"
+                aria-expanded="true"
+                [attr.aria-controls]="'collapse' + idx"
+              >
+                {{
+                  wells.at(idx).get("selectedWellBore")?.value?.name ||
+                    "None Selected"
+                }}
+              </button>
+              <button
+                type="button"
+                class="btn text-danger bg-dark"
+                (click)="removeWell(idx)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  class="bi bi-trash-fill"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"
+                  />
+                </svg>
+              </button>
+            </h2>
+            <div
+              [id]="'collapse' + idx"
+              class="accordion-collapse collapse"
+              data-bs-parent="#wellAccordion"
+            >
+              <div class="accordion-body mt-4">
+                <div class="row mb-3">
+                  <label for="well" class="col-4 form-label">Well</label>
+                  <div class="col-8">
+                    <select id="well"
+                    formControlName="selectedWell"
+                    class="form-select"
+                    >
+            
+                      <option [value]="null">Select option</option>
+                      @if (wellOptions) {
+                        @for (option of wellOptions; track option.uid) {
+                          <option [ngValue]="option">
+                            {{ option.name }}
+                          </option>
+                        }
+                      }
+                    </select>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <label for="wellBore" class="col-4 form-label"
+                    >WellBore</label
+                  >
+                  <div class="col-8">
+                    <select id="wellBore"
+                    formControlName="selectedWellBore"
+                    class="form-select"
+                    
+                    [disabled]="!wellBoreOptions[idx]?.wellbores?.length">
+            
+            
+                      <option value="">Select option</option>
+                      @for (
+                        option of wellBoreOptions[idx].wellbores || [];
+                        track $index
+                      ) {
+                        <option [ngValue]="option">{{ option.name }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+    
+                <div class="w-100 ms-auto mb-3">
+                  <button
+                    type="button"
+                    class="btn w-25 ms-auto border-0 d-inline-flex align-items-center bg-dark"
+                    (click)="addMnemonic(idx)"
+                  >
+                    <span
+                      data-icon="material-symbols-light:add"
+                      class="iconify fs-20px my-n2 me-1 text-theme"
+                    ></span>
+                    Add Mnemonic
+                  </button>
+                </div>
+    
+                <div
+                  formArrayName="mnemonicList"
+                  class="accordion"
+                  id="mnemonicAccordion"
+                >
+                  @for (
+                    item of getMnemonics(idx).controls;
+                    track $index;
+                    let mnemonicIdx = $index
+                  ) {
+                    <div [formGroupName]="mnemonicIdx" class="accordion-item">
+                      <h2
+                        class="accordion-header d-flex justify-content-between mb-0"
+                      >
+                        <button
+                          class="accordion-button"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          [attr.data-bs-target]="
+                            '#collapseMnemonic' + mnemonicIdx
+                          "
+                          aria-expanded="true"
+                          [attr.aria-controls]="
+                            '#collapseMnemonic' + mnemonicIdx
+                          "
+                        >
+                          {{
+                            item.get("mnemonic")?.value?.mnemonic ||
+                              "None Selected"
+                          }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn text-danger bg-dark"
+                          (click)="removeMnemonic(idx, mnemonicIdx)"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            class="bi bi-trash-fill"
+                            viewBox="0 0 16 16"
+                          >
+                            <path
+                              d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"
+                            />
+                          </svg>
+                        </button>
+                      </h2>
+                      <div
+                        [id]="'collapseMnemonic' + mnemonicIdx"
+                        class="accordion-collapse collapse"
+                        data-bs-parent="#mnemonicAccordion"
+                      >
+                        <div class="accordion-body row">
+                          <label for="wellBoreLog" class="col-2 form-label"
+                            >WellBore Log</label
+                          >
+                          <div class="col-4">
+                            <select
+                              id="wellBoreLog"
+                              formControlName="selectedWellBoreLog"
+                              class="form-select"
+                            >
+                              <option value="">Select option</option>
+                              @for (
+                                option of wellBoreLogOptions[idx].logs;
+                                track option.uid
+                              ) {
+                                <option [ngValue]="option">
+                                  {{ option.name }}
+                                </option>
+                              }
+                            </select>
+                          </div>
+                          <label for="mnemonic" class="col-2 form-label"
+                            >Mnemonic</label
+                          >
+                          <div class="col-4">
+                            <select id="mnemonic"
+                            formControlName="mnemonic"
+                            class="form-select"
+                            >
+                    
+                              <option value="">Select mnemonic</option>
+                              @for (
+                                option of mnemonicOptions[idx][mnemonicIdx];
+                                track $index
+                              ) {
+                                <option [ngValue]="option">
+                                  {{ option.mnemonic }}
+                                </option>
+                              }
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    <div> 
+    <button
+        type="submit"
+        class="btn btn-dark"
+        [disabled]="isSubmitDisabled"
+      >
+        Save
+      </button>
+      &nbsp;
+       <button
+        type="submit"
+        class="btn btn-dark"
+        (click)="closeDialog()"
+      >
+        Cancel
+      </button>
+    
+    </div>
+     
+    </form>
+    </div>
+    
+    
+    

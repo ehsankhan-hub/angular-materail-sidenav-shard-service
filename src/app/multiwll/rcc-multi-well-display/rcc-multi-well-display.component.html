@@ -1,0 +1,16 @@
+<div class="button-container">
+    <button mat-raised-button color="primary" (click)="addWell()">Add Wells</button>
+  </div>
+  
+  <div class="parent">
+    <mat-card *ngFor="let item of wellsData" class="well-card">
+      <mat-card-header>
+        <mat-card-title>{{ item.well }}</mat-card-title>
+        <mat-card-subtitle>{{ item.wellbore }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p><b>Mnemonics:</b> {{ item.mnemonics.join(', ') }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  

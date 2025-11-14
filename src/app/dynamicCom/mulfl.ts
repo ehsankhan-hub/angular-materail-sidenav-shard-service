@@ -1,3 +1,21 @@
+// mwid 
+
+/** ✅ Build widgets with last values from wellService */
+buildWidgetsFromMnemonicsWithValues(logData: any, mnemonics: string[]): any[] {
+    return mnemonics.map((mnemonic, i) => {
+      const [value, unit] = this.wellService.getMnemoicValueAndUnit(logData, mnemonic) || [0, ''];
+      return {
+        type: this.getWidgetType(i),
+        label: mnemonic,
+        value,              // ✅ last value of curve
+        unit,
+        color: this.getColorByIndex(i)
+      };
+    });
+  }
+  
+
+
 /// multiw
 ngOnInit(): void {
     // ✅ Only set default wells if BehaviorSubject is empty
