@@ -73,7 +73,10 @@ export class MultiWellFilterComponent implements OnInit {
       this.wells.at(idx).get("selectedWell")?.setValue(wellObj, { emitEvent: true });
   
       // Load wellbores for this well
-      this.fetchWllBoreOptions(idx, wellObj);
+      if (wellObj) {
+        this.fetchWllBoreOptions(idx, wellObj);
+      }
+      
   
       setTimeout(() => {
         const boreObj = this.wellBoreOptions[idx].wellbores
