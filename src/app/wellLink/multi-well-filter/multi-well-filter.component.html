@@ -1,6 +1,7 @@
-<div class="border p-4 overflow-y-auto">
+<!-- 
+<div class="border p-4 overflow-y-auto" >
   <h5 class="text-theme">Well List</h5>
-
+  
   <form [formGroup]="wellForm" (ngSubmit)="submit()">
     <button
       type="button"
@@ -13,9 +14,9 @@
       ></span>
       Add Well
     </button>
-
+  
     <div formArrayName="wells" class="accordion mb-3" id="wellAccordion">
-      @for (item of wells.controls; track item; let idx = $index) {
+      @for (item of wells.controls; track $index; let idx = $index) {
         <div [formGroupName]="idx" class="accordion-item">
           <h2 class="accordion-header d-flex justify-content-between mb-0">
             <button
@@ -50,22 +51,20 @@
               </svg>
             </button>
           </h2>
-
           <div
             [id]="'collapse' + idx"
             class="accordion-collapse collapse"
             data-bs-parent="#wellAccordion"
           >
             <div class="accordion-body mt-4">
-              <!-- Well selection -->
               <div class="row mb-3">
                 <label for="well" class="col-4 form-label">Well</label>
                 <div class="col-8">
-                  <select
-                    id="well"
-                    formControlName="selectedWell"
-                    class="form-select"
+                  <select id="well"
+                  formControlName="selectedWell"
+                  class="form-select"
                   >
+          
                     <option [value]="null">Select option</option>
                     @if (wellOptions) {
                       @for (option of wellOptions; track option.uid) {
@@ -77,29 +76,29 @@
                   </select>
                 </div>
               </div>
-
-              <!-- WellBore selection -->
               <div class="row mb-3">
-                <label for="wellBore" class="col-4 form-label">WellBore</label>
+                <label for="wellBore" class="col-4 form-label"
+                  >WellBore</label
+                >
                 <div class="col-8">
-                  <select
-                    id="wellBore"
-                    formControlName="selectedWellBore"
-                    class="form-select"
-                    [disabled]="!wellBoreOptions[idx]?.wellbores?.length"
-                  >
+                  <select id="wellBore"
+                  formControlName="selectedWellBore"
+                  class="form-select"
+                  
+                  [disabled]="!wellBoreOptions[idx]?.wellbores?.length">
+          
+          
                     <option value="">Select option</option>
                     @for (
-                      option of (wellBoreOptions[idx]?.wellbores || []);
-                      track option
+                      option of wellBoreOptions[idx].wellbores || [];
+                      track $index
                     ) {
                       <option [ngValue]="option">{{ option.name }}</option>
                     }
                   </select>
                 </div>
               </div>
-
-              <!-- Add Mnemonic button -->
+  
               <div class="w-100 ms-auto mb-3">
                 <button
                   type="button"
@@ -113,8 +112,7 @@
                   Add Mnemonic
                 </button>
               </div>
-
-              <!-- Mnemonic list -->
+  
               <div
                 formArrayName="mnemonicList"
                 class="accordion"
@@ -122,7 +120,7 @@
               >
                 @for (
                   item of getMnemonics(idx).controls;
-                  track item;
+                  track $index;
                   let mnemonicIdx = $index
                 ) {
                   <div [formGroupName]="mnemonicIdx" class="accordion-item">
@@ -137,7 +135,9 @@
                           '#collapseMnemonic' + mnemonicIdx
                         "
                         aria-expanded="true"
-                        [attr.aria-controls]="'collapseMnemonic' + mnemonicIdx"
+                        [attr.aria-controls]="
+                          '#collapseMnemonic' + mnemonicIdx
+                        "
                       >
                         {{
                           item.get("mnemonic")?.value?.mnemonic ||
@@ -163,14 +163,12 @@
                         </svg>
                       </button>
                     </h2>
-
                     <div
                       [id]="'collapseMnemonic' + mnemonicIdx"
                       class="accordion-collapse collapse"
                       data-bs-parent="#mnemonicAccordion"
                     >
                       <div class="accordion-body row">
-                        <!-- WellBore Log -->
                         <label for="wellBoreLog" class="col-2 form-label"
                           >WellBore Log</label
                         >
@@ -191,21 +189,19 @@
                             }
                           </select>
                         </div>
-
-                        <!-- Mnemonic -->
                         <label for="mnemonic" class="col-2 form-label"
                           >Mnemonic</label
                         >
                         <div class="col-4">
-                          <select
-                            id="mnemonic"
-                            formControlName="mnemonic"
-                            class="form-select"
+                          <select id="mnemonic"
+                          formControlName="mnemonic"
+                          class="form-select"
                           >
+                  
                             <option value="">Select mnemonic</option>
                             @for (
                               option of mnemonicOptions[idx][mnemonicIdx];
-                              track option
+                              track $index
                             ) {
                               <option [ngValue]="option">
                                 {{ option.mnemonic }}
@@ -223,23 +219,27 @@
         </div>
       }
     </div>
-
-    <div>
-      <button
-        type="submit"
-        class="btn btn-dark"
-        [disabled]="isSubmitDisabled"
-      >
-        Save
-      </button>
-      &nbsp;
-      <button
-        type="button"
-        class="btn btn-dark"
-        (click)="closeDialog()"
-      >
-        Cancel
-      </button>
-    </div>
+  <div> 
+  <button
+      type="submit"
+      class="btn btn-dark"
+      [disabled]="isSubmitDisabled"
+    >
+      Save
+    </button>
+    &nbsp;
+     <button
+      type="submit"
+      class="btn btn-dark"
+      (click)="closeDialog()"
+    >
+      Cancel
+    </button>
+  
+  </div>
+   
   </form>
-</div>
+  </div>
+  
+  
+   -->

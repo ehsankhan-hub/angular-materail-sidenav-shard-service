@@ -5,11 +5,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { RccMultiWellDisplayComponent } from '../../wellLink/rcc-multi-well-display/rcc-multi-well-display.component';
+import { MultiWellViewComponent } from '../../multiWell/multi-well-view/multi-well-view.component';
 
 @Component({
     selector: 'app-support',
     standalone: true, 
-    imports: [FormsModule,CommonModule, ReactiveFormsModule,MatFormFieldModule,MatSelectModule,MatInputModule,MatButtonModule],
+    imports: [RccMultiWellDisplayComponent,MultiWellViewComponent, FormsModule,CommonModule, ReactiveFormsModule,MatFormFieldModule,MatSelectModule,MatInputModule,MatButtonModule],
     templateUrl: './support.component.html',
     styleUrl: './support.component.css'
 })

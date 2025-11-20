@@ -1,5 +1,5 @@
 
-import { Component, Inject, inject, OnInit, Optional } from "@angular/core";
+import { Component, Inject, inject, OnInit } from "@angular/core";
 import {
   FormArray,
   FormBuilder,
@@ -8,24 +8,25 @@ import {
   ReactiveFormsModule,
   Validators,
 } from "@angular/forms";
-import { MultiWellDataService } from "../../services/multi-well-data.service"; 
-import { Well } from "../../wellLink/models/well-bore-logs-list"; 
-import { WellBoreList } from "../../wellLink/models/well-bore-logs-list"; 
+import { MultiWellDataService } from "../../services/multi-well-data.service";
+import { Well } from "../models/well-bore-logs-list"; 
+import { WellBoreList } from "../models/well-bore-logs-list"; 
 import { NgTemplateOutlet } from "@angular/common";
-import { WellBoreLogsList } from "../../wellLink/models/well-bore-logs-list"; 
-//import { WellBoreLogDepth } from "../../models/well-bore-log-depth";
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { WellBoreLogsList } from "../models/well-bore-logs-list";  
+
+import { MatDialogRef } from "@angular/material/dialog";
 import { StaticTemplateSharedService } from "../../services/static-template-shared.service"; 
-import { MultiWellFilterComponent } from "../../multiwll/multi-well-filter/multi-well-filter.component";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { AppAutocompleteComponent } from "../app-autocomplete/app-autocomplete.component";
 
 @Component({
-  selector: 'app-multi-well-view',
+  selector: 'app-multi-well-filter',
   standalone: true,
-  imports: [ReactiveFormsModule],
-  templateUrl: './multi-well-view.component.html',
-  styleUrl: './multi-well-view.component.scss'
+  imports: [ReactiveFormsModule,MatFormFieldModule,AppAutocompleteComponent, NgTemplateOutlet],
+  templateUrl: './multi-well-filter.component.html',
+  styleUrl: './multi-well-filter.component.scss'
 })
-export class MultiWellViewComponent implements OnInit {
+export class MultiWellFilterComponent implements OnInit {
   multiWellService = inject(MultiWellDataService);
   formBuilder = inject(FormBuilder);
   tracks = [];
@@ -37,7 +38,7 @@ export class MultiWellViewComponent implements OnInit {
   token!: string;
   isLoading = true;
   result: any;
-  constructor(@Optional() @Inject(MAT_DIALOG_DATA) public data: any,@Optional() @Inject(MatDialogRef) public dialogRef: MatDialogRef<MultiWellFilterComponent>,private  sharedService:StaticTemplateSharedService) { }
+  constructor(@Inject(MatDialogRef) public dialogRef: MatDialogRef<MultiWellFilterComponent>,private  sharedService:StaticTemplateSharedService) { }
   ngOnInit(): void {
     this.token = "" + localStorage.getItem("token");
     this.wellForm = this.formBuilder.group({
@@ -65,9 +66,8 @@ export class MultiWellViewComponent implements OnInit {
   restorePreviouslySelectedWells(){
   this.sharedService.multiWellFilterData$.subscribe((data: any) => {
     if (!data) return;
-    console.log("data",data);
+  
     const wells = data.wells || [];
-    console.log("wells",wells);
     wells.forEach((w: any) => this.addWell());
   
     wells.forEach((w: any, idx: number) => {
@@ -82,10 +82,9 @@ export class MultiWellViewComponent implements OnInit {
   
       setTimeout(() => {
         const boreObj = this.wellBoreOptions[idx].wellbores
-        
           .find(x => x.uid === w.selectedWellBore.uid);
         this.wells.at(idx).get("selectedWellBore")?.setValue(boreObj, { emitEvent: true });
-        console.log("boreObj",boreObj);
+  
         // Load logs
         this.wellBoreLogOptions[idx] = w.wellBoreLogOptions;
   
@@ -96,7 +95,7 @@ export class MultiWellViewComponent implements OnInit {
             .find(x => x.uid === m.selectedWellBoreLog.uid);
           this.getMnemonics(idx).at(mIdx).get("selectedWellBoreLog")?.setValue(logObj);
   
-          const mnemonicObj = logObj!.logCurveInfo.find((x: any) =>
+          const mnemonicObj = logObj?.logCurveInfo.find((x: any) =>
             x.mnemonic === m.mnemonic.mnemonic);
           this.getMnemonics(idx).at(mIdx).get("mnemonic")?.setValue(mnemonicObj);
         });
@@ -138,8 +137,6 @@ compareMnemonic = (o1: any, o2: any) =>
       wellbores: [],
       SuppMsgOut: "",
     }); // initialize it with empty array
-
-    console.log('this.wellBoreOptions',this.wellBoreOptions);
     this.wellBoreLogOptions.push({
       depthLogs: [],
       timeLogs: [],
@@ -206,15 +203,13 @@ compareMnemonic = (o1: any, o2: any) =>
   }
 
   fetchWllBoreOptions(index: number, selectedValue: Well) {
-    console.log('selected well ',selectedValue)
     this.multiWellService
       .getWellBoreList( selectedValue.uid as any)
       .subscribe({
         next: (data: WellBoreList) => {
-          console
-        // IMPORTANT FIX: mutate the existing object
-        this.wellBoreOptions[index].wellbores = data.wellbores;
-        this.wellBoreOptions[index].SuppMsgOut = data.SuppMsgOut;
+          // console.log("wellbore data", data);
+
+          this.wellBoreOptions[index] = data;
         },
         error: (err) => {
           console.error(err);

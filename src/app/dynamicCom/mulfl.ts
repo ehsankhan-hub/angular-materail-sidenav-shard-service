@@ -1,6 +1,50 @@
+/**
+   * 🔹 Build widgets dynamically using full log object
+   * Uses last row of log data for each mnemonic.
+   */
+buildWidgetsDynamic(mnemonics: string[], logObject: any): any[] {
+  const widgets: any[] = [];
+  if (!logObject) {
+    return widgets;
+  }
+
+  const curves = logObject.logCurveInfo || logObject.logInfo || [];
+  const rows = logObject.logData?.data || logObject.data || [];
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return widgets;
+  }
+
+  const latestRow = rows[rows.length - 1];
+
+  mnemonics.forEach((mn) => {
+    const curveMeta = curves.find((c: any) =>
+      (c.mnemonic || c.mnemonicId) === mn
+    );
+    if (!curveMeta) {
+      return;
+    }
+
+    const colIdx = curveMeta.columnIndex ?? curveMeta.index ?? null;
+    if (colIdx == null || colIdx < 0 || colIdx >= latestRow.length) {
+      return;
+    }
+
+    const value = latestRow[colIdx];
+
+    widgets.push({
+      label: mn,
+      value,
+      unit: curveMeta.unit || '',
+      color: this.getColorByMnemonic(mn)
+    });
+  });
+
+  return widgets;
+
 // mwid 
 
-/** ✅ Build widgets with last values from wellService */
+/**  Build widgets with last values from wellService */
 buildWidgetsFromMnemonicsWithValues(logData: any, mnemonics: string[]): any[] {
     return mnemonics.map((mnemonic, i) => {
       const [value, unit] = this.wellService.getMnemoicValueAndUnit(logData, mnemonic) || [0, ''];

@@ -1,0 +1,28 @@
+<div class="button-container mb-3">
+    <button mat-raised-button color="primary" (click)="addWell()">
+      Add Wells
+    </button>
+  </div>
+  
+  <div class="parent">
+    <div class="rtdisplay" *ngFor="let item of wellsData">
+      <div class="card p-2 mb-2 text-light bg-dark">
+        <div>
+          <strong>Well:</strong> {{ item.selectedWell?.name }}
+        </div>
+        <div>
+          <strong>Wellbore:</strong> {{ item.selectedWellBore?.name }}
+        </div>
+        <div *ngIf="item.mnemonicList?.length">
+          <strong>Mnemonics:</strong>
+          <span *ngFor="let m of item.mnemonicList; let i = index">
+            {{ m.mnemonic?.mnemonic }}<span *ngIf="i < item.mnemonicList.length - 1">, </span>
+          </span>
+        </div>
+        <div *ngIf="!item.mnemonicList?.length">
+          <em>No mnemonics selected</em>
+        </div>
+      </div>
+    </div>
+  </div>
+  

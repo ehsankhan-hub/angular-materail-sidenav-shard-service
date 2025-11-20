@@ -1,0 +1,13 @@
+.parent {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .rtdisplay {
+    margin-bottom: 8px;
+  }
+  
+  .button-container {
+    margin-bottom: 12px;
+  }
+  

@@ -1,0 +1,13 @@
+.parent {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .well-card {
+    width: 220px;
+    background: #f5f5f5;
+  }
+  .button-container {
+    margin-bottom: 12px;
+  }
+  
