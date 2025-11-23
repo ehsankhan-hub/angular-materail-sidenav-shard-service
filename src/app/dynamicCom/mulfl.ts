@@ -42,21 +42,23 @@ buildWidgetsFromBackend(selectedWells: any[], backend: any) {
       wellbore: sel.wellbore,
 
       widgets: sel.mnemonics.map(m => {
+
         const curve = backendWell?.objectInfo.find(c =>
           c.mnemonic === m &&
-          c.logId === sel.logId       // ✔ correct place
+          c.logId === sel.logId      // ✔ correct field from your screenshot
         );
 
         return {
           mnemonic: m,
           unit: curve?.unit || "",
           value: curve?.data?.[curve.data.length - 1] ?? null,
-          logId: curve?.logId || null
+          logId: curve?.logId
         };
       })
     };
   });
 }
+
 
 
 
