@@ -27,6 +27,39 @@ buildWidgetsFromBackend(selectedWells: any[], backend: any) {
 }
 
 
+////////////////////
+
+buildWidgetsFromBackend(selectedWells: any[], backend: any) {
+  this.widgetsData = selectedWells.map(sel => {
+
+    const backendWell = backend.wellboreObjects.find(w =>
+      w.wellId === sel.well &&
+      w.wellboreId === sel.wellbore
+    );
+
+    return {
+      well: sel.well,
+      wellbore: sel.wellbore,
+
+      widgets: sel.mnemonics.map(m => {
+        const curve = backendWell?.objectInfo.find(c =>
+          c.mnemonic === m &&
+          c.logId === sel.logId       // ✔ correct place
+        );
+
+        return {
+          mnemonic: m,
+          unit: curve?.unit || "",
+          value: curve?.data?.[curve.data.length - 1] ?? null,
+          logId: curve?.logId || null
+        };
+      })
+    };
+  });
+}
+
+
+
 
 
 /**
