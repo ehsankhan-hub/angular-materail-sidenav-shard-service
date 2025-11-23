@@ -1,3 +1,34 @@
+buildWidgetsFromBackend(selectedWells: any[], backend: any) {
+  this.widgetsData = selectedWells.map(sel => {
+
+    // find matching wellbore from backend
+    const backendWell = backend.wellboreObjects.find(w =>
+      w.wellId === sel.well &&
+      w.wellboreId === sel.wellbore
+    );
+
+    return {
+      well: sel.well,
+      wellbore: sel.wellbore,
+
+      widgets: sel.mnemonics.map(m => {
+        // GET curve from objectInfo
+        const curve = backendWell?.objectInfo.find(c => c.mnemonic === m);
+
+        return {
+          mnemonic: m,
+          unit: curve?.unit || "",
+          value: curve?.data?.[curve.data.length - 1] ?? null, // latest sample
+          logId: curve?.logId
+        };
+      })
+    };
+  });
+}
+
+
+
+
 /**
    * 🔹 Build widgets dynamically using full log object
    * Uses last row of log data for each mnemonic.
