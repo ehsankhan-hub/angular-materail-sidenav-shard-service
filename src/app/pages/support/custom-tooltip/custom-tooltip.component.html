@@ -1,0 +1,24 @@
+<mat-menu #dataTooltip="matMenu" 
+          [hasBackdrop]="false" 
+          class="custom-tooltip-menu">
+  
+  <div class="tooltip-wrapper"
+       (mouseenter)="openTooltip()" 
+       (mouseleave)="closeTooltip()">
+    
+    <table class="tooltip-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of jsonData">
+          <td>{{ item.key }}</td>
+          <td>{{ item.val }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</mat-menu>

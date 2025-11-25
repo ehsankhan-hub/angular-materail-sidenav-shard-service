@@ -7,11 +7,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { RccMultiWellDisplayComponent } from '../../wellLink/rcc-multi-well-display/rcc-multi-well-display.component';
 import { MultiWellViewComponent } from '../../multiWell/multi-well-view/multi-well-view.component';
-
+import { MatMenuTrigger } from '@angular/material/menu';
+import { MatMenuModule } from '@angular/material/menu';
 @Component({
     selector: 'app-support',
     standalone: true, 
-    imports: [RccMultiWellDisplayComponent,MultiWellViewComponent, FormsModule,CommonModule, ReactiveFormsModule,MatFormFieldModule,MatSelectModule,MatInputModule,MatButtonModule],
+    imports: [RccMultiWellDisplayComponent,MatMenuModule,MultiWellViewComponent, MatButtonModule,
+      FormsModule,CommonModule, ReactiveFormsModule,MatFormFieldModule,MatSelectModule,MatInputModule,MatButtonModule],
     templateUrl: './support.component.html',
     styleUrl: './support.component.css'
 })
@@ -19,6 +21,7 @@ export class SupportComponent {
     registerForm: FormGroup;
     searchControl = new FormControl('');
     countryFilter = '';
+    menuTimer: any;
   countries = [
     { value: 'us', label: 'United States' },
     { value: 'uk', label: 'United Kingdom' },
@@ -28,7 +31,29 @@ export class SupportComponent {
     { value: 'fr', label: 'France' }
   ];
   filteredCountries = [...this.countries];
+
+  jsonData = [
+    { key: 'ID', val: '1024' },
+    { key: 'Status', val: 'Active' },
+    { key: 'User', val: 'Admin' },
+    { key: 'Zone', val: 'EU-West' },
+    { key: 'Uptime', val: '99.9%' }
+  ];
   
+  // Open immediately
+  menuEnter(trigger: MatMenuTrigger) {
+    if (this.menuTimer) {
+      clearTimeout(this.menuTimer);
+    }
+    trigger.openMenu();
+  }
+
+  // Close after 100ms delay
+  menuLeave(trigger: MatMenuTrigger) {
+    this.menuTimer = setTimeout(() => {
+      trigger.closeMenu();
+    }, 100);
+  }
   constructor(private fb: FormBuilder) {
     this.registerForm = this.fb.group({
       firstName: [''],

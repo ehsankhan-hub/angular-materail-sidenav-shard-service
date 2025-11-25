@@ -1,0 +1,31 @@
+ 
+/* Use ::ng-deep to force styles on the dynamic overlay container */
+::ng-deep .custom-tooltip-menu {
+    background-color: #333 !important; /* Forces dark background */
+    border-radius: 4px;
+    min-width: 200px;
+  }
+  
+  /* Remove default padding from the menu content container */
+  ::ng-deep .custom-tooltip-menu .mat-mdc-menu-content {
+    padding: 0 !important;
+  }
+  
+  /* Your table styles */
+  .tooltip-table {
+    width: 100%;
+    color: #fff;
+    font-size: 13px;
+    border-collapse: collapse;
+  }
+  
+  .tooltip-table th, 
+  .tooltip-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #444;
+    text-align: left;
+  }
+    
+  
+    
+    

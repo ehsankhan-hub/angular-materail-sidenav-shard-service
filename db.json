@@ -1,45 +1,21 @@
 {
-  "wells": [
-    { "uid": "W1", "name": "ABHD_112" },
-    { "uid": "W2", "name": "ABHD_104" },
-    { "uid": "W3", "name": "ABHD_120" },
-    { "uid": "W4", "name": "ABHD_130" },
-    { "uid": "W5", "name": "ABHD_140" }
-  ],
-  "wellbores": [
-    { "uid": "WB1", "name": "ABHD_112_0", "wellUid": "W1" },
-    { "uid": "WB2", "name": "ABHD_104_2", "wellUid": "W2" },
-    { "uid": "WB3", "name": "ABHD_120_1", "wellUid": "W3" },
-    { "uid": "WB4", "name": "ABHD_130_0", "wellUid": "W4" },
-    { "uid": "WB5", "name": "ABHD_140_1", "wellUid": "W5" }
-  ],
-  "logs": [
+  "wellboreObjects": [
     {
-      "uid": "L1",
-      "name": "DEPTH_LOG_1",
-      "wellboreUid": "WB1",
-      "logCurveInfo": [
-        { "mnemonic": "ROP_L", "unit": "ft/hr" },
-        { "mnemonic": "WOB_L", "unit": "kN" }
+      "wellId": "ABSF_321",
+      "wellboreId": "ABSF_321_0",
+      "objectId": "LWD_Depth_Run3_BH",
+      "objectInfo": [
+        { "logId": "LWD_Depth_Run3_BH", "mnemonic": "ABG_L", "unit": "API", "data": [12, 14, 15] },
+        { "logId": "LWD_Depth_Run3_BH", "mnemonic": "GR", "unit": "API", "data": [55, 60, 62] }
       ]
     },
     {
-      "uid": "L2",
-      "name": "DEPTH_LOG_2",
-      "wellboreUid": "WB2",
-      "logCurveInfo": [
-        { "mnemonic": "ROP_L", "unit": "ft/hr" },
-        { "mnemonic": "DLS", "unit": "deg/100ft" }
-      ]
-    },
-    {
-      "uid": "L3",
-      "name": "DEPTH_LOG_3",
-      "wellboreUid": "WB3",
-      "logCurveInfo": [
-        { "mnemonic": "ROP_L", "unit": "ft/hr" },
-        { "mnemonic": "WOB_L", "unit": "kN" },
-        { "mnemonic": "GR_L", "unit": "gAPI" }
+      "wellId": "XYZA_100",
+      "wellboreId": "XYZA_100_1",
+      "objectId": "LWD_Run5",
+      "objectInfo": [
+        { "logId": "LWD_Run5", "mnemonic": "ROP", "unit": "m/hr", "data": [20, 28, 30] },
+        { "logId": "LWD_Run5", "mnemonic": "WOB", "unit": "klb", "data": [10, 15, 17] }
       ]
     }
   ],

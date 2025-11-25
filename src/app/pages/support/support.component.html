@@ -1,66 +1,29 @@
-<!-- <form class="registration-form" [formGroup]="registerForm">
- 
-    <div class="form-column">
-      <div class="form-row">
-        <label for="firstName">First Name:</label>
-        <input id="firstName" matInput formControlName="firstName" />
-      </div>
-  
-      <div class="form-row">
-        <label for="lastName">Last Name:</label>
-        <input id="lastName" matInput formControlName="lastName" />
-      </div>
-  
-      <div class="form-row">
-        <label for="email">Email:</label>
-        <input id="email" matInput type="email" formControlName="email" />
-      </div>
-  
-      <div class="form-row">
-        <label for="password">Password:</label>
-        <input id="password" matInput type="password" formControlName="password" />
-      </div>
-  
-      <div class="form-row">
-        <label for="confirmPassword">Confirm Password:</label>
-        <input id="confirmPassword" matInput type="password" formControlName="confirmPassword" />
-      </div>
-    </div>
 
-    <div class="form-column">
-      <div class="form-row">
-        <label for="phone">Phone:</label>
-        <input id="phone" matInput type="tel" formControlName="phone" />
-      </div>
 
-      <div class="form-row">
-        <label for="country">Country:</label>
-        <mat-select id="country" formControlName="country" (selectionChange)="onCountrySelect($event.value)">
-         
-          <mat-option>
-            <input
-              matInput
-              placeholder="Search..."
-              [formControl]="searchControl"
-              (click)="$event.stopPropagation()" />
-          </mat-option>
-      
-   
-          <mat-option *ngFor="let c of filteredCountries" [value]="c.value">
-            {{ c.label }}
-          </mat-option>
-        </mat-select>
-      </div>
-      
+   <button mat-raised-button color="primary"
+        [matMenuTriggerFor]="dataTooltip"
+        #trigger="matMenuTrigger"
+        (mouseenter)="menuEnter(trigger)"
+        (mouseleave)="menuLeave(trigger)">
+  Hover for Data
+</button>
 
-    </div>
-  </form>
-  
-  <div class="form-actions">
-    <button mat-raised-button (click)="submitForm()" color="primary">Register</button>
-    <button mat-button type="reset">Reset</button>
+<mat-menu #dataTooltip="matMenu" [hasBackdrop]="false" class="custom-tooltip-menu">
+  <div (mouseenter)="menuEnter(trigger)" (mouseleave)="menuLeave(trigger)">
+    <table class="tooltip-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of jsonData">
+          <td>{{ item.key }}</td>
+          <td>{{ item.val }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-   -->
+</mat-menu>
 
-   <!-- <app-rcc-multi-well-display></app-rcc-multi-well-display> -->
-   <app-multi-well-view></app-multi-well-view>
