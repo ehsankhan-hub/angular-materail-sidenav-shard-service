@@ -9,10 +9,11 @@ import { RccMultiWellDisplayComponent } from '../../wellLink/rcc-multi-well-disp
 import { MultiWellViewComponent } from '../../multiWell/multi-well-view/multi-well-view.component';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { MatMenuModule } from '@angular/material/menu';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 @Component({
     selector: 'app-support',
     standalone: true, 
-    imports: [RccMultiWellDisplayComponent,MatMenuModule,MultiWellViewComponent, MatButtonModule,
+    imports: [RccMultiWellDisplayComponent,MatMenuModule,NgbModule,MultiWellViewComponent, MatButtonModule,
       FormsModule,CommonModule, ReactiveFormsModule,MatFormFieldModule,MatSelectModule,MatInputModule,MatButtonModule],
     templateUrl: './support.component.html',
     styleUrl: './support.component.css'
@@ -31,14 +32,6 @@ export class SupportComponent {
     { value: 'fr', label: 'France' }
   ];
   filteredCountries = [...this.countries];
-
-  jsonData = [
-    { key: 'ID', val: '1024' },
-    { key: 'Status', val: 'Active' },
-    { key: 'User', val: 'Admin' },
-    { key: 'Zone', val: 'EU-West' },
-    { key: 'Uptime', val: '99.9%' }
-  ];
   
   // Open immediately
   menuEnter(trigger: MatMenuTrigger) {
@@ -91,6 +84,34 @@ export class SupportComponent {
         // Example method
         alert(`Fetching data for ${country}`);
       }
+
+      // 1. Source JSON data
+  logData = {
+    displayName: 'ABG_L',
+    min: 8,
+    max: 550,
+    mnemonic: 'ABG_L',
+    unit: 'gAPI',
+    wellId: 'A8SF_321',
+  };
+
+  // 2. Formatted data for the template table
+  jsonData: any[] = []; 
+
+  ngOnInit() {
+    this.mapDataForTable();
+  }
+
+  mapDataForTable(): void {
+    if (this.logData) {
+      this.jsonData = [
+        { key: 'Mnemonic', val: this.logData.mnemonic },
+        { key: 'Unit', val: this.logData.unit },
+        { key: 'Well ID', val: this.logData.wellId },
+        { key: 'Range', val: `${this.logData.min} - ${this.logData.max}` }
+      ];
+    }
+  }
   }
   
   

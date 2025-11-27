@@ -1,3 +1,46 @@
+// 1. Rename your variables to be distinct
+openTimer: any;
+closeTimer: any;
+currentTrigger: MatMenuTrigger | undefined;
+
+menuEnter(trigger: MatMenuTrigger) {
+  // Stop any pending close actions from the past
+  if (this.closeTimer) {
+    clearTimeout(this.closeTimer);
+  }
+
+  // Stop any pending open actions (prevent double opening)
+  if (this.openTimer) {
+    clearTimeout(this.openTimer);
+  }
+
+  // If we moved from Card A to Card B, close Card A immediately
+  if (this.currentTrigger && this.currentTrigger !== trigger) {
+    this.currentTrigger.closeMenu();
+  }
+
+  // Start the 3-second countdown to OPEN
+  this.openTimer = setTimeout(() => {
+    this.currentTrigger = trigger;
+    trigger.openMenu();
+  }, 3000);
+}
+
+menuLeave(trigger: MatMenuTrigger) {
+  // CRITICAL FIX: If the user leaves before 3s, KILL the open timer!
+  if (this.openTimer) {
+    clearTimeout(this.openTimer);
+  }
+
+  // Start the delay to CLOSE
+  this.closeTimer = setTimeout(() => {
+    trigger.closeMenu();
+    if (this.currentTrigger === trigger) {
+      this.currentTrigger = undefined;
+    }
+  }, 100);
+}
+
 buildWidgetsFromBackend(selectedWells: any[], backend: any) {
   this.widgetsData = selectedWells.map(sel => {
 
