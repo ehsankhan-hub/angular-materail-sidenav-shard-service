@@ -1,3 +1,132 @@
+//filter
+
+
+ngOnInit(): void {
+  this.token = '' + localStorage.getItem('token');
+  this.wellForm = this.formBuilder.group({
+    wells: this.formBuilder.array([]),
+  });
+
+  this.multiWellService.getAllWellList(this.token).subscribe({
+    next: (data: any) => {
+      this.wellOptions = data as Well[];
+
+      // Prefill wells if storedData exists
+      const storedData = JSON.parse(localStorage.getItem('multiWellFilterData') || '[]');
+      if (storedData?.wells?.length) {
+        storedData.wells.forEach((wellData: any) => {
+          this.addWell(wellData);
+        });
+      }
+    },
+    error: (err) => console.error('Failed to load wells'),
+  });
+}
+
+
+
+///////////////
+
+addWell(prefillData?: any): void {
+  const wellGroup = this.formBuilder.group({
+    selectedWell: this.formBuilder.control<Well | null>(
+      prefillData?.selectedWell || null,
+      Validators.required
+    ),
+    selectedWellBore: [prefillData?.selectedWellBore || '', Validators.required],
+    mnemonicList: this.formBuilder.array([]),
+  });
+
+  this.wells.push(wellGroup);
+  const index = this.wells.length - 1;
+
+  this.wellBoreOptions.push({ wellbores: [], SuppMsgOut: '' });
+  this.wellBoreLogOptions.push({ depthLogs: [], timeLogs: [], logs: [], SuppMsgOut: '' });
+  this.mnemonicOptions[index] = [];
+
+  // Fetch wellbores if prefilled well exists
+  if (prefillData?.selectedWell) {
+    this.fetchWllBoreOptions(index, prefillData.selectedWell);
+  }
+
+  // Subscribe to selectedWell changes
+  wellGroup.get('selectedWell')?.valueChanges.subscribe((selectedWell) => {
+    this.wellBoreOptions[index] = { wellbores: [], SuppMsgOut: '' };
+    this.wellBoreLogOptions[index] = { depthLogs: [], timeLogs: [], logs: [], SuppMsgOut: '' };
+    wellGroup.get('selectedWellBore')?.setValue('');
+    const mnemonicList = this.getMnemonics(index);
+    mnemonicList.controls.forEach((mnemonic) => {
+      mnemonic.get('selectedWellBoreLog')?.setValue('');
+      mnemonic.get('mnemonic')?.setValue('');
+    });
+
+    if (!selectedWell) return;
+    this.fetchWllBoreOptions(index, selectedWell as any);
+  });
+
+  // Subscribe to selectedWellBore changes
+  wellGroup.get('selectedWellBore')?.valueChanges.subscribe((wellbore: any) => {
+    this.wellBoreLogOptions[index] = { depthLogs: [], timeLogs: [], logs: [], SuppMsgOut: '' };
+    const mnemonicList = this.getMnemonics(index);
+    mnemonicList.controls.forEach((mnemonic, mnemonicIdx) => {
+      mnemonic.get('selectedWellBoreLog')?.setValue('');
+      mnemonic.get('mnemonic')?.setValue('');
+      this.mnemonicOptions[index][mnemonicIdx] = [];
+    });
+
+    const well = wellGroup.get('selectedWell')?.value as Well;
+    if (!wellbore || !well) return;
+
+    this.multiWellService
+      .getWellBoreLogsList(this.token, well, wellbore, 'measured depth')
+      .subscribe({
+        next: (logsOptions) => {
+          this.wellBoreLogOptions[index] = logsOptions as WellBoreLogsList;
+
+          // Prefill mnemonics if data exists
+          if (prefillData?.mnemonicList?.length) {
+            prefillData.mnemonicList.forEach((mnData: any) => {
+              this.addMnemonic(index, mnData);
+            });
+          }
+        },
+        error: (err) => console.log('error loading logs', err),
+      });
+  });
+
+  // If prefillData has selectedWellBore but no valueChanges fired yet
+  if (prefillData?.selectedWellBore) {
+    wellGroup.get('selectedWellBore')?.setValue(prefillData.selectedWellBore);
+  }
+}
+
+
+
+///////////////////
+
+addMnemonic(index: number, prefillData?: any): void {
+  const mnemonicGroup = this.formBuilder.group({
+    selectedWellBoreLog: [prefillData?.selectedWellBoreLog || '', Validators.required],
+    mnemonic: [prefillData?.mnemonic || '', Validators.required],
+  });
+
+  this.getMnemonics(index).push(mnemonicGroup);
+  const mnemonicIndex = this.getMnemonics(index).length - 1;
+
+  if (!this.mnemonicOptions[index]) this.mnemonicOptions[index] = [];
+
+  mnemonicGroup.get('selectedWellBoreLog')?.valueChanges.subscribe((selectedLogData: any) => {
+    this.mnemonicOptions[index][mnemonicIndex] = selectedLogData?.logCurveInfo || [];
+    if (prefillData?.mnemonic) {
+      mnemonicGroup.get('mnemonic')?.setValue(prefillData.mnemonic);
+    } else {
+      mnemonicGroup.get('mnemonic')?.setValue('');
+    }
+  });
+}
+
+
+
 // 1. Rename your variables to be distinct
 openTimer: any;
 closeTimer: any;
