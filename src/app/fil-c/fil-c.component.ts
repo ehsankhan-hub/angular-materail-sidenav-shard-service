@@ -107,22 +107,8 @@ export class MultiWellFilterComponent implements OnInit, AfterViewInit {
         const wellGroup = this.formBuilder.group({
           selectedWell: [well.selectedWell],
           selectedWellBore: [well.selectedWellBore],
-          trackMnemonics: this.formBuilder.array(
-            well.trackMnemonics?.map((mn: any) =>
-              this.formBuilder.group({
-                selectedWellBoreLog: [mn.selectedWellBoreLog],
-                mnemonic: [mn.mnemonic],
-              })
-            ) || []
-          ),
-          widgetMnemonics: this.formBuilder.array(
-            well.widgetMnemonics?.map((mn: any) =>
-              this.formBuilder.group({
-                selectedWellBoreLog: [mn.selectedWellBoreLog],
-                mnemonic: [mn.mnemonic],
-              })
-            ) || []
-          ),
+          trackMnemonics: this.formBuilder.array([]),
+          widgetMnemonics: this.formBuilder.array([]),
         });
         this.wells.push(wellGroup);
       });
@@ -206,13 +192,25 @@ export class MultiWellFilterComponent implements OnInit, AfterViewInit {
       this.fetchWellBoreOptions(index, selectedWell as any);
     });
 
-    wellGroup.get('selectedWellBore')?.valueChanges.subscribe((wellbores: any) => {
+    wellGroup.get('selectedWellBore')?.valueChanges.subscribe((wellBore: any) => {
       const well = wellGroup.get('selectedWell')?.value as Well;
-      if (!wellbores || !well) return;
-      this.multiWellService.getWellBoreLogsList(this.token, well, wellbores, 'measured depth')
+      if (!wellBore || !well) return;
+
+      this.multiWellService.getWellBoreLogsList(this.token, well, wellBore, 'measured depth')
         .subscribe({
           next: (logsOptions) => {
             this.wellBoreLogOptions[index] = logsOptions as WellBoreLogsList;
+            // reset track/widget mnemonic dropdowns
+            this.trackMnemonicOptions[index] = [];
+            this.widgetMnemonicOptions[index] = [];
+            this.getTrackMnemonics(index).controls.forEach((mnemonic, mnIdx) => {
+              mnemonic.get('mnemonic')?.setValue('');
+              this.trackMnemonicOptions[index][mnIdx] = logsOptions.logs;
+            });
+            this.getWidgetMnemonics(index).controls.forEach((mnemonic, mnIdx) => {
+              mnemonic.get('mnemonic')?.setValue('');
+              this.widgetMnemonicOptions[index][mnIdx] = logsOptions.logs;
+            });
           },
           error: (err) => console.log('error loading logs', err),
         });
@@ -233,7 +231,11 @@ export class MultiWellFilterComponent implements OnInit, AfterViewInit {
       selectedWellBoreLog: ['', Validators.required],
       mnemonic: ['', Validators.required],
     });
+    const mnemonicIndex = this.getTrackMnemonics(index).length;
     this.getTrackMnemonics(index).push(mnemonicGroup);
+    // initialize empty array for dropdown
+    if (!this.trackMnemonicOptions[index]) this.trackMnemonicOptions[index] = [];
+    this.trackMnemonicOptions[index][mnemonicIndex] = [];
   }
 
   addWidgetMnemonic(index: number) {
@@ -241,26 +243,35 @@ export class MultiWellFilterComponent implements OnInit, AfterViewInit {
       selectedWellBoreLog: ['', Validators.required],
       mnemonic: ['', Validators.required],
     });
+    const mnemonicIndex = this.getWidgetMnemonics(index).length;
     this.getWidgetMnemonics(index).push(mnemonicGroup);
+    if (!this.widgetMnemonicOptions[index]) this.widgetMnemonicOptions[index] = [];
+    this.widgetMnemonicOptions[index][mnemonicIndex] = [];
   }
 
   removeTrackMnemonic(wellIdx: number, mnemonicIdx: number) {
     this.getTrackMnemonics(wellIdx).removeAt(mnemonicIdx);
+    this.trackMnemonicOptions[wellIdx].splice(mnemonicIdx, 1);
   }
 
   removeWidgetMnemonic(wellIdx: number, mnemonicIdx: number) {
     this.getWidgetMnemonics(wellIdx).removeAt(mnemonicIdx);
+    this.widgetMnemonicOptions[wellIdx].splice(mnemonicIdx, 1);
   }
 
   removeWell(wellIdx: number) {
     this.wells.removeAt(wellIdx);
+    this.wellBoreOptions.splice(wellIdx, 1);
+    this.wellBoreLogOptions.splice(wellIdx, 1);
+    this.trackMnemonicOptions.splice(wellIdx, 1);
+    this.widgetMnemonicOptions.splice(wellIdx, 1);
   }
 
   get isSubmitDisabled(): boolean {
     if (this.wellForm.invalid || this.wells.length === 0) return true;
-    return this.wells.controls.some(well => 
-      (this.getTrackMnemonics(this.wells.controls.indexOf(well)).length === 0) &&
-      (this.getWidgetMnemonics(this.wells.controls.indexOf(well)).length === 0)
+    return this.wells.controls.some(well =>
+      this.getTrackMnemonics(this.wells.controls.indexOf(well)).length === 0 &&
+      this.getWidgetMnemonics(this.wells.controls.indexOf(well)).length === 0
     );
   }
 
