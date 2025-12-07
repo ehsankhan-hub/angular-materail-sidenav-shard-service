@@ -40,46 +40,45 @@
               <!-- WELL -->
               <mat-form-field appearance="fill" class="w-100 mb-3">
                 <mat-label>Well</mat-label>
-                <input matInput type="text"
+                <input matInput
                        [formControl]="selectedWellControl(idx)"
                        [matAutocomplete]="wellAuto"
                        (input)="filterOptions($event)">
                 <mat-autocomplete #wellAuto="matAutocomplete"
                                   [displayWith]="getDisplayValue">
-                  <mat-option *ngFor="let opt of filteredOptions"
-                              [value]="opt">
-                    {{ opt.name }}
-                  </mat-option>
+                  @for (opt of filteredOptions; track $index) {
+                    <mat-option [value]="opt">{{ opt.name }}</mat-option>
+                  }
                 </mat-autocomplete>
               </mat-form-field>
   
               <!-- WELLBORE -->
               <mat-form-field appearance="fill" class="w-100 mb-3">
                 <mat-label>WellBore</mat-label>
-                <input matInput type="text"
+                <input matInput
                        [formControl]="selectedWellBoreControl(idx)"
                        [matAutocomplete]="wbAuto">
                 <mat-autocomplete #wbAuto="matAutocomplete"
                                   [displayWith]="getWellBoreDisplayValue">
-                  <mat-option *ngFor="let opt of wellBoreOptions[idx]?.wellbores || []"
-                              [value]="opt">
-                    {{ opt.name }}
-                  </mat-option>
+                  @for (wb of (wellBoreOptions[idx]?.wellbores || []); track $index) {
+                    <mat-option [value]="wb">{{ wb.name }}</mat-option>
+                  }
                 </mat-autocomplete>
               </mat-form-field>
   
   
-              <!-- TRACK + WIDGET COLUMNS -->
               <div class="row">
   
-                <!-- LEFT COLUMN BUTTONS -->
+                <!-- LEFT COLUMN -->
                 <div class="col-3 d-flex flex-column gap-2">
-                  <button type="button" class="btn bg-dark text-white w-100"
+                  <button type="button"
+                          class="btn bg-dark text-white w-100"
                           (click)="addTrackMnemonic(idx)">
                     + Add Track Mnemonic
                   </button>
   
-                  <button type="button" class="btn bg-dark text-white w-100"
+                  <button type="button"
+                          class="btn bg-dark text-white w-100"
                           (click)="addWidgetMnemonic(idx)">
                     + Add Widget Mnemonic
                   </button>
@@ -90,16 +89,17 @@
   
                   <!-- TRACK MNEMONICS -->
                   <div formArrayName="trackMnemonics" class="mb-4">
-                    @for (row of getTrackMnemonics(idx).controls;
-                          track $index; let m = $index) {
+  
+                    @for (row of getTrackMnemonics(idx).controls; track $index; let m = $index) {
   
                     <div class="row mb-2" [formGroupName]="m">
+  
                       <div class="col-4">
                         <select class="form-select"
                                 formControlName="selectedWellBoreLog">
                           <option value="">Select Log</option>
-                          @for (opt of wellBoreLogOptions[idx]?.logs || [])
-                          {
+  
+                          @for (opt of (wellBoreLogOptions[idx]?.logs || []); track $index) {
                             <option [ngValue]="opt">{{ opt.name }}</option>
                           }
                         </select>
@@ -109,11 +109,8 @@
                         <select class="form-select" formControlName="mnemonic">
                           <option value="">Select Mnemonic</option>
   
-                          @for (mn of trackMnemonicOptions[idx]?.[m] || [])
-                          {
-                            <option [ngValue]="mn">
-                              {{ mn.mnemonic }}
-                            </option>
+                          @for (mn of (trackMnemonicOptions[idx]?.[m] || []); track $index) {
+                            <option [ngValue]="mn">{{ mn.mnemonic }}</option>
                           }
                         </select>
                       </div>
@@ -125,24 +122,27 @@
                           Remove
                         </button>
                       </div>
+  
                     </div>
   
-                    }
+                    } <!-- end track loop -->
+  
                   </div>
   
   
                   <!-- WIDGET MNEMONICS -->
                   <div formArrayName="widgetMnemonics">
-                    @for (row of getWidgetMnemonics(idx).controls;
-                          track $index; let m = $index) {
+  
+                    @for (row of getWidgetMnemonics(idx).controls; track $index; let m = $index) {
   
                     <div class="row mb-2" [formGroupName]="m">
+  
                       <div class="col-4">
                         <select class="form-select"
                                 formControlName="selectedWellBoreLog">
                           <option value="">Select Log</option>
-                          @for (opt of wellBoreLogOptions[idx]?.logs || [])
-                          {
+  
+                          @for (opt of (wellBoreLogOptions[idx]?.logs || []); track $index) {
                             <option [ngValue]="opt">{{ opt.name }}</option>
                           }
                         </select>
@@ -152,11 +152,8 @@
                         <select class="form-select" formControlName="mnemonic">
                           <option value="">Select Mnemonic</option>
   
-                          @for (mn of widgetMnemonicOptions[idx]?.[m] || [])
-                          {
-                            <option [ngValue]="mn">
-                              {{ mn.mnemonic }}
-                            </option>
+                          @for (mn of (widgetMnemonicOptions[idx]?.[m] || []); track $index) {
+                            <option [ngValue]="mn">{{ mn.mnemonic }}</option>
                           }
                         </select>
                       </div>
@@ -168,9 +165,11 @@
                           Remove
                         </button>
                       </div>
+  
                     </div>
   
-                    }
+                    } <!-- end widget loop -->
+  
                   </div>
   
                 </div>
@@ -181,13 +180,12 @@
   
         </div>
   
-        } <!-- END FOR LOOP -->
+        } <!-- END WELL LOOP -->
   
       </div>
   
       <div class="mt-3">
-        <button type="submit" class="btn btn-dark"
-                [disabled]="isSubmitDisabled">
+        <button type="submit" class="btn btn-dark">
           Save
         </button>
   
