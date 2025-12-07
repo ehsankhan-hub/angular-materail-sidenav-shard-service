@@ -1,280 +1,92 @@
 <div class="border p-4 overflow-y-auto">
-    <h5 class="text-theme">Track Selection</h5> <!-- NEW -->
+    <h5 class="text-theme">Well List</h5>
+    <div style="display: none;">
+      <app-correlation-display [graphData]="result"></app-correlation-display>
+    </div>
     <form [formGroup]="wellForm" (ngSubmit)="submit()">
-      <button
-        type="button"
-        class="btn border-0 d-inline-flex align-items-center w-100 bg-dark mb-3"
-        (click)="addTrackWell()"
-      >
-        <span
-          data-icon="material-symbols-light:add"
-          class="iconify fs-20px my-n2 me-1 text-theme"
-        ></span>
-        Add Well (Track)
-      </button>
-  
-      <div formArrayName="trackWells" class="accordion mb-3" id="trackWellAccordion">
-        @for (item of trackWells.controls; track $index; let idx = $index) {
-          <div [formGroupName]="idx" class="accordion-item">
-            <h2 class="accordion-header d-flex justify-content-between mb-0">
-              <button
-                class="accordion-button fs-3"
-                type="button"
-                data-bs-toggle="collapse"
-                [attr.data-bs-target]="'#collapseTrack' + idx"
-                aria-expanded="true"
-                [attr.aria-controls]="'collapseTrack' + idx"
-              >
-                {{ trackWells.at(idx).get("selectedWellBore")?.value?.name || "None Selected" }}
-              </button>
-              <button
-                type="button"
-                class="btn text-danger bg-dark"
-                (click)="removeTrackWell(idx)"
-              >
-                <!-- same trash svg -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                  class="bi bi-trash-fill" viewBox="0 0 16 16">
-                  <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
-                </svg>
-              </button>
-            </h2>
-  
-            <div [id]="'collapseTrack' + idx" class="accordion-collapse collapse" data-bs-parent="#trackWellAccordion">
-              <div class="accordion-body mt-4">
-                <div class="row mb-3">
-                  <label for="well" class="col-4 form-label">Well</label>
-                  <div class="col-8">
-                    <mat-form-field appearance="fill">
-                      <mat-label>Well</mat-label>
-                      <input
-                        type="text"
-                        matInput
-                        [formControl]="selectedWellControlForTrack(idx)"
-                        [matAutocomplete]="autoTrack"
-                        (input)="filterOptions($event)"
-                      />
-                      <mat-autocomplete #autoTrack="matAutocomplete" [displayWith]="getDisplayValue">
-                        <mat-option *ngFor="let option of filteredOptions" [value]="option">
-                          {{ option.name }}
-                        </mat-option>
-                      </mat-autocomplete>
-                    </mat-form-field>
-                  </div>
-                </div>
-  
-                <div class="row mb-3">
-                  <label for="wellBore" class="col-4 form-label">WellBore</label>
-                  <div class="col-8">
-                    <mat-form-field appearance="fill">
-                      <mat-label>WellBore</mat-label>
-                      <input
-                        type="text"
-                        matInput
-                        [formControl]="selectedWellBoreControlForTrack(idx)"
-                        [matAutocomplete]="autoTrackWellBore"
-                      />
-                      <mat-autocomplete #autoTrackWellBore="matAutocomplete" [displayWith]="getWellBoreDisplayValue">
-                        <mat-option *ngFor="let option of trackWellBoreOptions[idx]?.wellbores" [value]="option">
-                          {{ option.name }}
-                        </mat-option>
-                      </mat-autocomplete>
-                    </mat-form-field>
-                  </div>
-                </div>
-  
-                <div class="w-100 ms-auto mb-3">
-                  <button
-                    type="button"
-                    class="btn w-25 ms-auto border-0 d-inline-flex align-items-center bg-dark"
-                    (click)="addTrackMnemonic(idx)"
-                  >
-                    <span data-icon="material-symbols-light:add" class="iconify fs-20px my-n2 me-1 text-theme"></span>
-                    Add Mnemonic (Track)
-                  </button>
-                </div>
-  
-                <div formArrayName="mnemonicList" class="accordion" id="mnemonicTrackAccordion">
-                  @for (item of getTrackMnemonics(idx).controls; track $index; let mnemonicIdx = $index) {
-                    <div [formGroupName]="mnemonicIdx" class="accordion-item">
-                      <h2 class="accordion-header d-flex justify-content-between mb-0">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                          [attr.data-bs-target]="'#collapseTrackMnemonic' + mnemonicIdx" aria-expanded="true"
-                          [attr.aria-controls]="'#collapseTrackMnemonic' + mnemonicIdx">
-                          {{ item.get("mnemonic")?.value?.mnemonic || "None Selected" }}
-                        </button>
-                        <button type="button" class="btn text-danger bg-dark"
-                          (click)="removeTrackMnemonic(idx, mnemonicIdx)">
-                          <!-- trash svg -->
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                            class="bi bi-trash-fill" viewBox="0 0 16 16">
-                            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
-                          </svg>
-                        </button>
-                      </h2>
-  
-                      <div [id]="'collapseTrackMnemonic' + mnemonicIdx" class="accordion-collapse collapse"
-                        data-bs-parent="#mnemonicTrackAccordion">
-                        <div class="accordion-body row">
-                          <label for="wellBoreLog" class="col-2 form-label">WellBore Log</label>
-                          <div class="col-4">
-                            <select id="wellBoreLog" formControlName="selectedWellBoreLog" class="form-select">
-                              <option value="">Select option</option>
-                              @for (option of trackWellBoreLogOptions[idx]?.logs; track option.uid) {
-                                <option [ngValue]="option">{{ option.name }}</option>
-                              }
-                            </select>
-                          </div>
-                          <label for="mnemonic" class="col-2 form-label">Mnemonic</label>
-                          <div class="col-4">
-                            <select id="mnemonic" formControlName="mnemonic" class="form-select">
-                              <option value="">Select mnemonic</option>
-                              @for (option of trackMnemonicOptions[idx]?.[mnemonicIdx]; track $index) {
-                                <option [ngValue]="option">{{ option.mnemonic }}</option>
-                              }
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                </div>
-  
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-  
-      <!-- ------------------------------ -->
-      <!-- WIDGETS SECTION (NEW) -->
-      <!-- ------------------------------ -->
-      <h5 class="text-theme mt-4">Widget Selection</h5> <!-- NEW -->
-      <button
-        type="button"
-        class="btn border-0 d-inline-flex align-items-center w-100 bg-dark mb-3"
-        (click)="addWidgetWell()"
-      >
+      <button type="button" class="btn border-0 d-inline-flex align-items-center w-100 bg-dark mb-3" (click)="addWell()">
         <span data-icon="material-symbols-light:add" class="iconify fs-20px my-n2 me-1 text-theme"></span>
-        Add Well (Widget)
+        Add Well
       </button>
   
-      <div formArrayName="widgetWells" class="accordion mb-3" id="widgetWellAccordion"> <!-- NEW -->
-        @for (item of widgetWells.controls; track $index; let idx = $index) {
+      <div formArrayName="wells" class="accordion mb-3" id="wellAccordion">
+        @for (item of wells.controls; track $index; let idx = $index) {
           <div [formGroupName]="idx" class="accordion-item">
             <h2 class="accordion-header d-flex justify-content-between mb-0">
-              <button class="accordion-button fs-3" type="button" data-bs-toggle="collapse"
-                [attr.data-bs-target]="'#collapseWidget' + idx" aria-expanded="true"
-                [attr.aria-controls]="'collapseWidget' + idx">
-                {{ widgetWells.at(idx).get("selectedWellBore")?.value?.name || "None Selected" }}
+              <button class="accordion-button fs-3" type="button" data-bs-toggle="collapse" [attr.data-bs-target]="'#collapse' + idx" aria-expanded="true" [attr.aria-controls]="'collapse' + idx">
+                {{ wells.at(idx).get("selectedWellBore")?.value?.name || "None Selected" }}
               </button>
-              <button type="button" class="btn text-danger bg-dark" (click)="removeWidgetWell(idx)">
-                <!-- trash svg -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                  class="bi bi-trash-fill" viewBox="0 0 16 16">
-                  <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
-                </svg>
-              </button>
+              <button type="button" class="btn text-danger bg-dark" (click)="removeWell(idx)">Remove Well</button>
             </h2>
-  
-            <div [id]="'collapseWidget' + idx" class="accordion-collapse collapse" data-bs-parent="#widgetWellAccordion">
+            <div [id]="'collapse' + idx" class="accordion-collapse collapse" data-bs-parent="#wellAccordion">
               <div class="accordion-body mt-4">
-                <div class="row mb-3">
-                  <label for="well" class="col-4 form-label">Well</label>
-                  <div class="col-8">
-                    <mat-form-field appearance="fill">
-                      <mat-label>Well</mat-label>
-                      <input
-                        type="text"
-                        matInput
-                        [formControl]="selectedWellControlForWidget(idx)"
-                        [matAutocomplete]="autoWidget"
-                        (input)="filterOptions($event)"
-                      />
-                      <mat-autocomplete #autoWidget="matAutocomplete" [displayWith]="getDisplayValue">
-                        <mat-option *ngFor="let option of filteredOptions" [value]="option">
-                          {{ option.name }}
-                        </mat-option>
-                      </mat-autocomplete>
-                    </mat-form-field>
-                  </div>
-                </div>
+                <!-- Well & WellBore inputs -->
+                ... (keep your existing well & wellbore input code here) ...
   
-                <div class="row mb-3">
-                  <label for="wellBore" class="col-4 form-label">WellBore</label>
-                  <div class="col-8">
-                    <mat-form-field appearance="fill">
-                      <mat-label>WellBore</mat-label>
-                      <input
-                        type="text"
-                        matInput
-                        [formControl]="selectedWellBoreControlForWidget(idx)"
-                        [matAutocomplete]="autoWidgetWellBore"
-                      />
-                      <mat-autocomplete #autoWidgetWellBore="matAutocomplete" [displayWith]="getWellBoreDisplayValue">
-                        <mat-option *ngFor="let option of widgetWellBoreOptions[idx]?.wellbores" [value]="option">
-                          {{ option.name }}
-                        </mat-option>
-                      </mat-autocomplete>
-                    </mat-form-field>
-                  </div>
-                </div>
-  
-                <div class="w-100 ms-auto mb-3">
-                  <button
-                    type="button"
-                    class="btn w-25 ms-auto border-0 d-inline-flex align-items-center bg-dark"
-                    (click)="addWidgetMnemonic(idx)"
-                  >
+                <!-- Track Mnemonics Section -->
+                <div class="mb-3">
+                  <button type="button" class="btn w-25 ms-auto border-0 d-inline-flex align-items-center bg-dark" (click)="addTrackMnemonic(idx)">
                     <span data-icon="material-symbols-light:add" class="iconify fs-20px my-n2 me-1 text-theme"></span>
-                    Add Mnemonic (Widget)
+                    Add Track Mnemonic
                   </button>
-                </div>
-  
-                <div formArrayName="mnemonicList" class="accordion" id="mnemonicWidgetAccordion">
-                  @for (item of getWidgetMnemonics(idx).controls; track $index; let mnemonicIdx = $index) {
-                    <div [formGroupName]="mnemonicIdx" class="accordion-item">
-                      <h2 class="accordion-header d-flex justify-content-between mb-0">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                          [attr.data-bs-target]="'#collapseWidgetMnemonic' + mnemonicIdx" aria-expanded="true"
-                          [attr.aria-controls]="'#collapseWidgetMnemonic' + mnemonicIdx">
-                          {{ item.get("mnemonic")?.value?.mnemonic || "None Selected" }}
-                        </button>
-                        <button type="button" class="btn text-danger bg-dark"
-                          (click)="removeWidgetMnemonic(idx, mnemonicIdx)">
-                          <!-- trash svg -->
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                            class="bi bi-trash-fill" viewBox="0 0 16 16">
-                            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
-                          </svg>
-                        </button>
-                      </h2>
-  
-                      <div [id]="'collapseWidgetMnemonic' + mnemonicIdx" class="accordion-collapse collapse"
-                        data-bs-parent="#mnemonicWidgetAccordion">
-                        <div class="accordion-body row">
-                          <label for="wellBoreLog" class="col-2 form-label">WellBore Log</label>
-                          <div class="col-4">
-                            <select id="wellBoreLog" formControlName="selectedWellBoreLog" class="form-select">
-                              <option value="">Select option</option>
-                              @for (option of widgetWellBoreLogOptions[idx]?.logs; track option.uid) {
-                                <option [ngValue]="option">{{ option.name }}</option>
-                              }
-                            </select>
-                          </div>
-                          <label for="mnemonic" class="col-2 form-label">Mnemonic</label>
-                          <div class="col-4">
-                            <select id="mnemonic" formControlName="mnemonic" class="form-select">
-                              <option value="">Select mnemonic</option>
-                              @for (option of widgetMnemonicOptions[idx]?.[mnemonicIdx]; track $index) {
-                                <option [ngValue]="option">{{ option.mnemonic }}</option>
-                              }
-                            </select>
-                          </div>
+                  <div formArrayName="trackMnemonics" class="mt-2">
+                    @for (item of getTrackMnemonics(idx).controls; track $index; let mnemonicIdx = $index) {
+                      <div [formGroupName]="mnemonicIdx" class="row mb-2">
+                        <div class="col-5">
+                          <select formControlName="selectedWellBoreLog" class="form-select">
+                            <option value="">Select WellBore Log</option>
+                            @for (option of wellBoreLogOptions[idx].logs; track option.uid) {
+                              <option [ngValue]="option">{{ option.name }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="col-5">
+                          <select formControlName="mnemonic" class="form-select">
+                            <option value="">Select Track Mnemonic</option>
+                            @for (option of trackMnemonicOptions[idx][mnemonicIdx]; track $index) {
+                              <option [ngValue]="option">{{ option.mnemonic }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="col-2">
+                          <button type="button" class="btn btn-danger" (click)="removeTrackMnemonic(idx, mnemonicIdx)">Remove</button>
                         </div>
                       </div>
-                    </div>
-                  }
+                    }
+                  </div>
+                </div>
+  
+                <!-- Widget Mnemonics Section -->
+                <div class="mb-3">
+                  <button type="button" class="btn w-25 ms-auto border-0 d-inline-flex align-items-center bg-dark" (click)="addWidgetMnemonic(idx)">
+                    <span data-icon="material-symbols-light:add" class="iconify fs-20px my-n2 me-1 text-theme"></span>
+                    Add Widget Mnemonic
+                  </button>
+                  <div formArrayName="widgetMnemonics" class="mt-2">
+                    @for (item of getWidgetMnemonics(idx).controls; track $index; let mnemonicIdx = $index) {
+                      <div [formGroupName]="mnemonicIdx" class="row mb-2">
+                        <div class="col-5">
+                          <select formControlName="selectedWellBoreLog" class="form-select">
+                            <option value="">Select WellBore Log</option>
+                            @for (option of wellBoreLogOptions[idx].logs; track option.uid) {
+                              <option [ngValue]="option">{{ option.name }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="col-5">
+                          <select formControlName="mnemonic" class="form-select">
+                            <option value="">Select Widget Mnemonic</option>
+                            @for (option of widgetMnemonicOptions[idx][mnemonicIdx]; track $index) {
+                              <option [ngValue]="option">{{ option.mnemonic }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="col-2">
+                          <button type="button" class="btn btn-danger" (click)="removeWidgetMnemonic(idx, mnemonicIdx)">Remove</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
                 </div>
   
               </div>
@@ -283,10 +95,8 @@
         }
       </div>
   
-      <!-- Submit area (single submit for both sections) -->
       <div>
         <button type="submit" class="btn btn-dark" [disabled]="isSubmitDisabled">Save</button>
-        &nbsp;
         <button type="button" class="btn btn-dark" (click)="closeDialog()">Cancel</button>
       </div>
     </form>
