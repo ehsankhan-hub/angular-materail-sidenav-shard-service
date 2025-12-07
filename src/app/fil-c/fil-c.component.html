@@ -20,10 +20,35 @@
             </h2>
             <div [id]="'collapse' + idx" class="accordion-collapse collapse" data-bs-parent="#wellAccordion">
               <div class="accordion-body mt-4">
-                <!-- Well & WellBore inputs -->
-                ... (keep your existing well & wellbore input code here) ...
   
-                <!-- Track Mnemonics Section -->
+                <!-- === EXISTING WELL & WELLBORE INPUTS === -->
+                <div class="row mb-3">
+                  <label for="well" class="col-4 form-label">Well</label>
+                  <div class="col-8">
+                    <mat-form-field appearance="fill">
+                      <mat-label>Well</mat-label>
+                      <input type="text" matInput [formControl]="selectedWellControl(idx)" [matAutocomplete]="auto" (input)="filterOptions($event)">
+                      <mat-autocomplete #auto="matAutocomplete" [displayWith]="getDisplayValue">
+                        <mat-option *ngFor="let option of filteredOptions" [value]="option">{{ option.name }}</mat-option>
+                      </mat-autocomplete>
+                    </mat-form-field>
+                  </div>
+                </div>
+  
+                <div class="row mb-3">
+                  <label for="wellBore" class="col-4 form-label">WellBore</label>
+                  <div class="col-8">
+                    <mat-form-field appearance="fill">
+                      <mat-label>WellBore</mat-label>
+                      <input type="text" matInput [formControl]="selectedWellBoreControl(idx)" [matAutocomplete]="autoWellBore">
+                      <mat-autocomplete #autoWellBore="matAutocomplete" [displayWith]="getWellBoreDisplayValue">
+                        <mat-option *ngFor="let option of wellBoreOptions[idx].wellbores" [value]="option">{{ option.name }}</mat-option>
+                      </mat-autocomplete>
+                    </mat-form-field>
+                  </div>
+                </div>
+  
+                <!-- === TRACK MNEMONICS === -->
                 <div class="mb-3">
                   <button type="button" class="btn w-25 ms-auto border-0 d-inline-flex align-items-center bg-dark" (click)="addTrackMnemonic(idx)">
                     <span data-icon="material-symbols-light:add" class="iconify fs-20px my-n2 me-1 text-theme"></span>
@@ -56,7 +81,7 @@
                   </div>
                 </div>
   
-                <!-- Widget Mnemonics Section -->
+                <!-- === WIDGET MNEMONICS === -->
                 <div class="mb-3">
                   <button type="button" class="btn w-25 ms-auto border-0 d-inline-flex align-items-center bg-dark" (click)="addWidgetMnemonic(idx)">
                     <span data-icon="material-symbols-light:add" class="iconify fs-20px my-n2 me-1 text-theme"></span>

@@ -52,7 +52,7 @@ export class MultiWellFilterComponent implements OnInit, AfterViewInit {
   wellBoreOptions: WellBoreList[] = [];
   wellBoreLogOptions: WellBoreLogsList[] = [];
 
-  // Updated mnemonic structure for separate Tracks and Widgets
+  // Separate mnemonic arrays for Tracks and Widgets
   trackMnemonicOptions: any[][] = [];
   widgetMnemonicOptions: any[][] = [];
 
@@ -167,9 +167,9 @@ export class MultiWellFilterComponent implements OnInit, AfterViewInit {
   filterOptions(event: any) {
     const input = event.target as HTMLInputElement;
     const value = input.value;
-    this.filteredOptions = this.wellOptions.filter((option) => {
-      return option.name.toLowerCase().includes(value.toLowerCase());
-    });
+    this.filteredOptions = this.wellOptions.filter((option) =>
+      option.name.toLowerCase().includes(value.toLowerCase())
+    );
   }
 
   addWell(): void {
