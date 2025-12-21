@@ -1,4 +1,62 @@
+ZoomOut() {
+  if (this.initialPlotRange === 0) {
+    console.log('Initial plot range is not defined. Cannot calculate scale.');
+    return;
+  }
 
+  const rectEl = this.canvasToPlot.nativeElement as HTMLElement;
+
+  if (this.currentScale > this.minScale) {
+    const nextScale = this.currentScale * (4 / 5);
+
+    // apply tentative zoom-out
+    this.currentScale = nextScale;
+    this.logWidget.scale(this.currentScale);
+
+    // ✅ Guard: if the rendered canvas/widget becomes smaller than the container,
+    // restore fit-to-height (full page) and keep scale at that level.
+    requestAnimationFrame(() => {
+      const containerH = rectEl.clientHeight || window.innerHeight;
+
+      // Try to find an actual canvas under your container (common with INT widgets)
+      const canvas = rectEl.querySelector('canvas') as HTMLCanvasElement | null;
+      const canvasH = canvas?.clientHeight ?? rectEl.clientHeight;
+
+      // If canvas is smaller than visible container, snap back to full height
+      if (canvasH < containerH - 2) {
+        this.logWidget.fitToHeight();
+
+        // IMPORTANT: keep a safe minimum so next zoomOut won’t shrink below full page again
+        // If you don't have getScale(), just lock minScale to currentScale.
+        const safeScale =
+          (this.logWidget as any).getScale?.() ??
+          (this.logWidget as any).getVerticalScale?.() ??
+          this.currentScale;
+
+        this.currentScale = safeScale;
+        this.minScale = safeScale;
+      }
+    });
+
+    // keep your existing range logic as-is
+    if (this.currentScale <= 0.5) {
+      this.logWidget.fitToHeight();
+      this.wellService.plotMaxDepth += 10;
+      this.wellService.plotMinDepth -= 10;
+    }
+
+    console.log('Zoom out');
+  } else {
+    console.log('Minimum zoom out level reached.');
+    // ✅ Also enforce full height at min
+    this.logWidget.fitToHeight();
+  }
+
+  this.isAutoScroll = false;
+}
+
+
+//////////////////////
 
 currentScale = 1;
 minScale = 1;
