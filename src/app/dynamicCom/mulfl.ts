@@ -1,3 +1,142 @@
+
+
+currentScale = 1;
+minScale = 1;
+private initializedZoom = false;
+
+// Save the "baseline" range you never want to go below (optional, but recommended)
+private baseMinDepth = 0;
+private baseMaxDepth = 0;
+private baseRange = 0;
+
+ngOnInit(): void {
+  this.baseMinDepth = this.wellService.plotMinDepth;
+  this.baseMaxDepth = this.wellService.plotMaxDepth;
+  this.baseRange = this.baseMaxDepth - this.baseMinDepth;
+
+  this.initialPlotRange = this.plotMaxDepth - this.plotMinDepth;
+}
+
+/**
+ * Call after widget is created & DOM is ready (ngAfterViewInit or after buildWidget())
+ */
+initZoomLimits(): void {
+  if (!this.logWidget || !this.canvasToPlot?.nativeElement) return;
+
+  // Fit once: defines the smallest allowed scale for the current container
+  this.logWidget.fitToHeight();
+
+  const s =
+    (this.logWidget as any).getScale?.() ??
+    (this.logWidget as any).getVerticalScale?.() ??
+    this.currentScale;
+
+  this.currentScale = s;
+  this.minScale = s;         // ✅ never go smaller than this
+  this.initializedZoom = true;
+}
+
+/**
+ * Apply the range change to both your service + INT widget.
+ * IMPORTANT: Replace the inside with the exact INT API you use for depth range.
+ */
+private applyDepthRange(minDepth: number, maxDepth: number): void {
+  this.wellService.plotMinDepth = minDepth;
+  this.wellService.plotMaxDepth = maxDepth;
+
+  // --- INT API varies by widget/version ---
+  // Use whichever exists in your project.
+  (this.logWidget as any).setDepthRange?.(minDepth, maxDepth);
+  (this.logWidget as any).setVisibleDepthRange?.(minDepth, maxDepth);
+  (this.logWidget as any).setVisibleRange?.(minDepth, maxDepth);
+
+  // If none of the above exist in your widget,
+  // you likely need to update the axis/range model on the Plot.
+  // (If you paste your widget creation code, I’ll wire the exact method.)
+}
+
+private expandRangeBy(pad: number): void {
+  const newMin = this.wellService.plotMinDepth - pad;
+  const newMax = this.wellService.plotMaxDepth + pad;
+  this.applyDepthRange(newMin, newMax);
+}
+
+private shrinkRangeBy(pad: number): void {
+  let newMin = this.wellService.plotMinDepth + pad;
+  let newMax = this.wellService.plotMaxDepth - pad;
+
+  // ✅ never shrink below your original/base range
+  const newRange = newMax - newMin;
+  if (newRange < this.baseRange) {
+    newMin = this.baseMinDepth;
+    newMax = this.baseMaxDepth;
+  }
+
+  this.applyDepthRange(newMin, newMax);
+}
+
+ZoomOut(): void {
+  if (!this.initializedZoom) this.initZoomLimits();
+  if (!this.initializedZoom) return;
+
+  const zoomFactor = 4 / 5;
+  const nextScale = this.currentScale * zoomFactor;
+
+  if (nextScale >= this.minScale) {
+    // ✅ normal zoom-out (canvas still >= window)
+    this.currentScale = nextScale;
+    this.logWidget.scale(this.currentScale);
+  } else {
+    // ✅ already at minimum scale (fit-to-window)
+    // Keep scale at minScale so canvas never shrinks,
+    // but expand the depth range instead.
+    this.currentScale = this.minScale;
+    this.logWidget.scale(this.currentScale);
+
+    // Expand by a pad that feels natural (pick your step)
+    // Option A: fixed step
+    this.expandRangeBy(10);
+
+    // Option B (better): proportional step based on current range
+    // const range = this.wellService.plotMaxDepth - this.wellService.plotMinDepth;
+    // this.expandRangeBy(Math.max(5, Math.round(range * 0.05)));
+  }
+
+  this.isAutoScroll = false;
+}
+
+ZoomIn(): void {
+  if (!this.initializedZoom) this.initZoomLimits();
+  if (!this.initializedZoom) return;
+
+  const zoomFactor = 5 / 4;
+
+  // zoom-in increases scale (always safe)
+  this.currentScale = this.currentScale * zoomFactor;
+  this.logWidget.scale(this.currentScale);
+
+  // OPTIONAL: also shrink the depth range on zoom-in
+  // (If you want zoom-in to reduce visible data range)
+  this.shrinkRangeBy(10);
+
+  this.isAutoScroll = false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //filter
 
 

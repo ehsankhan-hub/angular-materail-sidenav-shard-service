@@ -1,0 +1,225 @@
+<div class="border p-4 overflow-y-auto">
+    <h5 class="text-theme">Well List</h5>
+    <div style="display: none;">
+
+    </div>
+    <form [formGroup]="wellForm" (ngSubmit)="submit()">
+      <button
+        type="button"
+        class="btn border-0 d-inline-flex align-items-center w-100 bg-dark mb-3"
+        (click)="addWell()"
+      >
+        <span
+          data-icon="material-symbols-light:add"
+          class="iconify fs-20px my-n2 me-1 text-theme"
+        ></span>
+        Add Well
+      </button>
+  
+      <div formArrayName="wells" class="accordion mb-3" id="wellAccordion">
+        @for (item of wells.controls; track $index; let idx = $index) {
+          <div [formGroupName]="idx" class="accordion-item">
+            <h2 class="accordion-header d-flex justify-content-between mb-0">
+              <button
+                class="accordion-button fs-3"
+                type="button"
+                data-bs-toggle="collapse"
+                [attr.data-bs-target]="'#collapse' + idx"
+                aria-expanded="true"
+                [attr.aria-controls]="'collapse' + idx"
+              >
+                {{
+                  wells.at(idx).get("selectedWellBore")?.value?.name ||
+                    "None Selected"
+                }}
+              </button>
+              <button
+                type="button"
+                class="btn text-danger bg-dark"
+                (click)="removeWell(idx)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  class="bi bi-trash-fill"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"
+                  />
+                </svg>
+              </button>
+            </h2>
+            <div
+              [id]="'collapse' + idx"
+              class="accordion-collapse collapse"
+              data-bs-parent="#wellAccordion"
+            >
+              <div class="accordion-body mt-4">
+                <div class="row mb-3">
+                  <label for="well" class="col-4 form-label">Well</label>
+                  <div class="col-8">
+                    <mat-form-field appearance="fill">
+                      <mat-label>Well</mat-label>
+                      <input
+                        type="text"
+                        matInput
+                        [formControl]="selectedWellControl(idx)"
+                        [matAutocomplete]="auto"
+                        (input)="filterOptions($event)"
+                      />
+                      <mat-autocomplete #auto="matAutocomplete" [displayWith]="getDisplayValue">
+                        <mat-option
+                          *ngFor="let option of filteredOptions"
+                          [value]="option"
+                        >
+                          {{ option.name }}
+                        </mat-option>
+                      </mat-autocomplete>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <label for="wellBore" class="col-4 form-label"
+                    >WellBore</label
+                  >
+                  <div class="col-8">
+                    <mat-form-field appearance="fill">
+                      <mat-label>WellBore</mat-label>
+                      <input
+                        type="text"
+                        matInput
+                        [formControl]="selectedWellBoreControl(idx)"
+                        [matAutocomplete]="autoWellBore"
+                      />
+                      <mat-autocomplete #autoWellBore="matAutocomplete" [displayWith]="getWellBoreDisplayValue"
+                      >
+                        <mat-option *ngFor="let option of wellBoreOptions[idx]?.wellbores" [value]="option">
+                          {{ option.name }}
+                        </mat-option>
+                      </mat-autocomplete>
+                    </mat-form-field>
+                  </div>
+                </div>
+  
+                <div class="w-100 ms-auto mb-3">
+                  <button
+                    type="button"
+                    class="btn w-25 ms-auto border-0 d-inline-flex align-items-center bg-dark"
+                    (click)="addMnemonic(idx)"
+                  >
+                    <span
+                      data-icon="material-symbols-light:add"
+                      class="iconify fs-20px my-n2 me-1 text-theme"
+                    ></span>
+                    Add Mnemonic
+                  </button>
+                </div>
+  
+                <div
+                  formArrayName="mnemonicList"
+                  class="accordion"
+                  id="mnemonicAccordion"
+                >
+                  @for (
+                    item of getMnemonics(idx).controls;
+                    track $index;
+                    let mnemonicIdx = $index
+                  ) {
+                    <div [formGroupName]="mnemonicIdx" class="accordion-item">
+                      <h2
+                        class="accordion-header d-flex justify-content-between mb-0"
+                      >
+                        <button
+                          class="accordion-button"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          [attr.data-bs-target]="
+                            '#collapseMnemonic' + idx + mnemonicIdx
+                          "
+                          aria-expanded="true"
+                          [attr.aria-controls]="
+                            '#collapseMnemonic' + idx + mnemonicIdx
+                          "
+                        >
+                          {{
+                            item.get("mnemonic")?.value?.mnemonic ||
+                              "None Selected"
+                          }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn text-danger bg-dark"
+                          (click)="removeMnemonic(idx, mnemonicIdx)"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            class="bi bi-trash-fill"
+                            viewBox="0 0 16 16"
+                          >
+                            <path
+                              d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"
+                            />
+                          </svg>
+                        </button>
+                      </h2>
+                      <div
+                        [id]="'collapseMnemonic' + idx + mnemonicIdx"
+                        class="accordion-collapse collapse"
+                        data-bs-parent="#mnemonicAccordion"
+                      >
+                        <div class="accordion-body row">
+                          <label for="wellBoreLog" class="col-2 form-label"
+                            >WellBore Log</label
+                          >
+                          <div class="col-4">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Mnemonic</mat-label>
+                                <mat-select
+                                    [formControl]="getMnemonicControl(idx, mnemonicIdx, 'mnemonic')"
+                                    >
+                                    <mat-option value="">Select mnemonic</mat-option>
+                                    @for (option of mnemonicOptions[idx][mnemonicIdx] || []; track $index) {
+                                        <mat-option [value]="option">
+                                            {{ option.mnemonic }}
+                                        </mat-option>
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                          
+                        
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+      <div>
+        <button
+          type="submit"
+          class="btn btn-dark"
+          [disabled]="wellForm.invalid || wells.length === 0"
+        >
+          Save
+        </button>
+        &nbsp;
+        <button
+          type="button"
+          class="btn btn-dark"
+          (click)="closeDialog()"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>

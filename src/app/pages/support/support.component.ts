@@ -9,11 +9,14 @@ import { RccMultiWellDisplayComponent } from '../../wellLink/rcc-multi-well-disp
 import { MultiWellViewComponent } from '../../multiWell/multi-well-view/multi-well-view.component';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { MatMenuModule } from '@angular/material/menu';
+import { MultiWellFilterComponent } from '../../multi-well-filter/multi-well-filter/multi-well-filter.component';
+
 
 @Component({
     selector: 'app-support',
     standalone: true, 
-    imports: [RccMultiWellDisplayComponent,MatMenuModule,MultiWellViewComponent, MatButtonModule,
+    imports: [RccMultiWellDisplayComponent,MultiWellFilterComponent,
+      MatMenuModule,MultiWellViewComponent, MatButtonModule,
       FormsModule,CommonModule, ReactiveFormsModule,MatFormFieldModule,MatSelectModule,MatInputModule,MatButtonModule],
     templateUrl: './support.component.html',
     styleUrl: './support.component.css'

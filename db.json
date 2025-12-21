@@ -1,12 +1,130 @@
 {
+  "wells": [
+    {
+      "uid": "ABHD_104",
+      "name": "ABHD_104"
+    },
+    {
+      "uid": "ABHD_112",
+      "name": "ABHD_112"
+    },
+    {
+      "uid": "WELL_C_01",
+      "name": "WELL_C_01"
+    }
+  ],
+  "wellbores": {
+    "ABHD_104": [
+      {
+        "@uidWell": "ABHD_104",
+        "nameWell": "ABHD_104",
+        "name": "ABHD_104_1",
+        "uid": "ABHD_104_1"
+      },
+      {
+        "@uidWell": "ABHD_104",
+        "nameWell": "ABHD_104",
+        "name": "ABHD_104_2",
+        "uid": "ABHD_104_2"
+      }
+    ],
+    "ABHD_112": [
+      {
+        "@uidWell": "ABHD_112",
+        "nameWell": "ABHD_112",
+        "name": "ABHD_112_0",
+        "uid": "ABHD_112_0"
+      },
+      {
+        "@uidWell": "ABHD_112",
+        "nameWell": "ABHD_112",
+        "name": "ABHD_112_Sidetrack",
+        "uid": "ABHD_112_Sidetrack"
+      }
+    ]
+  },
+  "logs": {
+    "ABHD_104_2": [
+      {
+        "@uidWell": "ABHD_104",
+        "@uidWellbore": "ABHD_104_2",
+        "nameWell": "ABHD_104",
+        "nameWellbore": "ABHD_104_2",
+        "name": "LWD_Depth_Run2_SLB",
+        "uid": "LWD_Depth_Run2_SLB",
+        "logCurveInfo": [
+          {
+            "@uid": "Depth",
+            "mnemonic": "Depth",
+            "unit": "ft",
+            "curveDescription": "CDEPTH"
+          },
+          {
+            "@uid": "WOB",
+            "mnemonic": "WOB",
+            "unit": "1000 lbf",
+            "curveDescription": "SWOB"
+          },
+          {
+            "@uid": "RHOB_L",
+            "mnemonic": "RHOB_L",
+            "unit": "g/cm3",
+            "curveDescription": "ROBB_RT"
+          }
+        ]
+      }
+    ],
+    "ABHD_112_0": [
+      {
+        "@uidWell": "ABHD_112",
+        "@uidWellbore": "ABHD_112_0",
+        "nameWell": "ABHD_112",
+        "nameWellbore": "ABHD_112_0",
+        "name": "Surface_Depth_IDS",
+        "uid": "Surface_Depth_IDS",
+        "logCurveInfo": [
+          {
+            "@uid": "PVT13",
+            "mnemonic": "PVT13",
+            "unit": "bbl",
+            "curveDescription": "Tank 13 Volume"
+          },
+          {
+            "@uid": "ROP",
+            "mnemonic": "ROP",
+            "unit": "ft/hr",
+            "curveDescription": "Rate of Penetration"
+          }
+        ]
+      }
+    ]
+  },
   "wellboreObjects": [
     {
       "wellId": "ABSF_321",
       "wellboreId": "ABSF_321_0",
       "objectId": "LWD_Depth_Run3_BH",
       "objectInfo": [
-        { "logId": "LWD_Depth_Run3_BH", "mnemonic": "ABG_L", "unit": "API", "data": [12, 14, 15] },
-        { "logId": "LWD_Depth_Run3_BH", "mnemonic": "GR", "unit": "API", "data": [55, 60, 62] }
+        {
+          "logId": "LWD_Depth_Run3_BH",
+          "mnemonic": "ABG_L",
+          "unit": "API",
+          "data": [
+            12,
+            14,
+            15
+          ]
+        },
+        {
+          "logId": "LWD_Depth_Run3_BH",
+          "mnemonic": "GR",
+          "unit": "API",
+          "data": [
+            55,
+            60,
+            62
+          ]
+        }
       ]
     },
     {
@@ -14,35 +132,30 @@
       "wellboreId": "XYZA_100_1",
       "objectId": "LWD_Run5",
       "objectInfo": [
-        { "logId": "LWD_Run5", "mnemonic": "ROP", "unit": "m/hr", "data": [20, 28, 30] },
-        { "logId": "LWD_Run5", "mnemonic": "WOB", "unit": "klb", "data": [10, 15, 17] }
+        {
+          "logId": "LWD_Run5",
+          "mnemonic": "ROP",
+          "unit": "m/hr",
+          "data": [
+            20,
+            28,
+            30
+          ]
+        },
+        {
+          "logId": "LWD_Run5",
+          "mnemonic": "WOB",
+          "unit": "klb",
+          "data": [
+            10,
+            15,
+            17
+          ]
+        }
       ]
     }
   ],
-
   "items": [
-    {
-      "rigCode": "NEW43",
-      "rigName": "New Rig",
-      "location": "alld",
-      "rigType": "off",
-      "opPlanFlag": "N",
-      "companyCode": "003",
-      "companyName": "old",
-      "justificatio": "User Added",
-      "id": 8
-    },
-    {
-      "rigCode": "NEW",
-      "rigName": "New Rig",
-      "location": "Alld",
-      "rigType": "PVLTD",
-      "opPlanFlag": "N",
-      "companyCode": "003",
-      "companyName": "od",
-      "justificatio": "updt",
-      "id": 9
-    },
     {
       "rigCode": "NEW",
       "rigName": "New Rig",
@@ -110,8 +223,6 @@
       "id": 15
     }
   ],
-
-
   "organizations": [
     {
       "code": "333333333",
@@ -168,8 +279,6 @@
     }
   ],
   "approvers": [
-    [
-      
-    ]
+    []
   ]
 }
