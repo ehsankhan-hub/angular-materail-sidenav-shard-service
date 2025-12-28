@@ -1,100 +1,132 @@
 ///
-
-import { Component, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-print-dialog',
+  standalone: true,
+  imports: [
+    CommonModule, FormsModule, MatDialogModule, MatFormFieldModule,
+    MatInputModule, MatSelectModule, MatCheckboxModule, MatRadioModule, MatButtonModule
+  ],
   templateUrl: './print-dialog.component.html',
-  styles: [`
-    .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .margins-section { border: 1px solid #ccc; padding: 10px; margin-top: 15px; }
-    mat-form-field { width: 100%; }
-  `]
+  styleUrls: ['./print-dialog.component.css']
 })
 export class PrintDialogComponent {
-  // Initializing with defaults seen in your screenshot
   public dialogData = {
-    paperFormat: 'Letter',
-    orientation: 'Portrait',
-    scaling: 'AsIs',
-    units: 'cm',
-    top: 1, bottom: 1, left: 0.5, right: 0.5,
-    keepAspectRatio: false,
-    continuous: false,
-    width: 10,
-    height: 15
+    rangeType: 'visible',
+    fromDepth: 5864.49,
+    toDepth: 6185.32,
+    scale: '1:600',
+    outputType: 'print', // 'print' | 'file'
+    headerFrequency: 'once', // 'none' | 'once' | 'all'
+    location: 'topbottom',
+    showPageNumber: false,
+    showPrintRange: false,
+    printSettings: {
+      paperFormat: 'Letter',
+      orientation: 'Portrait'
+    }
   };
+
+  public scales = ['1:60', '1:120', '1:200', '1:240', '1:360', '1:480', '1:500', '1:600', '1:1000'];
 
   constructor(public dialogRef: MatDialogRef<PrintDialogComponent>) {}
 
-  onExport() {
+  onConfirm() {
     this.dialogRef.close(this.dialogData);
   }
 }
 
 ///////////////
+<h2 mat-dialog-title>Print properties</h2>
+<mat-dialog-content class="dialog-content">
+  
+  <p class="warning-text">Note: If printing more than few hours of data, it is recommended to use 64 bit application process.</p>
 
-<h2 mat-dialog-title>Export to PDF</h2>
-<mat-dialog-content>
-  <div class="grid-container">
-    <mat-form-field appearance="fill" style="grid-column: span 2;">
-      <mat-label>Paper format</mat-label>
-      <mat-select [(ngModel)]="dialogData.paperFormat">
-        <mat-option value="Letter">Letter</mat-option>
-        <mat-option value="A4">A4</mat-option>
-      </mat-select>
-    </mat-form-field>
+  <fieldset class="section">
+    <legend>Print range</legend>
+    <mat-radio-group [(ngModel)]="dialogData.rangeType">
+      <mat-radio-button value="visible">Visible range</mat-radio-button>
+      <mat-radio-button value="all">All</mat-radio-button>
+      <div class="range-row">
+        <mat-radio-button value="range">Range:</mat-radio-button>
+        <span class="label">from</span>
+        <input class="mini-input" [(ngModel)]="dialogData.fromDepth">
+        <span class="label">FT to</span>
+        <input class="mini-input" [(ngModel)]="dialogData.toDepth">
+        <span class="label">FT</span>
+      </div>
+    </mat-radio-group>
+  </fieldset>
 
-    <mat-form-field><mat-label>Width</mat-label><input matInput type="number" [(ngModel)]="dialogData.width"></mat-form-field>
-    <mat-form-field><mat-label>Height</mat-label><input matInput type="number" [(ngModel)]="dialogData.height"></mat-form-field>
+  <div class="flex-row">
+    <div class="left-col">
+      <div class="inline-field">
+        <label>Scale</label>
+        <mat-select [(ngModel)]="dialogData.scale" class="scale-select">
+          <mat-option *ngFor="let s of scales" [value]="s">{{s}}</mat-option>
+        </mat-select>
+        <span>2" Log</span>
+      </div>
 
-    <mat-form-field>
-      <mat-label>Orientation</mat-label>
-      <mat-select [(ngModel)]="dialogData.orientation">
-        <mat-option value="Portrait">Portrait</mat-option>
-        <mat-option value="Landscape">Landscape</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>Scaling</mat-label>
-      <mat-select [(ngModel)]="dialogData.scaling">
-        <mat-option value="AsIs">AsIs</mat-option>
-        <mat-option value="FitWidth">Fit Width</mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
+      <mat-radio-group [(ngModel)]="dialogData.outputType" class="radio-row">
+        <mat-radio-button value="print">Print</mat-radio-button>
+        <mat-radio-button value="file">Export to file</mat-radio-button>
+      </mat-radio-group>
 
-  <div class="checkbox-row">
-    <mat-checkbox [(ngModel)]="dialogData.keepAspectRatio">Keep proportions</mat-checkbox>
-    <mat-checkbox [(ngModel)]="dialogData.continuous" style="margin-left: 20px;">Continuous</mat-checkbox>
-  </div>
+      <div class="header-section">
+        <label>Header</label>
+        <mat-radio-group [(ngModel)]="dialogData.headerFrequency" class="radio-row">
+          <mat-radio-button value="none">None</mat-radio-button>
+          <mat-radio-button value="once">Once</mat-radio-button>
+          <mat-radio-button value="all">All</mat-radio-button>
+        </mat-radio-group>
+      </div>
+    </div>
 
-  <div class="margins-section">
-    <p>Margins</p>
-    <mat-form-field appearance="fill">
-      <mat-label>Units</mat-label>
-      <mat-select [(ngModel)]="dialogData.units">
-        <mat-option value="cm">cm</mat-option>
-        <mat-option value="in">in</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <div class="grid-container">
-      <mat-form-field><mat-label>Top</mat-label><input matInput [(ngModel)]="dialogData.top"></mat-form-field>
-      <mat-form-field><mat-label>Bottom</mat-label><input matInput [(ngModel)]="dialogData.bottom"></mat-form-field>
-      <mat-form-field><mat-label>Left</mat-label><input matInput [(ngModel)]="dialogData.left"></mat-form-field>
-      <mat-form-field><mat-label>Right</mat-label><input matInput [(ngModel)]="dialogData.right"></mat-form-field>
+    <div class="right-col">
+      <mat-checkbox [(ngModel)]="dialogData.showPageNumber">Show page number</mat-checkbox>
+      <mat-checkbox [(ngModel)]="dialogData.showPrintRange">Show print range</mat-checkbox>
     </div>
   </div>
+
+  <div class="footer-select">
+    <label>Location</label>
+    <mat-select [(ngModel)]="dialogData.location">
+      <mat-option value="topbottom">Include log header at the top and bottom</mat-option>
+    </mat-select>
+  </div>
+
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onExport()" color="primary">EXPORT</button>
-  <button mat-button mat-dialog-close>CLOSE</button>
+  <button mat-button (click)="onConfirm()" class="ok-btn">OK</button>
+  <button mat-button mat-dialog-close class="cancel-btn">Cancel</button>
 </mat-dialog-actions>
-
 /////
 
+
+.dialog-content { font-size: 12px; color: #333; }
+.warning-text { color: red; margin-bottom: 10px; font-style: italic; }
+.section { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+.range-row { display: flex; align-items: center; gap: 5px; margin-top: 5px; padding-left: 25px; }
+.mini-input { width: 80px; border: 1px solid #ccc; padding: 2px; }
+.flex-row { display: flex; justify-content: space-between; margin-top: 15px; }
+.radio-row { display: flex; gap: 15px; margin: 10px 0; }
+.header-section { border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; }
+.ok-btn, .cancel-btn { border: 1px solid #999; min-width: 80px; height: 30px; margin-left: 8px; }
+.scale-select { width: 100px; border: 1px solid #ccc; margin: 0 5px; }
+
+////
 // In your rtd.component.ts
 exportTracksToPdf(userSelectedSettings: any) {
   // 1. Start the loading state
