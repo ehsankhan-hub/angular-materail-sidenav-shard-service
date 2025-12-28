@@ -1,4 +1,99 @@
+///
 
+import { Component, Inject } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+@Component({
+  selector: 'app-print-dialog',
+  templateUrl: './print-dialog.component.html',
+  styles: [`
+    .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .margins-section { border: 1px solid #ccc; padding: 10px; margin-top: 15px; }
+    mat-form-field { width: 100%; }
+  `]
+})
+export class PrintDialogComponent {
+  // Initializing with defaults seen in your screenshot
+  public dialogData = {
+    paperFormat: 'Letter',
+    orientation: 'Portrait',
+    scaling: 'AsIs',
+    units: 'cm',
+    top: 1, bottom: 1, left: 0.5, right: 0.5,
+    keepAspectRatio: false,
+    continuous: false,
+    width: 10,
+    height: 15
+  };
+
+  constructor(public dialogRef: MatDialogRef<PrintDialogComponent>) {}
+
+  onExport() {
+    this.dialogRef.close(this.dialogData);
+  }
+}
+
+///////////////
+
+<h2 mat-dialog-title>Export to PDF</h2>
+<mat-dialog-content>
+  <div class="grid-container">
+    <mat-form-field appearance="fill" style="grid-column: span 2;">
+      <mat-label>Paper format</mat-label>
+      <mat-select [(ngModel)]="dialogData.paperFormat">
+        <mat-option value="Letter">Letter</mat-option>
+        <mat-option value="A4">A4</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field><mat-label>Width</mat-label><input matInput type="number" [(ngModel)]="dialogData.width"></mat-form-field>
+    <mat-form-field><mat-label>Height</mat-label><input matInput type="number" [(ngModel)]="dialogData.height"></mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Orientation</mat-label>
+      <mat-select [(ngModel)]="dialogData.orientation">
+        <mat-option value="Portrait">Portrait</mat-option>
+        <mat-option value="Landscape">Landscape</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Scaling</mat-label>
+      <mat-select [(ngModel)]="dialogData.scaling">
+        <mat-option value="AsIs">AsIs</mat-option>
+        <mat-option value="FitWidth">Fit Width</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="checkbox-row">
+    <mat-checkbox [(ngModel)]="dialogData.keepAspectRatio">Keep proportions</mat-checkbox>
+    <mat-checkbox [(ngModel)]="dialogData.continuous" style="margin-left: 20px;">Continuous</mat-checkbox>
+  </div>
+
+  <div class="margins-section">
+    <p>Margins</p>
+    <mat-form-field appearance="fill">
+      <mat-label>Units</mat-label>
+      <mat-select [(ngModel)]="dialogData.units">
+        <mat-option value="cm">cm</mat-option>
+        <mat-option value="in">in</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div class="grid-container">
+      <mat-form-field><mat-label>Top</mat-label><input matInput [(ngModel)]="dialogData.top"></mat-form-field>
+      <mat-form-field><mat-label>Bottom</mat-label><input matInput [(ngModel)]="dialogData.bottom"></mat-form-field>
+      <mat-form-field><mat-label>Left</mat-label><input matInput [(ngModel)]="dialogData.left"></mat-form-field>
+      <mat-form-field><mat-label>Right</mat-label><input matInput [(ngModel)]="dialogData.right"></mat-form-field>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onExport()" color="primary">EXPORT</button>
+  <button mat-button mat-dialog-close>CLOSE</button>
+</mat-dialog-actions>
+
+/////
 
 // In your rtd.component.ts
 exportTracksToPdf(userSelectedSettings: any) {
