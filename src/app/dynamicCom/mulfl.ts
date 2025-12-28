@@ -126,6 +126,25 @@ export class PrintDialogComponent {
 .ok-btn, .cancel-btn { border: 1px solid #999; min-width: 80px; height: 30px; margin-left: 8px; }
 .scale-select { width: 100px; border: 1px solid #ccc; margin: 0 5px; }
 
+
+
+
+/////////////
+
+exportTracksToPdf(data: any) {
+  const settings = {
+    printSettings: data.printSettings,
+    // Decide based on the new dialog properties
+    header: data.headerFrequency === 'none' ? null : new HeaderComponent(600, 20),
+    // App.ts uses limits based on rangeType
+    limits: data.rangeType === 'range' ? { start: data.fromDepth, end: data.toDepth } : null
+  };
+  
+  (this.logWidget as any).exportToPDF(settings, (p) => this.loadingValue = p);
+}
+
+
+
 ////
 // In your rtd.component.ts
 exportTracksToPdf(userSelectedSettings: any) {
