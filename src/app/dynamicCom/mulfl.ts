@@ -1,61 +1,53 @@
 
 
-// 1. Add these properties to your class
-public printing = false;
-public loadingValue = 0;
-public showExportDialog = false;
+// In your rtd.component.ts
+exportTracksToPdf(userSelectedSettings: any) {
+  // 1. Start the loading state
+  this.printing = true;
+  this.showExportDialog = false;
 
-// 2. This method replaces the Vue 'exportToPdf' method
-exportTracksToPdf(settings: any) {
-    this.printing = true;
-    this.showExportDialog = false;
+  // 2. Prepare the exact object structure required by your App.ts screenshot
+  const settingsObject = {
+      printSettings: userSelectedSettings // App.ts line 8: settings['printSettings']
+  };
 
-    // The 'progress' callback updates the loading bar
-    const progress = (currentPage: number, totalPages: number) => {
-        this.loadingValue = (currentPage / totalPages) * 100;
-        console.log(`Printing page ${currentPage} of ${totalPages}`);
-    };
+  // 3. Define the progress callback (App.ts line 1: progress)
+  const progressCallback = (currentPage: number, totalPages: number) => {
+      this.loadingValue = (currentPage / totalPages) * 100;
+  };
 
-    // Use the custom method built into your office's LogDisplay wrapper
-    this.logWidget
-        .exportToPDF(settings, progress)
-        .then(() => {
-            this.printing = false;
-            this.loadingValue = 0;
-            alert('Export Successful!');
-        })
-        .catch((fail: any) => {
-            this.printing = false;
-            console.error('Export failed:', fail.message);
-            alert('Export failed: ' + fail.message);
-        });
+  // 4. Execute the call using the (as any) cast to avoid the argument count error
+  (this.logWidget as any).exportToPDF(settingsObject, progressCallback)
+      .then(() => {
+          this.printing = false;
+          this.loadingValue = 0;
+          console.log("Export Successful");
+      })
+      .catch((err: any) => {
+          this.printing = false;
+          alert("Export failed: " + err.message);
+      });
 }
 
 /////
-<button (click)="showExportDialog = true" class="btn btn-primary">
-  Export to PDF
+<button (click)="showExportDialog = true" [disabled]="printing" class="btn">
+    Export to PDF
 </button>
 
-<div *ngIf="showExportDialog" class="modal-overlay">
-  <div class="modal-content">
-    <h3>Print Settings</h3>
-    
-    <label>Paper Format:</label>
-    <select [(ngModel)]="tempSettings.paperFormat">
-      <option value="Letter">Letter</option>
-      <option value="A4">A4</option>
-    </select>
-
-    <button (click)="exportTracksToPdf(tempSettings)">Confirm Export</button>
+<div *ngIf="showExportDialog" class="my-custom-dialog">
+    <h3>Export Settings</h3>
+    <button (click)="exportTracksToPdf({ paperFormat: 'A4', orientation: 'portrait' })">
+        Confirm & Export
+    </button>
     <button (click)="showExportDialog = false">Cancel</button>
-  </div>
 </div>
 
-<div *ngIf="printing" class="progress-overlay">
-  <p>Generating PDF... {{ loadingValue | number:'1.0-0' }}%</p>
-  <div class="progress-bar" [style.width.%]="loadingValue"></div>
+<div *ngIf="printing" class="loading-screen">
+    <p>Generating PDF: {{ loadingValue | number:'1.0-0' }}%</p>
+    <div class="progress-bar-container">
+        <div class="progress-fill" [style.width.%]="loadingValue"></div>
+    </div>
 </div>
-
 
 ////////////////////
 createCurve(curveInfo: IWellboreLogData) {
