@@ -1,3 +1,173 @@
+
+
+// 1. Add these properties to your class
+public printing = false;
+public loadingValue = 0;
+public showExportDialog = false;
+
+// 2. This method replaces the Vue 'exportToPdf' method
+exportTracksToPdf(settings: any) {
+    this.printing = true;
+    this.showExportDialog = false;
+
+    // The 'progress' callback updates the loading bar
+    const progress = (currentPage: number, totalPages: number) => {
+        this.loadingValue = (currentPage / totalPages) * 100;
+        console.log(`Printing page ${currentPage} of ${totalPages}`);
+    };
+
+    // Use the custom method built into your office's LogDisplay wrapper
+    this.logWidget
+        .exportToPDF(settings, progress)
+        .then(() => {
+            this.printing = false;
+            this.loadingValue = 0;
+            alert('Export Successful!');
+        })
+        .catch((fail: any) => {
+            this.printing = false;
+            console.error('Export failed:', fail.message);
+            alert('Export failed: ' + fail.message);
+        });
+}
+
+/////
+<button (click)="showExportDialog = true" class="btn btn-primary">
+  Export to PDF
+</button>
+
+<div *ngIf="showExportDialog" class="modal-overlay">
+  <div class="modal-content">
+    <h3>Print Settings</h3>
+    
+    <label>Paper Format:</label>
+    <select [(ngModel)]="tempSettings.paperFormat">
+      <option value="Letter">Letter</option>
+      <option value="A4">A4</option>
+    </select>
+
+    <button (click)="exportTracksToPdf(tempSettings)">Confirm Export</button>
+    <button (click)="showExportDialog = false">Cancel</button>
+  </div>
+</div>
+
+<div *ngIf="printing" class="progress-overlay">
+  <p>Generating PDF... {{ loadingValue | number:'1.0-0' }}%</p>
+  <div class="progress-bar" [style.width.%]="loadingValue"></div>
+</div>
+
+
+////////////////////
+createCurve(curveInfo: IWellboreLogData) {
+  const values = curveInfo.data;
+  const depths = values.map(
+    (_val, i) =>
+      this.wellService.plotMinDepth +
+      (i * (this.wellService.plotMaxDepth - this.wellService.plotMinDepth)) /
+        (values.length - 1)
+  );
+  const data = new LogData(depths, values);
+
+  let curveValuePosition: AnchorType = AnchorType.None;
+  switch (curveInfo.valuePosition) {
+    case 'Left':
+      curveValuePosition = AnchorType.RightCenter;
+      break;
+    case 'Right':
+      curveValuePosition = AnchorType.LeftCenter;
+      break;
+    case 'Center':
+      curveValuePosition = AnchorType.TopCenter;
+      break;
+  }
+  let lastValue: number = 0;
+  if (curveInfo.data.length > 0) {
+    lastValue = this.wellService.getLastValueOfCurve(
+      curveInfo.data,
+      curveInfo.data.length - 1
+    );
+  }
+  let min: number = 0;
+  let max: number = 0;
+  if (curveInfo.min != '') {
+    min = curveInfo.min;
+  }
+  if (curveInfo.max != '') {
+    max = curveInfo.max;
+  }
+
+  return new LogCurve(data)
+    .setTag(curveInfo.mnemonicId) // <--- ADDED THIS: Permanent ID for updates
+    .setName(
+      curveInfo.displayName +
+        '(' +
+        (Math.round(lastValue * 100) / 100).toFixed(2) +
+        ' ' +
+        curveInfo.unit +
+        ')'
+    )
+    .setVisibleValue(curveInfo.showValue)
+    .setTextReference(TextReference.Sample)
+    .setTextAnchorType(curveValuePosition)
+    .setHideOverlappedValues(true)
+    .setDisplayUnit(curveInfo.unit)
+    .setTextDecimationStep(curveInfo.textDecimationStep)
+    .setTextStyle({
+      color: curveInfo.color,
+      font: 'bold 12px Roboto',
+    })
+    .setLineStyle({
+      color: curveInfo.color,
+      width: 2,
+      pattern: curveInfo.lineStyle,
+    })
+    .setClippingLimits(min, max);
+}
+
+///////////////////////
+
+//New methot to upate the curve instead of crete again and angain
+
+updateExistingCurves() {
+  if (!this.logWidget) return;
+
+  this.lstOfTrack.forEach((track) => {
+      track.curves.forEach((curve) => {
+          // We search for the curve using the Tag (MnemonicId)
+          const visualCurve = this.logWidget.findNode(`* [tag="${curve.mnemonicId}"]`);
+
+          if (visualCurve instanceof LogCurve) {
+              // 1. Update the Data
+              const logData = visualCurve.getData();
+              if (logData instanceof LogData) {
+                  logData.setValues(this.indexCurveDepth, curve.data);
+              }
+
+              // 2. Update the Name (so the value in the header updates)
+              let lastValue = 0;
+              if (curve.data.length > 0) {
+                  lastValue = this.wellService.getLastValueOfCurve(curve.data, curve.data.length - 1);
+              }
+              visualCurve.setName(
+                  curve.displayName + '(' + (Math.round(lastValue * 100) / 100).toFixed(2) + ' ' + curve.unit + ')'
+              );
+          }
+      });
+  });
+
+  // Request redraw
+  this.logWidget.updateLayout();
+  this.plot.update();
+}
+
+
+//////////////
+
+
+
+
+
+//////////////////////
 ZoomOut() {
   if (this.initialPlotRange === 0) {
     console.log('Initial plot range is not defined. Cannot calculate scale.');
