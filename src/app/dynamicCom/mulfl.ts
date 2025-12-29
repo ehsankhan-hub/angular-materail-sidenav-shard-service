@@ -1,3 +1,282 @@
+import { Rect } from '@int/geotoolkit/util/Rect';
+import { Group } from '@int/geotoolkit/scene/Group';
+import { Text } from '@int/geotoolkit/scene/shapes/Text';
+import { BoxLayout } from '@int/geotoolkit/layout/BoxLayout';
+
+export class App {
+    private _widget: any; // This is your WellLogWidget instance
+
+    // ... existing initialization ...
+
+    public async exportToPDF(settings: any, progressFn: (current: number, total: number) => void): Promise<void> {
+        const { printSettings, customLimits, header, headerData } = settings;
+
+        // 1. Prepare the Export Range
+        // We use the selection property to tell the widget exactly what depth/time to slice
+        const limits = customLimits 
+            ? new Rect(0, customLimits.start, 0, customLimits.end) 
+            : this._widget.getVisibleLimits(); // Use visible if no custom range
+
+        // 2. Create the Header Group (No separate file needed)
+        let pdfHeader = null;
+        if (header !== 'none' && headerData) {
+            pdfHeader = new Group()
+                .setLayout(new BoxLayout({ orientation: 'vertical' }))
+                .setBounds(new Rect(0, 0, 100, 40)); // Header area height
+
+            pdfHeader.addChild(new Text({
+                text: headerData.wellName,
+                textstyle: { font: 'bold 16px Arial', color: 'black' }
+            }));
+
+            pdfHeader.addChild(new Text({
+                text: `Field: ${headerData.field} | UWI: ${headerData.uwi}`,
+                textstyle: { font: '12px Arial', color: 'gray' }
+            }));
+        }
+
+        // 3. Use the Widget's built-in export logic
+        // This is the specific way LogWidget handles PDF generation
+        try {
+            await this._widget.exportToPdf({
+                'selection': limits,
+                'header': pdfHeader,
+                'repeatHeader': header === 'all',
+                'printSettings': {
+                    'paperFormat': printSettings.paperFormat,
+                    'orientation': printSettings.orientation,
+                    'scaling': printSettings.scaling || 'AsIs',
+                    'keepAspectRatio': true
+                },
+                'progress': progressFn
+            });
+            console.log('PDF Export Completed');
+        } catch (error) {
+            console.error('Export Error:', error);
+            throw error;
+        }
+    }
+}
+
+
+
+////////////////////
+
+
+openPrintDialog() {
+  const isTime = this.logWidget.getIndexType() === 'time';
+  const limits = this.logWidget.getDepthLimits();
+
+  const dialogRef = this.dialog.open(PrintDialogComponent, {
+    width: '600px',
+    data: {
+      indexType: isTime ? 'time' : 'depth',
+      limits: { start: limits.getLow(), end: limits.getHigh() }
+    }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      // --- THIS IS WHERE THE CODE GOES ---
+      this.printing = true; // Show your loading spinner/overlay
+      
+      const settings = {
+        printSettings: result.printSettings,
+        header: result.headerFrequency,
+        headerData: { wellName: this.wellName, field: this.field, uwi: this.uwi },
+        customLimits: result.rangeType === 'range' ? {
+           start: isTime ? this.convertToTimestamp(result.startTime) : result.fromDepth,
+           end: isTime ? this.convertToTimestamp(result.endTime) : result.toDepth
+        } : null
+      };
+
+      // We cast to 'any' because 'exportToPDF' is a custom method we added to your App/Widget class
+      (this.logWidget as any).exportToPDF(settings, (current: number, total: number) => {
+          this.loadingValue = (current / total) * 100; // Update your progress bar
+      })
+      .then(() => {
+          this.printing = false; // Hide spinner when done
+      })
+      .catch((err: any) => {
+          console.error(err);
+          this.printing = false;
+      });
+    }
+  });
+}
+
+/////
+
+import { Component, Inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatButtonModule } from '@angular/material/button';
+
+@Component({
+  selector: 'app-print-dialog',
+  standalone: true,
+  imports: [
+    CommonModule, FormsModule, MatDialogModule, MatFormFieldModule,
+    MatInputModule, MatSelectModule, MatCheckboxModule, MatRadioModule, MatButtonModule
+  ],
+  templateUrl: './print-dialog.component.html',
+  styleUrls: ['./print-dialog.component.css']
+})
+export class PrintDialogComponent implements OnInit {
+  public mode: 'depth' | 'time' = 'depth'; 
+
+  public dialogData = {
+    rangeType: 'visible',
+    fromDepth: 0,
+    toDepth: 0,
+    startTime: '',
+    endTime: '',
+    scale: '1:600',
+    outputType: 'file', // Print or Export to File
+    headerFrequency: 'once', // None, Once, All
+    showPageNumber: true,
+    showPrintRange: true,
+    printSettings: {
+      paperFormat: 'Letter',
+      orientation: 'Portrait'
+    }
+  };
+
+  public scales = ['1:60', '1:120', '1:200', '1:240', '1:360', '1:600', '1:1000'];
+
+  constructor(
+    public dialogRef: MatDialogRef<PrintDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {}
+
+  ngOnInit() {
+    // 1. Set Mode based on incoming data from RTD component
+    this.mode = this.data.indexType === 'time' ? 'time' : 'depth';
+    
+    // 2. Pre-fill the inputs with the current visible limits from the widget
+    if (this.mode === 'depth') {
+      this.dialogData.fromDepth = Math.round(this.data.limits.start * 100) / 100;
+      this.dialogData.toDepth = Math.round(this.data.limits.end * 100) / 100;
+    } else {
+      this.dialogData.startTime = this.formatDateForInput(this.data.limits.start);
+      this.dialogData.endTime = this.formatDateForInput(this.data.limits.end);
+    }
+  }
+
+  // Helper to convert Unix Timestamp to HTML Date Input format
+  private formatDateForInput(timestamp: number): string {
+    const date = new Date(timestamp);
+    const pad = (n: number) => n < 10 ? '0' + n : n;
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 
+           'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+  }
+
+  onConfirm() {
+    this.dialogRef.close(this.dialogData);
+  }
+}
+
+///////////////////
+
+
+<h2 mat-dialog-title>Print properties</h2>
+<mat-dialog-content class="dialog-content">
+  
+  <p class="warning-text">Note: If printing more than few hours of data, it is recommended to use 64 bit application process.</p>
+
+  <fieldset class="section">
+    <legend>Print range ({{ mode | titlecase }} Based)</legend>
+    <mat-radio-group [(ngModel)]="dialogData.rangeType">
+      <mat-radio-button value="visible">Visible range</mat-radio-button>
+      <mat-radio-button value="all">All</mat-radio-button>
+      
+      <div class="range-row">
+        <mat-radio-button value="range">Range:</mat-radio-button>
+        
+        <ng-container *ngIf="mode === 'depth'">
+          <span class="label">from</span>
+          <input class="mini-input" type="number" [(ngModel)]="dialogData.fromDepth">
+          <span class="label">to</span>
+          <input class="mini-input" type="number" [(ngModel)]="dialogData.toDepth">
+          <span class="label">FT</span>
+        </ng-container>
+
+        <ng-container *ngIf="mode === 'time'">
+          <span class="label">from</span>
+          <input class="time-input" type="datetime-local" [(ngModel)]="dialogData.startTime">
+          <span class="label">to</span>
+          <input class="time-input" type="datetime-local" [(ngModel)]="dialogData.endTime">
+        </ng-container>
+      </div>
+    </mat-radio-group>
+  </fieldset>
+
+  <div class="flex-row">
+    <div class="left-col">
+      <div class="inline-field">
+        <label>Scale</label>
+        <mat-select [(ngModel)]="dialogData.scale" class="small-select">
+          <mat-option *ngFor="let s of scales" [value]="s">{{s}}</mat-option>
+        </mat-select>
+        <span>2" Log</span>
+      </div>
+
+      <mat-radio-group [(ngModel)]="dialogData.outputType" class="radio-row">
+        <mat-radio-button value="print">Print</mat-radio-button>
+        <mat-radio-button value="file">Export to file</mat-radio-button>
+      </mat-radio-group>
+
+      <div class="header-control">
+        <label>Header</label>
+        <mat-radio-group [(ngModel)]="dialogData.headerFrequency" class="radio-row">
+          <mat-radio-button value="none">None</mat-radio-button>
+          <mat-radio-button value="once">Once</mat-radio-button>
+          <mat-radio-button value="all">All</mat-radio-button>
+        </mat-radio-group>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <mat-checkbox [(ngModel)]="dialogData.showPageNumber">Show page number</mat-checkbox>
+      <mat-checkbox [(ngModel)]="dialogData.showPrintRange">Show print range</mat-checkbox>
+    </div>
+  </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-raised-button color="primary" (click)="onConfirm()">OK</button>
+  <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>
+
+
+/////////////////
+
+.dialog-content { font-size: 12px; color: #333; }
+.warning-text { color: #d32f2f; margin-bottom: 12px; font-weight: 500; }
+.section { border: 1px solid #ccc; padding: 12px; margin-bottom: 15px; border-radius: 4px; }
+.range-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-left: 28px; }
+.mini-input { width: 80px; border: 1px solid #ccc; padding: 4px; }
+.time-input { border: 1px solid #ccc; padding: 2px; font-size: 11px; }
+.flex-row { display: flex; justify-content: space-between; margin-top: 15px; }
+.radio-row { display: flex; gap: 12px; margin: 8px 0; }
+.header-control { border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; }
+.small-select { width: 100px; margin: 0 8px; border: 1px solid #ccc; height: 24px; font-size: 12px;}
+.right-col { display: flex; flex-direction: column; gap: 10px; }
+
+
+
+
+
+
+
+
 ///
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
