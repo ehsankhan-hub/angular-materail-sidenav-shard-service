@@ -1,63 +1,62 @@
-import { Rect } from '@int/geotoolkit/util/Rect';
-import { Group } from '@int/geotoolkit/scene/Group';
-import { Text } from '@int/geotoolkit/scene/shapes/Text';
-import { BoxLayout } from '@int/geotoolkit/layout/BoxLayout';
+// Inside RealTimeDisplay.component.ts
 
-export class App {
-    private _widget: any; // This is your WellLogWidget instance
+async startExportProcess(result: any) {
+  this.printing = true;
+  const isTime = this.logWidget.getIndexType() === 'time';
 
-    // ... existing initialization ...
+  // 1. Prepare Selection Rect (Vertical slice of the log)
+  let selection: any;
+  if (result.rangeType === 'range') {
+    const start = isTime ? new Date(result.startTime).getTime() : result.fromDepth;
+    const end = isTime ? new Date(result.endTime).getTime() : result.toDepth;
+    // Rect(x, y1, width, y2)
+    selection = new (geotoolkit as any).util.Rect(0, start, 0, end);
+  } else {
+    // Falls back to current visible view
+    selection = this.logWidget.getVisibleLimits();
+  }
 
-    public async exportToPDF(settings: any, progressFn: (current: number, total: number) => void): Promise<void> {
-        const { printSettings, customLimits, header, headerData } = settings;
+  // 2. Build the Header Group dynamically
+  let pdfHeader = null;
+  if (result.headerFrequency !== 'none') {
+    pdfHeader = new (geotoolkit as any).scene.Group()
+      .setLayout(new (geotoolkit as any).layout.BoxLayout({ orientation: 'vertical' }))
+      .setBounds(new (geotoolkit as any).util.Rect(0, 0, 100, 40));
 
-        // 1. Prepare the Export Range
-        // We use the selection property to tell the widget exactly what depth/time to slice
-        const limits = customLimits 
-            ? new Rect(0, customLimits.start, 0, customLimits.end) 
-            : this._widget.getVisibleLimits(); // Use visible if no custom range
+    pdfHeader.addChild(new (geotoolkit as any).scene.shapes.Text({
+      text: this.wellName, // Uses wellName from your component
+      textstyle: { font: 'bold 16px Arial', color: 'black' }
+    }));
+  }
 
-        // 2. Create the Header Group (No separate file needed)
-        let pdfHeader = null;
-        if (header !== 'none' && headerData) {
-            pdfHeader = new Group()
-                .setLayout(new BoxLayout({ orientation: 'vertical' }))
-                .setBounds(new Rect(0, 0, 100, 40)); // Header area height
+  // 3. Call the NATIVE LogWidget method
+  try {
+    // Note: LogWidget.exportToPdf returns a Promise<IWritable>
+    const writable = await this.logWidget.exportToPdf({
+      'selection': selection,
+      'header': pdfHeader,
+      'repeatHeader': result.headerFrequency === 'all',
+      'printSettings': {
+        'paperFormat': result.printSettings.paperFormat,
+        'orientation': result.printSettings.orientation,
+        'scaling': 'AsIs', // Map your result.scale here if needed
+        'keepAspectRatio': true
+      },
+      'progress': (current: number, total: number) => {
+        this.loadingValue = (current / total) * 100;
+      }
+    });
 
-            pdfHeader.addChild(new Text({
-                text: headerData.wellName,
-                textstyle: { font: 'bold 16px Arial', color: 'black' }
-            }));
-
-            pdfHeader.addChild(new Text({
-                text: `Field: ${headerData.field} | UWI: ${headerData.uwi}`,
-                textstyle: { font: '12px Arial', color: 'gray' }
-            }));
-        }
-
-        // 3. Use the Widget's built-in export logic
-        // This is the specific way LogWidget handles PDF generation
-        try {
-            await this._widget.exportToPdf({
-                'selection': limits,
-                'header': pdfHeader,
-                'repeatHeader': header === 'all',
-                'printSettings': {
-                    'paperFormat': printSettings.paperFormat,
-                    'orientation': printSettings.orientation,
-                    'scaling': printSettings.scaling || 'AsIs',
-                    'keepAspectRatio': true
-                },
-                'progress': progressFn
-            });
-            console.log('PDF Export Completed');
-        } catch (error) {
-            console.error('Export Error:', error);
-            throw error;
-        }
+    // 4. Trigger Download
+    if (writable && writable.save) {
+      await writable.save(`${this.wellName}_Export.pdf`);
     }
+  } catch (error) {
+    console.error('Export failed:', error);
+  } finally {
+    this.printing = false;
+  }
 }
-
 
 
 ////////////////////
