@@ -1,3 +1,50 @@
+private _buildTooltipContent(trackIdx: number, depth: number): string {
+  const track = this._trackInfo[trackIdx];
+  if (!track) return '';
+
+  let html = `&nbsp;&nbsp;<b>${track.trackName}</b><br>`;
+  let idx = -1;
+
+  // 1. DETERMINE THE CORRECT INDEX (Depth vs Time)
+  // Check if the first curve is a time curve or if trackInfo is marked as time
+  const isTimeIndex = track.curves.some(c => !c.isDepth);
+
+  if (isTimeIndex && this._indexCurveTime.length > 0) {
+      // Find index in Time array
+      const timeRange = this.wellService.plotMaxDepth - this.wellService.plotMinDepth;
+      idx = Math.round(((depth - this.wellService.plotMinDepth) / timeRange) * (this._indexCurveTime.length - 1));
+      idx = Math.max(0, Math.min(this._indexCurveTime.length - 1, idx));
+
+      const timeVal = this._indexCurveTime[idx];
+      const formattedTime = timeVal ? formatDate(new Date(timeVal), 'HH:mm:ss', 'en') : 'N/A';
+      html += `&nbsp;&nbsp;<span><b>Rig Time: ${formattedTime}</b></span><br>`;
+  } else {
+      // Find index in Depth array
+      const depthRange = this.wellService.plotMaxDepth - this.wellService.plotMinDepth;
+      idx = Math.round(((depth - this.wellService.plotMinDepth) / depthRange) * (this._indexCurveDepth.length - 1));
+      idx = Math.max(0, Math.min(this._indexCurveDepth.length - 1, idx));
+
+      html += `&nbsp;&nbsp;<span><b>Depth: ${this._indexCurveDepth[idx] ?? 'N/A'}</b></span><br>`;
+  }
+
+  // 2. APPEND CURVE DATA
+  track.curves.forEach(curve => {
+      if (!curve.show || !curve.data?.length) return;
+
+      const valRaw = curve.data[idx];
+      if (valRaw === undefined || valRaw === null || valRaw === 'NaN') {
+          html += `&nbsp;&nbsp;&nbsp;<span>${curve.displayName}: N/A</span><br>`;
+      } else {
+          // Format number to 2 decimal places if it's a number
+          const displayVal = typeof valRaw === 'number' ? valRaw.toFixed(2) : valRaw;
+          html += `&nbsp;&nbsp;&nbsp;<span>${curve.displayName}: ${displayVal} ${curve.unit ?? ''}</span><br>`;
+      }
+  });
+
+  return html;
+}
+
+///////////////
 import { ToolTipTool } from '@int/geotoolkit/controls/tools/ToolTipTool';
 import { Point } from '@int/geotoolkit/util/Point';
 import { Selector } from '@int/geotoolkit/selection/Selector';
