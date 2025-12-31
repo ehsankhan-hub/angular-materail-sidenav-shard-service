@@ -1,3 +1,59 @@
+private _drawCircles(trackIndex: number, pt: Point, logTrack: LogTrack, hostRect: DOMRect) {
+  const track = this._trackInfo[trackIndex];
+  const bounds = logTrack.getBounds();
+  if (!bounds || !track) return;
+
+  const trackHeight = hostRect.height - this._widget.getHeaderHeight();
+  
+  // 1. Determine if this track is Time-based
+  const isTimeIndex = track.curves.some(c => !c.isDepth);
+  const indexArrayLength = isTimeIndex ? this._indexCurveTime.length : this._indexCurveDepth.length;
+
+  if (indexArrayLength === 0) return;
+
+  // 2. Calculate the Shared Index for this Y-position
+  const range = this.wellService.plotMaxDepth - this.wellService.plotMinDepth;
+  let sharedIdx = Math.round(((pt.y - this._widget.getHeaderHeight()) / trackHeight) * (indexArrayLength - 1));
+  
+  // Safety clamp
+  sharedIdx = Math.max(0, Math.min(indexArrayLength - 1, sharedIdx));
+
+  track.curves.forEach(curve => {
+      if (!this._circlePool[curve.displayName]) {
+          const circle = document.createElement('div');
+          circle.style.cssText = 'position:absolute; width:10px; height:10px; margin-top:-5px; margin-left:-5px; border-radius:50%; z-index:10001; pointer-events:none; display:none; left:0px; top:0px;';
+          document.body.appendChild(circle);
+          this._circlePool[curve.displayName] = circle;
+      }
+
+      const circle = this._circlePool[curve.displayName];
+      const data = curve.data;
+
+      // 3. Get value using the shared index
+      const valRaw = data ? data[sharedIdx] : undefined;
+      const value = parseFloat(valRaw);
+
+      if (isNaN(value) || !curve.show) {
+          circle.style.display = 'none';
+          return;
+      }
+
+      // 4. Calculate X Position based on curve scale
+      const valueRange = curve.max - curve.min;
+      const xRel = (value - curve.min) / valueRange;
+      const xPos = (xRel * bounds.getWidth()) + bounds.getLeft() + hostRect.left;
+      const yPos = pt.y + hostRect.top;
+
+      // 5. Apply Position
+      circle.style.background = curve.color;
+      circle.style.left = '0px'; 
+      circle.style.top = '0px';
+      circle.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+      circle.style.display = 'block';
+  });
+}
+
+///////////////////
 private _buildTooltipContent(trackIdx: number, depth: number): string {
   const track = this._trackInfo[trackIdx];
   if (!track) return '';
