@@ -1,3 +1,173 @@
+@Obfuscate()
+export class CrossTrackTooltip extends ToolTipTool implements OnDestroy {
+    private readonly _selector = new Selector();
+    private _host: HTMLElement;
+    private _trackInfo: ITracks[] = [];
+    private _indexCurveDepth: number[] = [];
+    private _indexCurveTime: Date[] = [];
+    private _hideHeader = false;
+    
+    // POOLING PROPERTIES
+    private _tooltipPool: HTMLElement[] = [];
+    private _circlePool: { [key: string]: HTMLElement } = {};
+    private _horizontalLinePool: HTMLElement[] = [];
+    
+    private _currentTrackIdx: number = -1;
+    private _debounceTimer: any;
+    private _lastMousePt: Point | undefined;
+    private readonly _debounceDelay = 50; // Reduced for responsiveness
+    private _tooltipTimeout: any;
+    private _currentSequenceIndex = 0;
+
+    constructor(
+        private readonly _widget: WellLogWidget,
+        host: HTMLElement,
+        trackInfo: ITracks[],
+        indexCurveDepth: number[],
+        indexCurveTime: Date[],
+        hideHeader: boolean,
+        private wellService: WellDataService
+    ) {
+        super({ layer: _widget, autoupdate: false, autoflip: true });
+        this._host = host;
+        this._trackInfo = trackInfo;
+        this._indexCurveDepth = indexCurveDepth;
+        this._indexCurveTime = indexCurveTime;
+        this._hideHeader = hideHeader;
+
+        // 1. Initialize Tooltip Pool (e.g., max 10 tracks)
+        for (let i = 0; i < 10; i++) {
+            const el = document.createElement('div');
+            el.className = 'cg-tooltip-container';
+            el.style.display = 'none';
+            el.style.position = 'absolute';
+            el.style.pointerEvents = 'none';
+            el.style.zIndex = '99999';
+            document.body.appendChild(el);
+            this._tooltipPool.push(el);
+        }
+
+        // 2. Initialize Line Pool
+        for (let i = 0; i < 5; i++) {
+            const line = document.createElement('div');
+            line.style.position = 'absolute';
+            line.style.height = '1px';
+            line.style.background = 'white';
+            line.style.display = 'none';
+            line.style.zIndex = '10000';
+            document.body.appendChild(line);
+            this._horizontalLinePool.push(line);
+        }
+
+        this.setCallback(this._callbackWrapper.bind(this));
+    }
+
+    private _callbackWrapper(pt: Point): any {
+        this._debouncedHandle(pt);
+        return null;
+    }
+
+    private _debouncedHandle(pt: Point): void {
+        this._lastMousePt = pt;
+        if (this._debounceTimer) clearTimeout(this._debounceTimer);
+        this._debounceTimer = setTimeout(() => {
+            if (this._lastMousePt) this._tooltipCallback(this._lastMousePt);
+        }, this._debounceDelay);
+    }
+
+    private _tooltipCallback(pt: Point): any {
+        if (this._tooltipTimeout) clearTimeout(this._tooltipTimeout);
+
+        const nodes = this._selector?.select(this._widget, pt.x, pt.y, 2);
+        if (!nodes?.length) {
+            this._resetAll();
+            return '';
+        }
+
+        const manipLayer: any = this._widget.getTrackManipulatorLayer();
+        const sceneTransform = manipLayer?.getSceneTransform?.();
+        const depth = sceneTransform ? sceneTransform.inverseTransformPoint(pt).getY() : pt.y;
+
+        // Optimized traversal
+        from(this._widget)
+            .where(node => node instanceof LogTrack)
+            .select((track, i) => this._drawForTrack(track as LogTrack, pt, depth, i));
+    }
+
+    private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number, poolIdx: number): void {
+        const index = this._widget.getTrackIndex(logTrack);
+        const bounds: any = logTrack.getBounds();
+        const hostRect = this._host.getBoundingClientRect();
+        
+        // Use pooled line
+        const line = this._horizontalLinePool[poolIdx % this._horizontalLinePool.length];
+        line.style.display = 'block';
+        line.style.top = `${pt.y + hostRect.top}px`;
+        line.style.left = `${hostRect.left}px`;
+        line.style.width = `${hostRect.width}px`;
+
+        if (pt.y < this._widget.getHeaderHeight() || !this._trackInfo[index] || this._trackInfo[index].curves?.length === 0) {
+            this._hideTrackUI(index, poolIdx);
+            return;
+        }
+
+        // Use pooled tooltip
+        const tooltip = this._tooltipPool[poolIdx % this._tooltipPool.length];
+        tooltip.style.display = 'block';
+        tooltip.innerHTML = this._buildTooltipContent(index, depth);
+        
+        // Position logic (Simplified for speed)
+        tooltip.style.top = `${pt.y + hostRect.top + 15}px`;
+        tooltip.style.left = `${bounds.getCenterX() + hostRect.left - 50}px`;
+
+        // Circle handling (Reuse by curve name)
+        this._trackInfo[index].curves.forEach(curve => {
+            let circle = this._circlePool[curve.displayName];
+            if (!circle) {
+                circle = document.createElement('div');
+                circle.className = 'cg-circle-container';
+                circle.style.position = 'absolute';
+                circle.style.width = '10px';
+                circle.style.height = '10px';
+                circle.style.borderRadius = '50%';
+                circle.style.zIndex = '10001';
+                document.body.appendChild(circle);
+                this._circlePool[curve.displayName] = circle;
+            }
+            circle.style.background = curve.color;
+            circle.style.display = 'block';
+            // (Your existing X-Intersection math here...)
+            circle.style.top = `${hostRect.top + pt.y}px`;
+            circle.style.left = `${hostRect.left + bounds.getLeft() + 50}px`; // Placeholder for math
+        });
+    }
+
+    private _resetAll(): void {
+        this._tooltipPool.forEach(t => t.style.display = 'none');
+        this._horizontalLinePool.forEach(l => l.style.display = 'none');
+        Object.values(this._circlePool).forEach(c => c.style.display = 'none');
+    }
+
+    private _hideTrackUI(index: number, poolIdx: number): void {
+        this._tooltipPool[poolIdx % this._tooltipPool.length].style.display = 'none';
+    }
+
+    private _buildTooltipContent(trackIdx: number, depth: number): string {
+        const track = this._trackInfo[trackIdx];
+        return `<b>${track.trackName}</b><br>Depth: ${depth.toFixed(2)}`;
+    }
+
+    ngOnDestroy(): void {
+        this._resetAll();
+        if (this._debounceTimer) clearTimeout(this._debounceTimer);
+        // Clean up DOM
+        this._tooltipPool.forEach(t => t.remove());
+        this._horizontalLinePool.forEach(l => l.remove());
+        Object.values(this._circlePool).forEach(c => c.remove());
+    }
+}
+
+
 // Inside RealTimeDisplay.component.ts
 
 async startExportProcess(result: any) {
