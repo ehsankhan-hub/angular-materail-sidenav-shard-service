@@ -1,3 +1,15 @@
+import { ToolTipTool } from '@int/geotoolkit/controls/tools/ToolTipTool';
+import { Point } from '@int/geotoolkit/util/Point';
+import { Selector } from '@int/geotoolkit/selection/Selector';
+import { WellLogWidget } from '@int/geotoolkit/welllog/widgets/WellLogWidget';
+import { Obfuscate } from '@int/geotoolkit/decorators';
+import { LogTrack } from '@int/geotoolkit/welllog/LogTrack';
+import { from } from '@int/geotoolkit/selection/from';
+import { ITracks } from '../../models/chart/tracks';
+import { formatDate } from '@angular/common';
+import { WellDataService } from '../../../app/service/well-service/well.service';
+import { OnDestroy } from '@angular/core';
+
 @Obfuscate()
 export class CrossTrackTooltip extends ToolTipTool implements OnDestroy {
     private readonly _selector = new Selector();
@@ -6,18 +18,16 @@ export class CrossTrackTooltip extends ToolTipTool implements OnDestroy {
     private _indexCurveDepth: number[] = [];
     private _indexCurveTime: Date[] = [];
     private _hideHeader = false;
-    
-    // POOLING PROPERTIES
+
+    // POOLS - Created once to avoid DOM churn
     private _tooltipPool: HTMLElement[] = [];
-    private _circlePool: { [key: string]: HTMLElement } = {};
     private _horizontalLinePool: HTMLElement[] = [];
-    
-    private _currentTrackIdx: number = -1;
+    private _circlePool: { [curveName: string]: HTMLElement } = {};
+
     private _debounceTimer: any;
     private _lastMousePt: Point | undefined;
-    private readonly _debounceDelay = 50; // Reduced for responsiveness
+    private readonly _debounceDelay = 20; // Fast response
     private _tooltipTimeout: any;
-    private _currentSequenceIndex = 0;
 
     constructor(
         private readonly _widget: WellLogWidget,
@@ -35,31 +45,29 @@ export class CrossTrackTooltip extends ToolTipTool implements OnDestroy {
         this._indexCurveTime = indexCurveTime;
         this._hideHeader = hideHeader;
 
-        // 1. Initialize Tooltip Pool (e.g., max 10 tracks)
+        // PRE-CREATE UI ELEMENTS (Object Pool)
+        this._initializePools();
+
+        this.setCallback(this._callbackWrapper.bind(this));
+    }
+
+    private _initializePools() {
+        // Create 10 reusable tooltip containers
         for (let i = 0; i < 10; i++) {
             const el = document.createElement('div');
             el.className = 'cg-tooltip-container';
-            el.style.display = 'none';
-            el.style.position = 'absolute';
-            el.style.pointerEvents = 'none';
-            el.style.zIndex = '99999';
+            el.style.cssText = 'position:absolute; display:none; pointer-events:none; z-index:99999; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(0,0,0,0.5); border-radius:3px; padding:2px; font-size:10px; backdrop-filter:blur(1px);';
             document.body.appendChild(el);
             this._tooltipPool.push(el);
         }
 
-        // 2. Initialize Line Pool
+        // Create 5 reusable horizontal lines
         for (let i = 0; i < 5; i++) {
             const line = document.createElement('div');
-            line.style.position = 'absolute';
-            line.style.height = '1px';
-            line.style.background = 'white';
-            line.style.display = 'none';
-            line.style.zIndex = '10000';
+            line.style.cssText = 'position:absolute; height:1px; background:white; display:none; z-index:10000; pointer-events:none;';
             document.body.appendChild(line);
             this._horizontalLinePool.push(line);
         }
-
-        this.setCallback(this._callbackWrapper.bind(this));
     }
 
     private _callbackWrapper(pt: Point): any {
@@ -76,69 +84,105 @@ export class CrossTrackTooltip extends ToolTipTool implements OnDestroy {
     }
 
     private _tooltipCallback(pt: Point): any {
-        if (this._tooltipTimeout) clearTimeout(this._tooltipTimeout);
+        // 1. CRITICAL: Hide everything first to prevent "stuck" elements
+        this._resetAll();
 
         const nodes = this._selector?.select(this._widget, pt.x, pt.y, 2);
-        if (!nodes?.length) {
-            this._resetAll();
-            return '';
-        }
+        if (!nodes?.length) return '';
 
         const manipLayer: any = this._widget.getTrackManipulatorLayer();
         const sceneTransform = manipLayer?.getSceneTransform?.();
         const depth = sceneTransform ? sceneTransform.inverseTransformPoint(pt).getY() : pt.y;
 
-        // Optimized traversal
-        from(this._widget)
+        // 2. Get tracks and iterate
+        const tracks = from(this._widget)
             .where(node => node instanceof LogTrack)
-            .select((track, i) => this._drawForTrack(track as LogTrack, pt, depth, i));
+            .toArray();
+
+        tracks.forEach((trackNode, i) => {
+            const logTrack = trackNode as LogTrack;
+            const bounds = logTrack.getBounds();
+            
+            // Only draw if the mouse is actually inside this track
+            if (bounds.contains(pt.x, pt.y)) {
+                this._drawForTrack(logTrack, pt, depth, i);
+            }
+        });
+
+        return null;
     }
 
     private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number, poolIdx: number): void {
         const index = this._widget.getTrackIndex(logTrack);
-        const bounds: any = logTrack.getBounds();
         const hostRect = this._host.getBoundingClientRect();
-        
-        // Use pooled line
+        const bounds = logTrack.getBounds();
+
+        // 1. Draw Horizontal Line (Pooled)
         const line = this._horizontalLinePool[poolIdx % this._horizontalLinePool.length];
-        line.style.display = 'block';
-        line.style.top = `${pt.y + hostRect.top}px`;
-        line.style.left = `${hostRect.left}px`;
-        line.style.width = `${hostRect.width}px`;
+        if (line) {
+            line.style.display = 'block';
+            line.style.width = `${hostRect.width}px`;
+            line.style.left = `${hostRect.left}px`;
+            line.style.top = `${pt.y + hostRect.top}px`;
+        }
 
         if (pt.y < this._widget.getHeaderHeight() || !this._trackInfo[index] || this._trackInfo[index].curves?.length === 0) {
-            this._hideTrackUI(index, poolIdx);
             return;
         }
 
-        // Use pooled tooltip
+        // 2. Update Tooltip (Pooled)
         const tooltip = this._tooltipPool[poolIdx % this._tooltipPool.length];
-        tooltip.style.display = 'block';
-        tooltip.innerHTML = this._buildTooltipContent(index, depth);
-        
-        // Position logic (Simplified for speed)
-        tooltip.style.top = `${pt.y + hostRect.top + 15}px`;
-        tooltip.style.left = `${bounds.getCenterX() + hostRect.left - 50}px`;
+        if (tooltip) {
+            tooltip.innerHTML = this._buildTooltipContent(index, depth);
+            tooltip.style.display = 'block';
+            
+            // Positioning - using transform for performance
+            const tooltipX = bounds.getCenterX() + hostRect.left - (bounds.getWidth() / 4);
+            const tooltipY = pt.y + hostRect.top + 15;
+            tooltip.style.left = `${tooltipX}px`;
+            tooltip.style.top = `${tooltipY}px`;
+        }
 
-        // Circle handling (Reuse by curve name)
-        this._trackInfo[index].curves.forEach(curve => {
-            let circle = this._circlePool[curve.displayName];
-            if (!circle) {
-                circle = document.createElement('div');
-                circle.className = 'cg-circle-container';
-                circle.style.position = 'absolute';
-                circle.style.width = '10px';
-                circle.style.height = '10px';
-                circle.style.borderRadius = '50%';
-                circle.style.zIndex = '10001';
+        // 3. Update Curve Circles (Pooled by name)
+        this._drawCircles(index, pt, logTrack, hostRect);
+    }
+
+    private _drawCircles(trackIndex: number, pt: Point, logTrack: LogTrack, hostRect: DOMRect) {
+        const curves = this._trackInfo[trackIndex].curves;
+        const bounds = logTrack.getBounds();
+        const trackHeight = hostRect.height - this._widget.getHeaderHeight();
+
+        curves.forEach(curve => {
+            if (!this._circlePool[curve.displayName]) {
+                const circle = document.createElement('div');
+                circle.style.cssText = 'position:absolute; width:10px; height:10px; margin-top:-5px; margin-left:-5px; border-radius:50%; z-index:10001; pointer-events:none; display:none;';
                 document.body.appendChild(circle);
                 this._circlePool[curve.displayName] = circle;
             }
+
+            const circle = this._circlePool[curve.displayName];
+            const data = curve.data;
+            if (!data || data.length === 0) return;
+
+            // Math to find intersection
+            const valueRange = curve.max - curve.min;
+            const valueAtY = curve.min + valueRange * (1 - (pt.y - this._widget.getHeaderHeight()) / trackHeight);
+            let idx = Math.round((valueAtY - curve.min) / valueRange * (data.length - 1));
+            idx = Math.max(0, Math.min(data.length - 1, idx));
+
+            const value = parseFloat(data[idx]);
+            if (isNaN(value)) {
+                circle.style.display = 'none';
+                return;
+            }
+
+            const xRel = (value - curve.min) / valueRange;
+            const xPos = (xRel * bounds.getWidth()) + bounds.getLeft() + hostRect.left;
+
             circle.style.background = curve.color;
+            circle.style.left = `${xPos}px`;
+            circle.style.top = `${pt.y + hostRect.top}px`;
             circle.style.display = 'block';
-            // (Your existing X-Intersection math here...)
-            circle.style.top = `${hostRect.top + pt.y}px`;
-            circle.style.left = `${hostRect.left + bounds.getLeft() + 50}px`; // Placeholder for math
         });
     }
 
@@ -148,25 +192,43 @@ export class CrossTrackTooltip extends ToolTipTool implements OnDestroy {
         Object.values(this._circlePool).forEach(c => c.style.display = 'none');
     }
 
-    private _hideTrackUI(index: number, poolIdx: number): void {
-        this._tooltipPool[poolIdx % this._tooltipPool.length].style.display = 'none';
-    }
-
     private _buildTooltipContent(trackIdx: number, depth: number): string {
         const track = this._trackInfo[trackIdx];
-        return `<b>${track.trackName}</b><br>Depth: ${depth.toFixed(2)}`;
+        if (!track) return '';
+
+        let html = `<b>${track.trackName}</b><br>`;
+        let idxDepth = 0;
+
+        // Calculate index based on depth
+        const depthRange = this.wellService.plotMaxDepth - this.wellService.plotMinDepth;
+        idxDepth = Math.round(((depth - this.wellService.plotMinDepth) / depthRange) * (this._indexCurveDepth.length - 1));
+        idxDepth = Math.max(0, Math.min(this._indexCurveDepth.length - 1, idxDepth));
+
+        html += `Depth: ${this._indexCurveDepth[idxDepth]}<br>`;
+
+        track.curves.forEach(curve => {
+            if (!curve.show || !curve.data?.length) return;
+            const valRaw = curve.data[idxDepth];
+            const display = (valRaw === undefined || valRaw === 'NaN') ? 'N/A' : valRaw;
+            html += `${curve.displayName}: ${display} ${curve.unit}<br>`;
+        });
+
+        return html;
     }
 
     ngOnDestroy(): void {
-        this._resetAll();
         if (this._debounceTimer) clearTimeout(this._debounceTimer);
-        // Clean up DOM
+        this._resetAll();
+        // Remove elements from DOM
         this._tooltipPool.forEach(t => t.remove());
         this._horizontalLinePool.forEach(l => l.remove());
         Object.values(this._circlePool).forEach(c => c.remove());
     }
-}
 
+    public destroy(): void {
+        this.ngOnDestroy();
+    }
+}
 
 // Inside RealTimeDisplay.component.ts
 
