@@ -1,5 +1,118 @@
 
 
+private _debouncedHandle(pt: Point): void {
+  this._lastMousePt = pt;
+  
+  // Use requestAnimationFrame for "Instant" feel instead of setTimeout
+  if (this._debounceTimer !== undefined) {
+      cancelAnimationFrame(this._debounceTimer);
+  }
+  
+  this._debounceTimer = window.requestAnimationFrame(() => {
+      if (this._lastMousePt) {
+          this._tooltipCallback(this._lastMousePt);
+      }
+      this._debounceTimer = undefined;
+  });
+}
+
+
+
+//////////////
+
+private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number): void {
+  this._currentSequenceIndex++;
+  const bounds: any = logTrack.getBounds();
+  const index = this._widget.getTrackIndex(logTrack);
+  const headerHeight = this._widget.getHeaderHeight();
+  const hostRect = this._host.getBoundingClientRect();
+  
+  this._drawHorizontalLine(index, pt.y, logTrack);
+
+  // 1. Instant Hide if out of bounds (No Delay)
+  if (pt.y < headerHeight || 
+      pt.y > hostRect.bottom || 
+      this._trackInfo[index]?.isIndex || 
+      this._trackInfo[index]?.curves?.length === 0
+  ) {
+      this._hideTooltip(index);
+      this._removeHorizontalLine(index);
+      return;
+  }
+
+  // 2. Immediate Logic (Removed the setTimeout that was here)
+  this._currentTrackIdx = index;
+  const tooltip = this._getTooltipContainer(index);
+  
+  // Update content and style immediately
+  tooltip.innerHTML = this._buildTooltipContent(depth); 
+  tooltip.style.display = 'block';
+  
+  // Position Logic
+  const tooltipHeight = tooltip.offsetHeight || 50;
+  const spaceBelow = hostRect.bottom - (pt.y + hostRect.top);
+  
+  // Flip logic: if not enough space below, show above the mouse
+  const topPos = (spaceBelow < tooltipHeight + 20) 
+      ? (pt.y + hostRect.top - tooltipHeight - 15) 
+      : (pt.y + hostRect.top + 15);
+
+  tooltip.style.top = `${topPos}px`;
+  tooltip.style.left = `${bounds.getCenterX() - bounds.getWidth() / 3 + hostRect.left - 20}px`;
+
+  // 3. Draw Circles Synchronously
+  const track = this._trackInfo[index];
+  const curves = track.curves;
+  const trackSelftRight = logTrack.getBounds()?.getRight() ?? 0;
+  const trackSelfLeft = logTrack.getBounds()?.getLeft() ?? 0;
+
+  curves.forEach(curve => {
+      this._updateCirclePosition(curve, pt, trackSelfLeft, trackSelftRight, hostRect.left, hostRect.top);
+  });
+}
+
+///
+
+private _updateCirclePosition(curve: any, pt: Point, trackLeft: number, trackRight: number, hostLeft: number, hostTop: number) {
+  if (!this._curveCircles[curve.displayName]) {
+      const circle = document.createElement('div');
+      circle.className = 'cg-cirlce-container';
+      circle.style.cssText = `position:absolute; width:12px; height:12px; margin-top:-6px; margin-left:-6px; border-radius:50%; background:${curve.color}; z-index:10001; opacity:0.9;`;
+      document.body.appendChild(circle);
+      this._curveCircles[curve.displayName] = circle;
+  }
+
+  const circle = this._curveCircles[curve.displayName];
+  const data = curve.data;
+  if (!data || !curve.show) {
+      circle.style.display = 'none';
+      return;
+  }
+
+  // Calculate Index based on mouse Y
+  const trackHeight = this._host.getBoundingClientRect().height - this._widget.getHeaderHeight();
+  const valRange = curve.max - curve.min;
+  const valueAtY = curve.min + valRange * (1 - (pt.y - this._widget.getHeaderHeight()) / trackHeight);
+  let idx = Math.round((valueAtY - curve.min) / valRange * (data.length - 1));
+  idx = Math.max(0, Math.min(data.length - 1, idx));
+
+  const val = parseFloat(data[idx]);
+  const xPercent = (val - curve.min) / valRange;
+  const xPos = (xPercent * (trackRight - trackLeft)) + trackLeft + hostLeft;
+
+  if (isNaN(xPos) || xPos < hostLeft) {
+      circle.style.display = 'none';
+  } else {
+      circle.style.left = `${xPos}px`;
+      circle.style.top = `${hostTop + pt.y}px`;
+      circle.style.display = 'block';
+  }
+}
+
+
+
+////////////////
+
 export class CrossTrackTooltip extends ToolTipTool implements OnDestroy {
   private readonly _selector = new Selector();
   private _host: HTMLElement;
