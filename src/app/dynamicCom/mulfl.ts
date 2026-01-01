@@ -1,3 +1,43 @@
+private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number, poolIdx: number): void {
+  const index = this._widget.getTrackIndex(logTrack);
+  const hostRect = this._host.getBoundingClientRect();
+  const bounds = logTrack.getBounds();
+
+  // 1. Draw one full-width horizontal line (only for the first track in the loop)
+  if (poolIdx === 0) {
+      const line = this._horizontalLinePool[0];
+      if (line) {
+          line.style.display = 'block';
+          line.style.width = `${hostRect.width}px`;
+          line.style.transform = `translate3d(${hostRect.left}px, ${pt.y + hostRect.top}px, 0)`;
+      }
+  }
+
+  // Skip drawing tooltips if we are in the header area
+  if (pt.y < this._widget.getHeaderHeight() || !this._trackInfo[index]) {
+      return;
+  }
+
+  // 2. Update Tooltip for this track
+  const tooltip = this._tooltipPool[poolIdx % this._tooltipPool.length];
+  if (tooltip) {
+      tooltip.innerHTML = this._buildTooltipContent(index, depth);
+      tooltip.style.display = 'block';
+      
+      // Position the tooltip at the center of this specific track
+      const tx = bounds.getCenterX() + hostRect.left - (tooltip.offsetWidth / 2 || 50);
+      const ty = pt.y + hostRect.top + 15;
+      
+      tooltip.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
+  }
+
+  // 3. Draw Circles for this track
+  this._drawCircles(index, pt, logTrack, hostRect);
+}
+
+///////////
+
+
 private _drawCircles(trackIndex: number, pt: Point, logTrack: LogTrack, hostRect: DOMRect) {
   const track = this._trackInfo[trackIndex];
   const bounds = logTrack.getBounds();
