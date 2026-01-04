@@ -1,3 +1,48 @@
+
+
+private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number): void {
+  const bounds: any = logTrack.getBounds();
+  const index = this._widget.getTrackIndex(logTrack);
+  const headerHeight = this._widget.getHeaderHeight();
+  const hostRect = this._host.getBoundingClientRect();
+
+  // 1. Draw the horizontal crosshair line for this track
+  this._drawHorizontalLine(index, pt.y, logTrack);
+
+  // 2. Validation: If out of bounds or no data, hide this track's tooltip/line
+  if (pt.y < headerHeight || pt.y > hostRect.bottom || 
+      this._trackInfo[index]?.isIndex || this._trackInfo[index]?.curves?.length === 0) {
+      this._removeHorizontalLine(index);
+      this._hideTooltip(index);
+      return;
+  }
+
+  // 3. Process Tooltip (No setTimeout - runs immediately)
+  this._currentTrackIdx = index;
+  const tooltip = this._getTooltipContainer(index);
+  tooltip.innerHTML = this._buildTooltipContent(depth);
+  tooltip.style.display = 'block';
+
+  // Position Tooltip
+  let top = pt.y + hostRect.top + 15;
+  const availableSpaceBelow = hostRect.bottom - (pt.y + hostRect.top);
+  
+  // Auto-flip tooltip if it hits the bottom
+  if (tooltip.offsetHeight > availableSpaceBelow - 15) {
+      top = pt.y + hostRect.top - tooltip.offsetHeight - 15;
+  }
+
+  tooltip.style.top = `${top}px`;
+  tooltip.style.left = `${bounds.getCenterX() - bounds.getWidth() / 3 + hostRect.left - 20}px`;
+  tooltip.style.maxWidth = `${bounds.getWidth()}px`;
+
+  // 4. CALL the new separate method for circles
+  this._updateCurveCircles(logTrack, pt);
+}
+
+
+///////////////////
+
 private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number, poolIdx: number): void {
   const index = this._widget.getTrackIndex(logTrack);
   const hostRect = this._host.getBoundingClientRect();
@@ -36,6 +81,67 @@ private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number, poolIdx: num
 }
 
 ///////////
+
+private _updateCurveCircles(logTrack: LogTrack, pt: Point): void {
+  const index = this._widget.getTrackIndex(logTrack);
+  const track = this._trackInfo[index];
+  const hostRect = this._host.getBoundingClientRect();
+  
+  const trackTop = hostRect.top;
+  const trackLeft = hostRect.left;
+  const trackSelfLeft = logTrack.getBounds()?.getLeft() ?? 0;
+  const trackSelfRight = logTrack.getBounds()?.getRight() ?? 0;
+  const trackHeightArea = hostRect.height - this._widget.getHeaderHeight();
+
+  track.curves.forEach(curve => {
+      // Find or Create the circle element
+      let circle = document.getElementById(`circle-${curve.displayName}`) as HTMLElement;
+
+      if (!circle) {
+          circle = document.createElement('div');
+          circle.id = `circle-${curve.displayName}`;
+          circle.className = 'cg-cirlce-container';
+          circle.style.position = 'absolute';
+          circle.style.width = '12px';
+          circle.style.height = '12px';
+          circle.style.borderRadius = '50%';
+          circle.style.background = curve.color;
+          circle.style.zIndex = '10001';
+          circle.style.pointerEvents = 'none'; // Crucial to prevent mouse sticking
+          circle.style.marginTop = '-6px';
+          circle.style.marginLeft = '-6px';
+          document.body.appendChild(circle);
+          this._curveCircles[curve.displayName] = circle;
+      }
+
+      // Calculation Logic
+      const data = curve.data;
+      const numPoints = data.length;
+      const valueRange = curve.max - curve.min;
+      
+      const valueAtY = curve.min + valueRange * (1 - (pt.y - this._widget.getHeaderHeight()) / trackHeightArea);
+      let adjustedIdx = Math.round((valueAtY - curve.min) / valueRange * (numPoints - 1));
+      adjustedIdx = Math.max(0, Math.min(numPoints - 1, adjustedIdx));
+
+      const value = parseFloat(data[adjustedIdx]);
+      const xPercent = (value - curve.min) / valueRange;
+      const xIntersection = (xPercent * (trackSelfRight - trackSelfLeft)) + trackSelfLeft + trackLeft;
+
+      // Apply position and visibility
+      if (!isNaN(xIntersection) && xIntersection > 0) {
+          circle.style.left = `${xIntersection}px`;
+          circle.style.top = `${trackTop + pt.y}px`;
+          circle.style.display = 'block';
+      } else {
+          circle.style.display = 'none';
+      }
+  });
+}
+
+
+
+//////////////////
+
 
 
 private _drawCircles(trackIndex: number, pt: Point, logTrack: LogTrack, hostRect: DOMRect) {
@@ -141,6 +247,11 @@ private _buildTooltipContent(trackIdx: number, depth: number): string {
 }
 
 ///////////////
+
+
+
+
+
 import { ToolTipTool } from '@int/geotoolkit/controls/tools/ToolTipTool';
 import { Point } from '@int/geotoolkit/util/Point';
 import { Selector } from '@int/geotoolkit/selection/Selector';
