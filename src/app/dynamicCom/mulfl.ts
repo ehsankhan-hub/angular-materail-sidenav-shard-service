@@ -82,61 +82,7 @@ private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number, poolIdx: num
 
 ///////////
 
-private _updateCurveCircles(logTrack: LogTrack, pt: Point): void {
-  const index = this._widget.getTrackIndex(logTrack);
-  const track = this._trackInfo[index];
-  const hostRect = this._host.getBoundingClientRect();
-  
-  const trackTop = hostRect.top;
-  const trackLeft = hostRect.left;
-  const trackSelfLeft = logTrack.getBounds()?.getLeft() ?? 0;
-  const trackSelfRight = logTrack.getBounds()?.getRight() ?? 0;
-  const trackHeightArea = hostRect.height - this._widget.getHeaderHeight();
 
-  track.curves.forEach(curve => {
-      // Find or Create the circle element
-      let circle = document.getElementById(`circle-${curve.displayName}`) as HTMLElement;
-
-      if (!circle) {
-          circle = document.createElement('div');
-          circle.id = `circle-${curve.displayName}`;
-          circle.className = 'cg-cirlce-container';
-          circle.style.position = 'absolute';
-          circle.style.width = '12px';
-          circle.style.height = '12px';
-          circle.style.borderRadius = '50%';
-          circle.style.background = curve.color;
-          circle.style.zIndex = '10001';
-          circle.style.pointerEvents = 'none'; // Crucial to prevent mouse sticking
-          circle.style.marginTop = '-6px';
-          circle.style.marginLeft = '-6px';
-          document.body.appendChild(circle);
-          this._curveCircles[curve.displayName] = circle;
-      }
-
-      // Calculation Logic
-      const data = curve.data;
-      const numPoints = data.length;
-      const valueRange = curve.max - curve.min;
-      
-      const valueAtY = curve.min + valueRange * (1 - (pt.y - this._widget.getHeaderHeight()) / trackHeightArea);
-      let adjustedIdx = Math.round((valueAtY - curve.min) / valueRange * (numPoints - 1));
-      adjustedIdx = Math.max(0, Math.min(numPoints - 1, adjustedIdx));
-
-      const value = parseFloat(data[adjustedIdx]);
-      const xPercent = (value - curve.min) / valueRange;
-      const xIntersection = (xPercent * (trackSelfRight - trackSelfLeft)) + trackSelfLeft + trackLeft;
-
-      // Apply position and visibility
-      if (!isNaN(xIntersection) && xIntersection > 0) {
-          circle.style.left = `${xIntersection}px`;
-          circle.style.top = `${trackTop + pt.y}px`;
-          circle.style.display = 'block';
-      } else {
-          circle.style.display = 'none';
-      }
-  });
-}
 
 
 
@@ -248,7 +194,66 @@ private _buildTooltipContent(trackIdx: number, depth: number): string {
 
 ///////////////
 
+private _updateCurveCircles(logTrack: LogTrack, pt: Point): void {
+  const index = this._widget.getTrackIndex(logTrack);
+  const track = this._trackInfo[index];
+  const hostRect = this._host.getBoundingClientRect();
+  
+  const trackTop = hostRect.top;
+  const trackLeft = hostRect.left;
+  const trackSelfLeft = logTrack.getBounds()?.getLeft() ?? 0;
+  const trackSelfRight = logTrack.getBounds()?.getRight() ?? 0;
+  const trackHeightArea = hostRect.height - this._widget.getHeaderHeight();
 
+  track.curves.forEach(curve => {
+      // Find or Create the circle element
+      let circle = document.getElementById(`circle-${curve.displayName}`) as HTMLElement;
+
+      if (!circle) {
+          circle = document.createElement('div');
+          circle.id = `circle-${curve.displayName}`;
+          circle.className = 'cg-cirlce-container';
+          circle.style.position = 'absolute';
+          circle.style.width = '12px';
+          circle.style.height = '12px';
+          circle.style.borderRadius = '50%';
+          circle.style.background = curve.color;
+          circle.style.zIndex = '10001';
+          circle.style.pointerEvents = 'none'; // Crucial to prevent mouse sticking
+          circle.style.marginTop = '-6px';
+          circle.style.marginLeft = '-6px';
+          document.body.appendChild(circle);
+          this._curveCircles[curve.displayName] = circle;
+      }
+
+      // Calculation Logic
+      const data = curve.data;
+      const numPoints = data.length;
+      const valueRange = curve.max - curve.min;
+      
+      const valueAtY = curve.min + valueRange * (1 - (pt.y - this._widget.getHeaderHeight()) / trackHeightArea);
+      let adjustedIdx = Math.round((valueAtY - curve.min) / valueRange * (numPoints - 1));
+      adjustedIdx = Math.max(0, Math.min(numPoints - 1, adjustedIdx));
+
+      const value = parseFloat(data[adjustedIdx]);
+      const xPercent = (value - curve.min) / valueRange;
+      const xIntersection = (xPercent * (trackSelfRight - trackSelfLeft)) + trackSelfLeft + trackLeft;
+
+      // Apply position and visibility
+      if (!isNaN(xIntersection) && xIntersection > 0) {
+          circle.style.left = `${xIntersection}px`;
+          circle.style.top = `${trackTop + pt.y}px`;
+          circle.style.display = 'block';
+      } else {
+          circle.style.display = 'none';
+      }
+  });
+}
+
+
+
+
+////////////////
 
 
 
