@@ -1,4 +1,27 @@
 
+zoomOut() {
+  const trackContainer = this.widget.getTrackContainer();
+  const modelLimits = this.widget.getModelLimits(); // The full well depth
+  const visibleLimits = this.widget.getVisibleLimits(); // What we see now
+
+  // 1. Calculate what the new height WOULD be (e.g., zooming out by 20%)
+  const newHeight = visibleLimits.getHeight() * 1.2;
+
+  // 2. CHECK: If the new height is greater than our total data depth, 
+  // just fit to height instead of shrinking.
+  if (newHeight >= modelLimits.getHeight()) {
+      this.widget.fitToHeight(); 
+  } else {
+      // Otherwise, perform a standard scale-out
+      const center = visibleLimits.getCenter();
+      visibleLimits.scale(1.2, center.getX(), center.getY());
+      this.widget.setVisibleLimits(visibleLimits);
+  }
+
+  this.widget.update();
+}
+
+//////////////////
 
 private _drawForTrack(logTrack: LogTrack, pt: Point, depth: number): void {
   const bounds: any = logTrack.getBounds();
