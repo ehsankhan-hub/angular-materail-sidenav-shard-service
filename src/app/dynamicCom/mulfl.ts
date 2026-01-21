@@ -1,4 +1,77 @@
 
+import { MatDialog } from '@angular/material/dialog';
+import { TrackConfigDialogComponent } from './track-config-dialog/track-config-dialog.component'; // adjust path
+
+constructor(
+  private dialog: MatDialog,
+  private cdr: ChangeDetectorRef,
+  // keep your other injections
+) {}
+
+OpenCardConfiguration(): void {
+  const dialogRef = this.dialog.open(TrackConfigDialogComponent, {
+    width: '900px',
+    maxWidth: '95vw',
+    height: '85vh',
+    data: {
+      lstOfTrack: JSON.parse(JSON.stringify(this.lstOfTrack)), // ✅ deep copy
+      selectedLog: this.selectedLog,
+
+      wellboreObjects: this.wellboreObjects,
+      lstTrackTypes: this.lstTrackTypes,
+      lstLineStyle: this.lstLineStyle,
+      anchorTypes: this.anchorTypes,
+
+      selectedHour: this.selectedHour,
+      lstHourss: this.lstHourss,
+      selectedDepth: this.selectedDepth,
+      hideHeader: this.hideHeader,
+      swtichToTvd: this.swtichToTvd,
+      showSurvey: this.showSurvey,
+      isFitToheight: this.isFitToheight,
+      isAutoScroll: this.isAutoScroll,
+      horizontalOrientaion: this.horizontalOrientaion,
+      IntervalStep: this.IntervalStep,
+    },
+  });
+
+  dialogRef.afterClosed().subscribe((result) => {
+    if (!result) return; // ✅ Cancel
+
+    this.lstOfTrack = result.lstOfTrack;
+    this.selectedLog = result.selectedLog;
+
+    this.selectedHour = result.selectedHour;
+    this.selectedDepth = result.selectedDepth;
+    this.hideHeader = result.hideHeader;
+    this.swtichToTvd = result.swtichToTvd;
+    this.showSurvey = result.showSurvey;
+    this.isFitToheight = result.isFitToheight;
+    this.isAutoScroll = result.isAutoScroll;
+    this.horizontalOrientaion = result.horizontalOrientaion;
+    this.IntervalStep = result.IntervalStep;
+
+    // Important: Comments tracks need comments loaded after Apply
+    this.lstOfTrack.forEach((t: any, idx: number) => {
+      if (t.trackType === 'Comments') {
+        this.getComments(idx);
+      }
+    });
+
+    // ✅ one refresh only
+    this.drawPlot();
+    this.createScene();
+    this.cdr.detectChanges();
+  });
+}
+
+
+
+//////////////////////
+
+
+
+
 zoomOut() {
   const trackContainer = this.widget.getTrackContainer();
   const modelLimits = this.widget.getModelLimits(); // The full well depth
