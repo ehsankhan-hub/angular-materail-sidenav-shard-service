@@ -68,6 +68,515 @@ OpenCardConfiguration(): void {
 
 
 //////////////////////
+import { CommonModule } from '@angular/common';
+import { Component, Inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+
+import { ITracks } from '../../../models/chart/tracks';            // ✅ adjust relative path if needed
+import { IMnemonic } from '../../../models/wellbore/wellbore-object'; // ✅ adjust relative path if needed
+import { WellDataService } from '../../../services/well-service/well.service'; // ✅ adjust path
+
+@Component({
+  selector: 'app-track-config-dialog',
+  standalone: true,
+  imports: [CommonModule, FormsModule, MatDialogModule, MatButtonModule, MatIconModule],
+  templateUrl: './track-config-dialog.component.html',
+})
+export class TrackConfigDialogComponent {
+  // ---- Track tab data (same names you use in RTD HTML) ----
+  lstOfTrack: ITracks[] = [];
+  selectedLog: any = '';
+  wellboreObjects: any[] = [];
+  lstTrackTypes: any[] = [];
+  lstLineStyle: any[] = [];
+  anchorTypes: any[] = [];
+
+  // ---- General tab data (same names you use in RTD HTML) ----
+  showLoading = false;
+  selectedHour: any;
+  lstHourss: any[] = [];
+  selectedDepth: any;
+  hideHeader = false;
+  swtichToTvd = false;
+  showSurvey = false;
+  isFitToheight = false;
+  isAutoScroll = false;
+  horizontalOrientaion = false;
+  IntervalStep: any;
+
+  // If you need it
+  callingFrom: string = '';
+
+  constructor(
+    private ref: MatDialogRef<TrackConfigDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    public wellService: WellDataService
+  ) {
+    // Tracks
+    this.lstOfTrack = data.lstOfTrack ?? [];
+    this.selectedLog = data.selectedLog ?? '';
+    this.wellboreObjects = data.wellboreObjects ?? [];
+    this.lstTrackTypes = data.lstTrackTypes ?? [];
+    this.lstLineStyle = data.lstLineStyle ?? [];
+    this.anchorTypes = data.anchorTypes ?? [];
+
+    // General
+    this.selectedHour = data.selectedHour;
+    this.lstHourss = data.lstHourss ?? [];
+    this.selectedDepth = data.selectedDepth;
+    this.hideHeader = !!data.hideHeader;
+    this.swtichToTvd = !!data.swtichToTvd;
+    this.showSurvey = !!data.showSurvey;
+    this.isFitToheight = !!data.isFitToheight;
+    this.isAutoScroll = !!data.isAutoScroll;
+    this.horizontalOrientaion = !!data.horizontalOrientaion;
+    this.IntervalStep = data.IntervalStep;
+
+    this.callingFrom = data.callingFrom ?? '';
+  }
+
+  // =========================================================
+  // ✅ YOUR SAME METHODS (Apply-only: NO drawPlot/createScene)
+  // =========================================================
+
+  NewTrack(isIndex = false) {
+    let track: ITracks = {
+      trackName: this.selectedLog,
+      trackNo: this.lstOfTrack.length + 1,
+      curves: [],
+      trackType: 'Linear',
+      isIndex: isIndex,
+      isDepth: false,
+      isMudLog: false,
+      isImage: false,
+      comments: [],
+    } as any;
+
+    this.lstOfTrack.push(track);
+    // ❌ No drawPlot/createScene here (Apply-only)
+  }
+
+  AddNewMnemonic(trackNo: number) {
+    this.lstOfTrack.forEach((val: any, index: number) => {
+      if (val.trackNo == trackNo) {
+        let curveInfo = this.wellService.GetDefaultMnemonic(
+          this.lstOfTrack.length > 0
+            ? (this.lstOfTrack as any)[Number(index)].curves.length + 1
+            : 0
+        );
+        (this.lstOfTrack as any)[index].curves.push(curveInfo);
+      }
+    });
+  }
+
+  DeleteTrack(trackNo: number) {
+    if (confirm('Are you sure for deleting track')) {
+      let index = this.lstOfTrack.findIndex((obj: any) => obj.trackNo == trackNo);
+      if (index < 0) return;
+
+      this.lstOfTrack.splice(index, 1);
+
+      // Keep numbering stable
+      this.lstOfTrack.forEach((t: any, i: number) => (t.trackNo = i + 1));
+    }
+  }
+
+  RemoveMnemonic(trackNo: number, displayOrder: number, mnemonicId: string) {
+    if (confirm('Are you sure for deleting curve')) {
+      let index = this.lstOfTrack.findIndex((obj: any) => obj.trackNo == trackNo);
+      if (index < 0) return;
+
+      let curveIndex = (this.lstOfTrack as any)[index].curves.findIndex(
+        (cur: any) => cur.mnemonicId == mnemonicId
+      );
+      if (curveIndex < 0) return;
+
+      (this.lstOfTrack as any)[index].curves.splice(curveIndex, 1);
+    }
+  }
+
+  selectedTrack(pSelectedTrack: any, trackIndex: number) {
+    (this.lstOfTrack as any)[trackIndex].isIndex = false;
+    (this.lstOfTrack as any)[trackIndex].isMudLog = false;
+    (this.lstOfTrack as any)[trackIndex].comments = [];
+
+    switch (pSelectedTrack.target.value) {
+      case 'Index':
+        (this.lstOfTrack as any)[trackIndex].isIndex = true;
+        break;
+      case 'Mudlog':
+        (this.lstOfTrack as any)[trackIndex].isMudLog = true;
+        break;
+      case 'Image':
+        (this.lstOfTrack as any)[trackIndex].isImage = true;
+        break;
+      case 'Comments':
+        // Apply-only: do NOT call getComments here
+        break;
+    }
+  }
+
+  SaveTrackInfo() {
+    // Apply-only mode: Save does nothing inside dialog.
+    // RealTimeDisplay will redraw after Apply.
+  }
+
+  MoveUpTrack(_trackNo: number, trackIndex: number) {
+    if (trackIndex == 0) return;
+
+    (this.lstOfTrack as any)[trackIndex].trackNo =
+      (this.lstOfTrack as any)[trackIndex - 1].trackNo;
+
+    (this.lstOfTrack as any)[trackIndex - 1].trackNo =
+      (this.lstOfTrack as any)[trackIndex - 1].trackNo + 1;
+
+    this.lstOfTrack = this.lstOfTrack.sort((x: any, y: any) =>
+      x.trackNo > y.trackNo ? 1 : x.trackNo < y.trackNo ? -1 : 0
+    );
+  }
+
+  MoveDownTrack(_trackNo: number, trackIndex: number) {
+    if (trackIndex == this.lstOfTrack.length - 1) return;
+
+    (this.lstOfTrack as any)[trackIndex].trackNo =
+      (this.lstOfTrack as any)[trackIndex + 1].trackNo;
+
+    (this.lstOfTrack as any)[trackIndex + 1].trackNo =
+      (this.lstOfTrack as any)[trackIndex + 1].trackNo - 1;
+
+    this.lstOfTrack = this.lstOfTrack.sort((x: any, y: any) =>
+      x.trackNo > y.trackNo ? 1 : x.trackNo < y.trackNo ? -1 : 0
+    );
+  }
+
+  selectedLogEvent(pSelectedLog: any, trackNo: number, curveDisplayOrder: number) {
+    let selectedlogObject: any;
+    let logIndex: number = -1;
+
+    this.wellboreObjects.forEach((val: any, _logIndex: number) => {
+      if (val.objectId == pSelectedLog.target.value) {
+        selectedlogObject = val;
+        logIndex = _logIndex;
+        return;
+      }
+    });
+
+    // ✅ FIX: must allow index 0
+    if (logIndex >= 0) {
+      let trackIndex = this.lstOfTrack.findIndex((obj: any) => obj.trackNo == trackNo);
+      let curveIndex = (this.lstOfTrack as any)[trackIndex].curves.findIndex(
+        (obj: any) => obj.displayOrder == curveDisplayOrder
+      );
+
+      (this.lstOfTrack as any)[trackIndex].curves[curveIndex].mnemonicLst = [];
+      (this.lstOfTrack as any)[trackIndex].curves[curveIndex].wellId =
+        this.wellboreObjects[logIndex].wellId;
+      (this.lstOfTrack as any)[trackIndex].curves[curveIndex].wellboreId =
+        this.wellboreObjects[logIndex].wellboreId;
+      (this.lstOfTrack as any)[trackIndex].curves[curveIndex].LogId =
+        pSelectedLog.target.value;
+      (this.lstOfTrack as any)[trackIndex].curves[curveIndex].mnemonicId = '';
+
+      this.wellboreObjects[logIndex].objectInfo.forEach((obj: any) => {
+        if (this.wellboreObjects[logIndex].indexCurve != obj.mnemonic) {
+          let mnemonic: IMnemonic = {
+            mnemonicDescp: obj.mnemonic,
+            mnemonicId: obj.mnemonicId,
+          };
+          (this.lstOfTrack as any)[trackIndex].curves[curveIndex].mnemonicLst.push(mnemonic);
+        }
+      });
+    }
+  }
+
+  // =========================================================
+  // Apply / Cancel
+  // =========================================================
+  cancel(): void {
+    this.ref.close(undefined);
+  }
+
+  apply(): void {
+    this.ref.close({
+      lstOfTrack: this.lstOfTrack,
+      selectedLog: this.selectedLog,
+
+      selectedHour: this.selectedHour,
+      selectedDepth: this.selectedDepth,
+      hideHeader: this.hideHeader,
+      swtichToTvd: this.swtichToTvd,
+      showSurvey: this.showSurvey,
+      isFitToheight: this.isFitToheight,
+      isAutoScroll: this.isAutoScroll,
+      horizontalOrientaion: this.horizontalOrientaion,
+      IntervalStep: this.IntervalStep,
+    });
+  }
+}
+
+
+
+
+
+
+//////////////////////////////
+
+
+
+
+<h2 mat-dialog-title class="d-flex justify-content-between align-items-center">
+  <span>Properties</span>
+  <button mat-icon-button type="button" (click)="cancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+
+<div mat-dialog-content style="height: calc(85vh - 120px); overflow:auto;">
+  <!-- Keep EXACTLY your existing panel UI -->
+  <ul class="nav nav-tabs nav-tabs-v2 ps-4 pe-4">
+    <li class="nav-item me-3">
+      <a href="#generalWithCard" class="nav-link" data-bs-toggle="tab">General</a>
+    </li>
+    <li class="nav-item me-3">
+      <a href="#tracksWithCard" class="nav-link active" data-bs-toggle="tab">Track</a>
+    </li>
+  </ul>
+
+  <div class="tab-content p-4">
+    <!-- ======================= General ======================= -->
+    <div class="tab-pane fade" id="generalWithCard">
+      <div class="mb-2 row">
+        <div *ngIf="showLoading" style="background-color:transparent; left:50%; top:50%; transform:translate(-50%,-50%);">
+          <div class="spinner-border text-theme me-2"></div>
+        </div>
+
+        <label class="col-sm-3 col-form-label">Real Time(Hours)</label>
+        <div class="col-sm-9">
+          <select class="form-select" [(ngModel)]="selectedHour">
+            @for (hour of lstHourss; track hour) {
+              <option [value]="hour">{{ hour }}</option>
+            }
+          </select>
+        </div>
+
+        <label class="col-sm-3 col-form-label">Real Time(Depth)</label>
+        <div class="col-sm-9">
+          <input type="number" [(ngModel)]="selectedDepth" class="form-control" />
+        </div>
+
+        <label class="col-sm-3 col-form-label">Hide Header</label>
+        <div class="col-sm-1">
+          <div class="form-check form-switch">
+            <input type="checkbox" style="margin-top:5px" [(ngModel)]="hideHeader" class="form-check-input" />
+          </div>
+        </div>
+
+        <label class="col-sm-2 col-form-label">Switch to TVD</label>
+        <div class="col-sm-1">
+          <div class="form-check form-switch">
+            <input type="checkbox" style="margin-top:5px" [(ngModel)]="swtichToTvd" class="form-check-input" />
+          </div>
+        </div>
+
+        <label class="col-sm-3 col-form-label">Show Survey</label>
+        <div class="col-sm-1">
+          <div class="form-check form-switch">
+            <input type="checkbox" style="margin-top:5px" [(ngModel)]="showSurvey" class="form-check-input" />
+          </div>
+        </div>
+
+        <label class="col-sm-3 col-form-label">Fit to Height</label>
+        <div class="col-sm-1">
+          <div class="form-check form-switch">
+            <input type="checkbox" style="margin-top:5px" [(ngModel)]="isFitToheight" class="form-check-input" />
+          </div>
+        </div>
+
+        <label class="col-sm-2 col-form-label">Auto Scroll</label>
+        <div class="col-sm-1">
+          <div class="form-check form-switch">
+            <input type="checkbox" style="margin-top:5px" [(ngModel)]="isAutoScroll" class="form-check-input" />
+          </div>
+        </div>
+
+        <label class="col-sm-3 col-form-label">Horizontal Display</label>
+        <div class="col-sm-1">
+          <div class="form-check form-switch">
+            <input type="checkbox" style="margin-top:5px" [(ngModel)]="horizontalOrientaion" class="form-check-input" />
+          </div>
+        </div>
+
+        <label class="col-sm-3 col-form-label">Steps/Intervals</label>
+        <div class="col-sm-3">
+          <input type="number" [(ngModel)]="IntervalStep" class="form-control" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================= Track ======================= -->
+    <div class="tab-pane fade show active" style="overflow-y:auto; overflow-x:hidden;" id="tracksWithCard">
+      <div *ngIf="showLoading" style="background-color:transparent; left:50%; top:50%; transform:translate(-50%,-50%);">
+        <div class="spinner-border text-theme me-2"></div>
+      </div>
+
+      <div class="file-manager">
+        <div class="file-manager-toolbar">
+          <button type="button" (click)="NewTrack()" class="btn border-0 d-inline-flex align-items-center">
+            <span data-icon="material-symbols-light:add" class="iconify fs-20px my-n2 me-1 text-theme"></span>
+            Add Track
+          </button>
+        </div>
+      </div>
+
+      <br />
+
+      @for (trackInfo of lstOfTrack; track trackInfo.trackNo; let trackIndex = $index) {
+        <div class="accordion" [id]="'trackAccordion' + trackIndex">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                      attr.data-bs-target="#collapseOne{{ trackIndex }}">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                  <h5>Track - {{ trackInfo.trackNo }}</h5>
+
+                  <div class="d-flex justify-content-end">
+                    @if (trackIndex != 0) {
+                      <button type="button" (click)="MoveUpTrack(trackInfo.trackNo, trackIndex)"
+                              class="btn border-0 me-2">
+                        <span data-icon="material-symbols-light:arrow-upward-alt" class="iconify fs-20px my-n2 me-1"></span>
+                      </button>
+                    }
+                    @if (trackIndex != lstOfTrack.length - 1) {
+                      <button type="button" (click)="MoveDownTrack(trackInfo.trackNo, trackIndex)"
+                              class="btn border-0 me-2">
+                        <span data-icon="material-symbols-light:arrow-downward-alt" class="iconify fs-20px my-n2 me-1"></span>
+                      </button>
+                    }
+                    <button type="button" (click)="DeleteTrack(trackInfo.trackNo)" class="btn border-0">
+                      <span data-icon="material-symbols-light:delete-forever-outline-sharp" class="iconify fs-20px"></span>
+                    </button>
+                  </div>
+                </div>
+              </button>
+            </h2>
+
+            <div [id]="'collapseOne' + trackIndex" class="accordion-collapse collapse"
+                 attr.data-bs-parent="#trackAccordion{{ trackIndex }}">
+              <div class="accordion-body">
+                <div class="mb-2 row">
+                  <label class="col-sm-2 col-form-label">Title</label>
+                  <div class="col-sm-10">
+                    <input type="text" [(ngModel)]="trackInfo.trackName" class="form-control" />
+                  </div>
+                </div>
+
+                <div class="mb-2 row">
+                  <label class="col-sm-2 col-form-label">Type</label>
+                  <div class="col-sm-10">
+                    <select class="form-select"
+                            (click)="selectedTrack($event, trackIndex)"
+                            [(ngModel)]="trackInfo.trackType">
+                      @for (trackType of lstTrackTypes; track trackType) {
+                        <option [value]="trackType">{{ trackType }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mb-4 row">
+                  <div class="col-sm-7"></div>
+                  <div class="col-sm-3">
+                    <button type="button" (click)="AddNewMnemonic(trackInfo.trackNo)"
+                            *ngIf="!trackInfo.isIndex && !trackInfo.isMudLog"
+                            class="btn btn-dark" style="float:right">
+                      Add Mnemonic
+                    </button>
+                  </div>
+                  <div class="col-sm-2">
+                    <button type="button" (click)="SaveTrackInfo()" class="btn btn-dark" style="float:right">
+                      Save
+                    </button>
+                  </div>
+                </div>
+
+                @if (!trackInfo.isIndex  && !trackInfo.isMudLog) {
+                  @for (curve of trackInfo.curves; track curve.mnemonicId; let curveIndex = $index) {
+                    <div class="accordion" id="accordionCurve">
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                          <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                  attr.data-bs-target="#collapseOne{{ trackIndex }}{{ curveIndex }}">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                              <label>Curve {{ curve.mnemonicId }}</label>
+                              <button type="button"
+                                      (click)="RemoveMnemonic(trackInfo.trackNo, curve.DisplayOrder, curve.mnemonicId)"
+                                      class="btn border-0 d-inline-flex align-items-center">
+                                <span data-icon="material-symbols-light:delete-forever-outline-sharp" class="iconify fs-20px my-n2 me-1"></span>
+                              </button>
+                            </div>
+                          </button>
+                        </h2>
+
+                        <div [id]="'collapseOne' + trackIndex + curveIndex"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#accordionCurve">
+                          <div class="accordion-body">
+                            <div class="mb-2 row">
+                              <label class="col-sm-2 col-form-label">Log</label>
+                              <div class="col-sm-4">
+                                <select class="form-select"
+                                        [(ngModel)]="curve.LogId"
+                                        (click)="selectedLogEvent($event, trackInfo.trackNo, curve.displayOrder)">
+                                  <option value="none">None</option>
+                                  @for (wellboreobject of wellboreObjects; track wellboreobject.objectId) {
+                                    <option [value]="wellboreobject.objectId">
+                                      {{ wellboreobject.objectName }}
+                                    </option>
+                                  }
+                                </select>
+                              </div>
+
+                              <label class="col-sm-2 col-form-label">Mnemonic</label>
+                              <div class="col-sm-4">
+                                <select class="form-select" [(ngModel)]="curve.mnemonicId">
+                                  <option value="none">None</option>
+                                  @for (lstMne of curve.mnemonicLst; track lstMne.mnemonicId) {
+                                    <option [value]="lstMne.mnemonicId">{{ lstMne.mnemonicDescp }}</option>
+                                  }
+                                </select>
+                              </div>
+                            </div>
+
+                            <!-- You can keep rest of your curve fields here exactly as-is -->
+                            <!-- (color, lineStyle, min/max, show, autoscale, etc.) -->
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  }
+                }
+
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<div mat-dialog-actions class="d-flex justify-content-end gap-2">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" type="button" (click)="apply()">Apply</button>
+</div>
+
+
+////////////////////////////
+
 
 
 
