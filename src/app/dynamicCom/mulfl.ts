@@ -1,4 +1,87 @@
 
+/* ===============================
+   Dialog container sizing
+   =============================== */
+   :host {
+    display: block;
+    height: 100%;
+  }
+  
+  /* Ensure dialog content scrolls, not the whole page */
+  ::ng-deep .mat-mdc-dialog-content {
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  /* ===============================
+     Tabs area scrolling
+     =============================== */
+  .tab-content {
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  /* Track tab: scroll inside */
+  #tracksWithCard {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(85vh - 220px);
+  }
+  
+  /* General tab: scroll inside */
+  #generalWithCard {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(85vh - 220px);
+  }
+  
+  /* ===============================
+     Accordion spacing fixes
+     =============================== */
+  .accordion-button {
+    padding: 0.75rem 1rem;
+  }
+  
+  .accordion-body {
+    padding: 0.75rem 1rem;
+  }
+  
+  /* ===============================
+     File manager toolbar
+     =============================== */
+  .file-manager-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  /* ===============================
+     Action icons (reuse existing)
+     =============================== */
+  .action-icon-container {
+    cursor: pointer;
+  }
+  
+  /* ===============================
+     Dialog footer buttons
+     =============================== */
+  ::ng-deep .mat-mdc-dialog-actions {
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  /* ===============================
+     Responsive tweaks
+     =============================== */
+  @media (max-width: 768px) {
+    #tracksWithCard,
+    #generalWithCard {
+      max-height: calc(85vh - 180px);
+    }
+  }
+  
+
+////////////////
 import { MatDialog } from '@angular/material/dialog';
 import { TrackConfigDialogComponent } from './track-config-dialog/track-config-dialog.component'; // adjust path
 
