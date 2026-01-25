@@ -1,4 +1,39 @@
 
+/* 1. Ensure the item itself always has a solid background */
+.accordion-item {
+  margin-bottom: 8px !important;
+  border: none !important;
+  background-color: #2b2b2b !important; /* Your dark grey/blue */
+  border-radius: 4px !important;
+}
+
+/* 2. Fix the background when the track is OPEN/EXPANDED */
+.accordion-button:not(.collapsed) {
+  background-color: #333333 !important; /* Keep it dark when open */
+  color: #00ffcc !important;            /* Green text like your theme */
+  box-shadow: none !important;          /* Removes the glowing blue focus ring */
+}
+
+/* 3. Fix the background color when the track is CLOSED */
+.accordion-button.collapsed {
+  background-color: #2b2b2b !important; 
+  color: white !important;
+}
+
+/* 4. Remove the "Blue Flash" or "Focus" outline when clicking */
+.accordion-button:focus {
+  z-index: 3;
+  outline: 0;
+  box-shadow: none !important;
+  background-color: #333333 !important; 
+}
+
+/* 5. Ensure the inner body also has the background color */
+.accordion-collapse {
+  background-color: #2b2b2b !important;
+}
+
+///////////////////////
 /* ===============================
    Dialog container sizing
    =============================== */
