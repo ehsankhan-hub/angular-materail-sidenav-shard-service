@@ -107,17 +107,22 @@ updateChartBoundaries(direction: 'append' | 'prepend') {
   const minDepth = this.indexCurveDepth[0];
   const maxDepth = this.indexCurveDepth[this.indexCurveDepth.length - 1];
 
-  // Update the widget's internal model range
-  this.logWidget.setDataLimits(minDepth, maxDepth);
+  // 1. Update the Model Limits (The "World" size)
+  // This tells the scrollbar how long the whole log is
+  this.logWidget.getTrackContainer().setModelLimits(
+    new geotoolkit.util.Rect(0, minDepth, 0, maxDepth)
+  );
 
+  // 2. Handle Auto-Scroll for Live Data
   if (direction === 'append' && this.isAutoScroll) {
-    // Scroll to the bottom for live updates
-    this.logWidget.scrollToLocation(maxDepth);
+    // If scrollToLocation isn't working, we use the last index
+    const lastIndex = this.indexCurveDepth.length - 1;
+    if (lastIndex >= 0) {
+      // scrollToIndex moves the view to the row number provided
+      this.logWidget.scrollToIndex(lastIndex);
+    }
   }
-  // For 'prepend', GeoToolkit handles the visible area automatically 
-  // if the model limits are expanded upwards.
 }
-
 /////////////
 
 
