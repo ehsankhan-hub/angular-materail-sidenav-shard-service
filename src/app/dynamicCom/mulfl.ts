@@ -11,16 +11,13 @@ getLogData(
   let endval: any;
   let isDepth = false;
   let tempMDforTvd: any[] = [];
-  console.log('isLiveData --', isLiveData);
-
-  // EXTRACT NUMERIC VALUES FROM WITSML INDEX OBJECTS
-  const currentStartIndex = typeof selectedlogObject.startIndex === 'object' 
-    ? Number(selectedlogObject.startIndex['#text']) 
-    : Number(selectedlogObject.startIndex);
   
-  const currentEndIndex = typeof selectedlogObject.endIndex === 'object' 
-    ? Number(selectedlogObject.endIndex['#text']) 
-    : Number(selectedlogObject.endIndex);
+  // Helper to handle WITSML object/string index formats
+  const getVal = (v: any) => typeof v === 'object' ? Number(v['#text']) : Number(v);
+  const latestDepth = getVal(selectedlogObject.endIndex);
+  const startDepth = getVal(selectedlogObject.startIndex);
+
+  console.log('isLiveData --', isLiveData);
 
   if (selectedlogObject.isDepth) {
     isDepth = true;
@@ -41,30 +38,29 @@ getLogData(
       }
     } 
     else if (this.isFirstTimeLoading) {
-      // INITIAL LOAD: Get the most recent 2000 units (Live end)
-      endval = currentEndIndex;
-      startval = Math.max(currentStartIndex, currentEndIndex - 2000); 
-      console.log('Initial Load (Bottom): startval', startval, 'endval ', endval);
+      // 1. INITIAL LOAD: Start from the very bottom (Live End)
+      endval = latestDepth;
+      startval = Math.max(startDepth, latestDepth - 2000); 
+      console.log('Initial Load: startval', startval, 'endval ', endval);
     } 
     else if (isLiveData) {
-      // LIVE UPDATE: Get from the last point we have +0.01
-      const lastPoint = this.indexCurveDepth.length > 0 
+      // 2. LIVE UPDATE: Fetch from our current highest point forward
+      const currentMax = this.indexCurveDepth.length > 0 
         ? this.indexCurveDepth[this.indexCurveDepth.length - 1] 
-        : currentEndIndex;
+        : latestDepth;
       
-      startval = lastPoint + 0.01;
-      endval = currentEndIndex + 2000;
-      console.log('Live update: startval', startval, 'endval ', endval);
+      startval = currentMax + 0.01; 
+      endval = latestDepth + 2000;
+      console.log('Live data: startval', startval, 'endval ', endval);
     } 
     else {
-      // HISTORICAL: User scrolled up, get 2000 units before the current top
-      const firstPoint = this.indexCurveDepth.length > 0 
-        ? this.indexCurveDepth[0] 
-        : currentEndIndex;
-        
-      endval = firstPoint;
-      startval = Math.max(currentStartIndex, firstPoint - 2000);
-      console.log('Historical scroll: startval', startval, 'endval ', endval);
+      // 3. HISTORICAL SCROLL: Fetch the previous 2000 units before our current top
+      const currentMin = this.indexCurveDepth.length > 0 ? this.indexCurveDepth[0] : latestDepth;
+      
+      // Use an offset (-0.01) to avoid fetching the same point at the boundary
+      endval = currentMin - 0.01;
+      startval = Math.max(startDepth, currentMin - 2000);
+      console.log('Historical Scroll: startval', startval, 'endval ', endval);
     }
   } else {
     // Time-based logic
@@ -123,16 +119,18 @@ getLogData(
         return;
       }
 
-      if (!logData.logs || !Array.isArray(response.logs[0].logData.data)) {
+      if (logData.logs == undefined || !Array.isArray(response.logs[0].logData.data)) {
         this.showLoading = false;
         this.isLiveTracking = false;
         return;
       }
 
-      var x: [] = response.logs[0].logData.data;
+      const rawDataRows: any[] = response.logs[0].logData.data;
 
-      // Logic: If it's a historical scroll (not first load, not live), we use UNSHIFT
+      // CRITICAL FIX: If we are fetching historical data, we must process the block 
+      // in reverse order so that unshift places the smallest depth at index 0.
       const isHistorical = !this.isFirstTimeLoading && !isLiveData;
+      const rowsToProcess = isHistorical ? [...rawDataRows].reverse() : rawDataRows;
 
       if (selectedlogObject.isDepth) {
         selectedlogObject.endIndex = logData.logs[0].endIndex;
@@ -152,7 +150,7 @@ getLogData(
                   selectedlogObject.objectInfo[mnemonicIndex].data = [];
                 }
                 
-                x.forEach((row) => {
+                rowsToProcess.forEach((row) => {
                   String(row)
                     .split(',')
                     .map((val, dataIndex) => {
@@ -160,7 +158,7 @@ getLogData(
                         let processedVal: any;
                         if (val == '' || val == undefined) {
                           if (selectedlogObject.objectInfo[mnemonicIndex].data.length > 0) {
-                            // If historical, take the value from index 0. If live, take the last index.
+                            // If historical, reference the top (index 0). If live, reference the bottom.
                             let refIdx = isHistorical ? 0 : selectedlogObject.objectInfo[mnemonicIndex].data.length - 1;
                             processedVal = selectedlogObject.objectInfo[mnemonicIndex].data[refIdx];
                           } else {
@@ -170,7 +168,6 @@ getLogData(
                           processedVal = val;
                         }
 
-                        // THE KEY CHANGE: UNSHIFT vs PUSH
                         if (isHistorical) {
                           selectedlogObject.objectInfo[mnemonicIndex].data.unshift(processedVal);
                         } else {
@@ -196,23 +193,18 @@ getLogData(
           );
         });
 
+      // TVD and Scaling
       if (this.swtichToTvd) {
         let indexArray: any[] = [];
         tempMDforTvd.forEach((val) => {
-          let findIndex = this.indexCurveDepth.findIndex(
-            (e) => e == val || (e - val < 1 && e - val > 0)
-          );
-          if (findIndex > -1) {
-            indexArray.push(findIndex);
-          }
+          let findIndex = this.indexCurveDepth.findIndex((e) => e == val || (e - val < 1 && e - val > 0));
+          if (findIndex > -1) indexArray.push(findIndex);
         });
         selectedlogObject.objectInfo.forEach((mnemonic, index) => {
           let tempCurveTvdData: any[] = [];
           if (mnemonic.mnemonic != selectedlogObject.indexCurve) {
             indexArray.forEach((indexVal) => {
-              if (mnemonic.data.length > indexVal) {
-                tempCurveTvdData.push(mnemonic.data[indexVal]);
-              }
+              if (mnemonic.data.length > indexVal) tempCurveTvdData.push(mnemonic.data[indexVal]);
             });
             selectedlogObject.objectInfo[index].data = tempCurveTvdData;
             selectedlogObject.objectInfo[index].min = this.getMinValue(tempCurveTvdData);
@@ -243,26 +235,24 @@ getLogData(
         if (!selectedlogObject.isDepth && val.mnemonicId.toLowerCase() == 'depth') {
           this.indexCurveTimeDepthForShowMarker = val.data;
         }
-        this.lstOfTrack.forEach((track, trackIndex) => {
-          track.curves.forEach((curve, index) => {
+        this.lstOfTrack.forEach((track, tIdx) => {
+          track.curves.forEach((curve, cIdx) => {
             if (curve.mnemonicId == val.mnemonicId) {
-              this.lstOfTrack[trackIndex].curves[index].data = val.data;
-              if (this.lstOfTrack[trackIndex].curves[index].autoScale) {
-                this.lstOfTrack[trackIndex].curves[index].min = val.min;
-                this.lstOfTrack[trackIndex].curves[index].max = val.max;
+              this.lstOfTrack[tIdx].curves[cIdx].data = val.data;
+              if (this.lstOfTrack[tIdx].curves[cIdx].autoScale) {
+                this.lstOfTrack[tIdx].curves[cIdx].min = val.min;
+                this.lstOfTrack[tIdx].curves[cIdx].max = val.max;
               }
-              this.lstOfTrack[trackIndex].curves[index].mnemonic = val.mnemonic;
-              this.lstOfTrack[trackIndex].curves[index].isDepth = selectedlogObject.isDepth;
-              this.lstOfTrack[trackIndex].curves[index].unit = val.unit;
-              this.lstOfTrack[trackIndex].curves[index].mnemonicList = val.mnemonicLst;
+              this.lstOfTrack[tIdx].curves[cIdx].mnemonic = val.mnemonic;
+              this.lstOfTrack[tIdx].curves[cIdx].isDepth = selectedlogObject.isDepth;
+              this.lstOfTrack[tIdx].curves[cIdx].unit = val.unit;
+              this.lstOfTrack[tIdx].curves[cIdx].mnemonicList = val.mnemonicLst;
             }
           });
         });
       });
 
-      if (callback) {
-        callback();
-      }
+      if (callback) callback();
       
       this.drawPlot();
       this.createScene();
