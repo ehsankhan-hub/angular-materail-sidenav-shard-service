@@ -1,3 +1,289 @@
+getLogData(
+  selectedlogObject: IWellboreObject,
+  logIndex: number,
+  isLiveData: boolean = false,
+  trackIndex: number = -1,
+  curveIndex: number = -1,
+  pSelectedMnemonic: string = '',
+  callback?: () => void
+) {
+  let startval: any;
+  let endval: any;
+  let isDepth = false;
+  let tempMDforTvd: any[] = [];
+  console.log('isLiveData --', isLiveData);
+
+  // EXTRACT NUMERIC VALUES FROM WITSML INDEX OBJECTS
+  const currentStartIndex = typeof selectedlogObject.startIndex === 'object' 
+    ? Number(selectedlogObject.startIndex['#text']) 
+    : Number(selectedlogObject.startIndex);
+  
+  const currentEndIndex = typeof selectedlogObject.endIndex === 'object' 
+    ? Number(selectedlogObject.endIndex['#text']) 
+    : Number(selectedlogObject.endIndex);
+
+  if (selectedlogObject.isDepth) {
+    isDepth = true;
+
+    if (this.swtichToTvd) {
+      if (this.trajectoryData && this.trajectoryData.trajectoryStation) {
+        this.indexCurveTVD = [];
+        let trajectoryStation: any[] = this.trajectoryData.trajectoryStation;
+        trajectoryStation.forEach((trajectory) => {
+          this.indexCurveTVD.push(Number(parseFloat(trajectory.tvd).toFixed(2)));
+          tempMDforTvd.push(Number(parseFloat(trajectory.md).toFixed(2)));
+        });
+        startval = this.indexCurveTVD[0];
+        if (this.lastselectedTvdVal != this.indexCurveTVD[this.indexCurveTVD.length - 1]) {
+          endval = this.indexCurveTVD[this.indexCurveTVD.length - 1];
+          this.lastselectedTvdVal = this.indexCurveTVD[this.indexCurveTVD.length - 1];
+        }
+      }
+    } 
+    else if (this.isFirstTimeLoading) {
+      // INITIAL LOAD: Get the most recent 2000 units (Live end)
+      endval = currentEndIndex;
+      startval = Math.max(currentStartIndex, currentEndIndex - 2000); 
+      console.log('Initial Load (Bottom): startval', startval, 'endval ', endval);
+    } 
+    else if (isLiveData) {
+      // LIVE UPDATE: Get from the last point we have +0.01
+      const lastPoint = this.indexCurveDepth.length > 0 
+        ? this.indexCurveDepth[this.indexCurveDepth.length - 1] 
+        : currentEndIndex;
+      
+      startval = lastPoint + 0.01;
+      endval = currentEndIndex + 2000;
+      console.log('Live update: startval', startval, 'endval ', endval);
+    } 
+    else {
+      // HISTORICAL: User scrolled up, get 2000 units before the current top
+      const firstPoint = this.indexCurveDepth.length > 0 
+        ? this.indexCurveDepth[0] 
+        : currentEndIndex;
+        
+      endval = firstPoint;
+      startval = Math.max(currentStartIndex, firstPoint - 2000);
+      console.log('Historical scroll: startval', startval, 'endval ', endval);
+    }
+  } else {
+    // Time-based logic
+    let mindate = new Date();
+    let currDate = new Date();
+    let lastRigtime = new Date(selectedlogObject.endIndex);
+    
+    if (this.isFirstTimeLoading || (!isLiveData && this.indexCurveTime[0] <= selectedlogObject.endIndex)) {
+      mindate = lastRigtime;
+      mindate.setHours(lastRigtime.getHours() - this.selectedHour);
+      this.indexCurveTime = [];
+    } else if (this.indexCurveTime[0] <= selectedlogObject.endIndex) {
+      mindate = new Date(selectedlogObject.endIndex);
+      mindate.setSeconds(mindate.getSeconds() + 1);
+    }
+    this.lastselectedDate = currDate;
+    startval = formatDate(mindate, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
+    endval = formatDate(currDate, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
+  }
+
+  if ((!startval && startval != 0) || (!endval && endval != 0)) {
+    this.showLoading = false;
+    this.isLiveTracking = false;
+    return;
+  }
+
+  let queryParameter: ILogDataQueryParameter = {
+    wellUid: selectedlogObject.wellId,
+    logUid: selectedlogObject.objectId,
+    wellboreUid: selectedlogObject.wellboreId,
+    logName: selectedlogObject.objectName,
+    indexType: selectedlogObject.indexType,
+    indexCurve: selectedlogObject.indexCurve,
+    startIndex: startval,
+    endIndex: endval,
+    isGrowing: selectedlogObject.objectGrowing,
+    mnemonicList: '',
+  };
+
+  this.wellService.getLogData(queryParameter).subscribe(
+    (response: any) => {
+      if (queryParameter?.logName?.includes('MLG_DRILLRMK_TIME')) {
+        this.handleRemarksData(response, 'drill-remarks');
+        return;
+      }
+      if (queryParameter?.logName?.includes('MLG_GASRMK_TIME')) {
+        this.handleRemarksData(response, 'gas-remarks');
+        return;
+      }
+
+      let logData: any = response;
+      if (logData.code !== undefined && logData.code == '404') {
+        this.showToast('Response', logData.message);
+        this.showLoading = false;
+        this.isLiveTracking = false;
+        return;
+      }
+
+      if (!logData.logs || !Array.isArray(response.logs[0].logData.data)) {
+        this.showLoading = false;
+        this.isLiveTracking = false;
+        return;
+      }
+
+      var x: [] = response.logs[0].logData.data;
+
+      // Logic: If it's a historical scroll (not first load, not live), we use UNSHIFT
+      const isHistorical = !this.isFirstTimeLoading && !isLiveData;
+
+      if (selectedlogObject.isDepth) {
+        selectedlogObject.endIndex = logData.logs[0].endIndex;
+      } else {
+        selectedlogObject.endIndex = logData.logs[0].endDateTimeIndex;
+      }
+
+      var unitList: any[] = String(logData.logs[0].logData.unitList).split(',');
+
+      String(logData.logs[0].logData.mnemonicList)
+        .split(',')
+        .map((val, mindex) => {
+          selectedlogObject.objectInfo.forEach(
+            (mnemonicInfo, mnemonicIndex) => {
+              if (mnemonicInfo.mnemonicId == val) {
+                if (this.swtichToTvd) {
+                  selectedlogObject.objectInfo[mnemonicIndex].data = [];
+                }
+                
+                x.forEach((row) => {
+                  String(row)
+                    .split(',')
+                    .map((val, dataIndex) => {
+                      if (dataIndex == mindex) {
+                        let processedVal: any;
+                        if (val == '' || val == undefined) {
+                          if (selectedlogObject.objectInfo[mnemonicIndex].data.length > 0) {
+                            // If historical, take the value from index 0. If live, take the last index.
+                            let refIdx = isHistorical ? 0 : selectedlogObject.objectInfo[mnemonicIndex].data.length - 1;
+                            processedVal = selectedlogObject.objectInfo[mnemonicIndex].data[refIdx];
+                          } else {
+                            processedVal = Number.NaN;
+                          }
+                        } else {
+                          processedVal = val;
+                        }
+
+                        // THE KEY CHANGE: UNSHIFT vs PUSH
+                        if (isHistorical) {
+                          selectedlogObject.objectInfo[mnemonicIndex].data.unshift(processedVal);
+                        } else {
+                          selectedlogObject.objectInfo[mnemonicIndex].data.push(processedVal);
+                        }
+
+                        selectedlogObject.objectInfo[mnemonicIndex].unit = unitList[mindex];
+                        
+                        if (mnemonicInfo.mnemonicId == selectedlogObject.indexCurve) {
+                          if (isDepth) {
+                            if (isHistorical) {
+                              this.indexCurveDepth.unshift(Number(val));
+                            } else {
+                              this.indexCurveDepth.push(Number(val));
+                            }
+                          }
+                        }
+                      }
+                    });
+                });
+              }
+            }
+          );
+        });
+
+      if (this.swtichToTvd) {
+        let indexArray: any[] = [];
+        tempMDforTvd.forEach((val) => {
+          let findIndex = this.indexCurveDepth.findIndex(
+            (e) => e == val || (e - val < 1 && e - val > 0)
+          );
+          if (findIndex > -1) {
+            indexArray.push(findIndex);
+          }
+        });
+        selectedlogObject.objectInfo.forEach((mnemonic, index) => {
+          let tempCurveTvdData: any[] = [];
+          if (mnemonic.mnemonic != selectedlogObject.indexCurve) {
+            indexArray.forEach((indexVal) => {
+              if (mnemonic.data.length > indexVal) {
+                tempCurveTvdData.push(mnemonic.data[indexVal]);
+              }
+            });
+            selectedlogObject.objectInfo[index].data = tempCurveTvdData;
+            selectedlogObject.objectInfo[index].min = this.getMinValue(tempCurveTvdData);
+            selectedlogObject.objectInfo[index].max = this.getMaxValue(tempCurveTvdData);
+          }
+        });
+      } else {
+        selectedlogObject.objectInfo.forEach((mnemonic, index) => {
+          if (mnemonic.mnemonic != selectedlogObject.indexCurve) {
+            selectedlogObject.objectInfo[index].min = this.getMinValue(mnemonic.data);
+            selectedlogObject.objectInfo[index].max = this.getMaxValue(mnemonic.data);
+          }
+        });
+      }
+
+      this.wellboreObjects[logIndex] = selectedlogObject;
+
+      var logID = this.wellService.getLogObjectFullName(this.lstOfTrack[0].curves[0].LogId);
+      if (selectedlogObject.objectId == logID) {
+        if (selectedlogObject.isDepth && logID.includes('Surface_Depth')) {
+          this.staticTemplateSharedService.dataDepth = selectedlogObject.objectInfo;
+        } else if (logID.includes('Surface_Time')) {
+          this.staticTemplateSharedService.dataTime = selectedlogObject.objectInfo;
+        }
+      }
+
+      selectedlogObject.objectInfo.forEach((val) => {
+        if (!selectedlogObject.isDepth && val.mnemonicId.toLowerCase() == 'depth') {
+          this.indexCurveTimeDepthForShowMarker = val.data;
+        }
+        this.lstOfTrack.forEach((track, trackIndex) => {
+          track.curves.forEach((curve, index) => {
+            if (curve.mnemonicId == val.mnemonicId) {
+              this.lstOfTrack[trackIndex].curves[index].data = val.data;
+              if (this.lstOfTrack[trackIndex].curves[index].autoScale) {
+                this.lstOfTrack[trackIndex].curves[index].min = val.min;
+                this.lstOfTrack[trackIndex].curves[index].max = val.max;
+              }
+              this.lstOfTrack[trackIndex].curves[index].mnemonic = val.mnemonic;
+              this.lstOfTrack[trackIndex].curves[index].isDepth = selectedlogObject.isDepth;
+              this.lstOfTrack[trackIndex].curves[index].unit = val.unit;
+              this.lstOfTrack[trackIndex].curves[index].mnemonicList = val.mnemonicLst;
+            }
+          });
+        });
+      });
+
+      if (callback) {
+        callback();
+      }
+      
+      this.drawPlot();
+      this.createScene();
+      this.showLoading = false;
+      this.isLiveTracking = false;
+      
+      if (this.isFirstTimeLoading) {
+        this.isFirstTimeLoading = false;
+        this.cdr.detectChanges();
+      }
+    },
+    (error) => {
+      this.showLoading = false;
+      this.isLiveTracking = false;
+      this.showToast('Error On Retreiving', 'Error Reteriving Curve Info ' + error);
+    }
+  );
+}
+////////////////////
+
+
 
 /* 1. Ensure the item itself always has a solid background */
 .accordion-item {
