@@ -62,25 +62,60 @@ getLogData(
       startval = Math.max(startDepth, currentMin - 2000);
       console.log('Historical Scroll: startval', startval, 'endval ', endval);
     }
-  } else {
-    // Time-based logic
-    let mindate = new Date();
-    let currDate = new Date();
-    let lastRigtime = new Date(selectedlogObject.endIndex);
-    
-    if (this.isFirstTimeLoading || (!isLiveData && this.indexCurveTime[0] <= selectedlogObject.endIndex)) {
-      mindate = lastRigtime;
-      mindate.setHours(lastRigtime.getHours() - this.selectedHour);
-      this.indexCurveTime = [];
-    } else if (this.indexCurveTime[0] <= selectedlogObject.endIndex) {
-      mindate = new Date(selectedlogObject.endIndex);
-      mindate.setSeconds(mindate.getSeconds() + 1);
-    }
-    this.lastselectedDate = currDate;
-    startval = formatDate(mindate, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
-    endval = formatDate(currDate, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
-  }
+  } 
+  else {
+    // --- TIME-BASED LOGIC (REFACTORED) ---
+    isDepth = false;
+    const absoluteEnd = new Date(selectedlogObject.endIndex);
+    const absoluteStart = new Date(selectedlogObject.startIndex);
+    const hourWindow = this.selectedHour || 4;
 
+    if (this.isFirstTimeLoading) {
+      // INITIAL LOAD: Fetch last X hours from the log's end
+      let sDate = new Date(absoluteEnd);
+      sDate.setHours(sDate.getHours() - hourWindow);
+      if (sDate < absoluteStart) sDate = absoluteStart;
+
+      startval = formatDate(sDate, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
+      endval = formatDate(absoluteEnd, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
+      console.log('Time Initial:', startval, endval);
+    } 
+    else if (isLiveData) {
+      // LIVE UPDATE: From the last point in chart to "Now"
+      let lastInChart = this.indexCurveTime.length > 0 
+        ? new Date(this.indexCurveTime[this.indexCurveTime.length - 1]) 
+        : absoluteEnd;
+      lastInChart.setSeconds(lastInChart.getSeconds() + 1);
+      
+      startval = formatDate(lastInChart, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
+      endval = formatDate(new Date(), 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
+      console.log('Time Live:', startval, endval);
+    } 
+    else {
+      // HISTORICAL SCROLL: Fetch previous 4 hours from current chart top
+      let currentTop = this.indexCurveTime.length > 0 
+        ? new Date(this.indexCurveTime[0]) 
+        : absoluteEnd;
+
+      let hEnd = new Date(currentTop);
+      hEnd.setSeconds(hEnd.getSeconds() - 1);
+      
+      let hStart = new Date(hEnd);
+      hStart.setHours(hStart.getHours() - hourWindow);
+      if (hStart < absoluteStart) hStart = absoluteStart;
+
+      // Stop if we have already reached the start of the log
+      if (hEnd <= absoluteStart) {
+        console.log('Time Log: Start reached.');
+        this.showLoading = false;
+        return;
+      }
+
+      startval = formatDate(hStart, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
+      endval = formatDate(hEnd, 'yyyy-MM-ddTHH:mm:ss', 'en', 'GMT') + '.000z';
+      console.log('Time Historical:', startval, endval);
+    }
+  }
   if ((!startval && startval != 0) || (!endval && endval != 0)) {
     this.showLoading = false;
     this.isLiveTracking = false;
